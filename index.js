@@ -64,7 +64,7 @@ app.get("/sayHello", (req, res) => {
 });
 
 app.put("/test", (req, res) => {
-  res.send("hello world toto");
+  res.send("hello world totoooo");
 });
 
 app.post("/addComment", (req, res) => {
