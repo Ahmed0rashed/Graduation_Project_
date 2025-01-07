@@ -1,138 +1,14 @@
+const dotenv = require("dotenv");
 const express = require("express");
-const mongoose = require("mongoose");
-const cors = require("cors");
-const app = express();
+const connectDB = require("./config/db.config");
+dotenv.config({ path: "./config.env" });
 
-app.use(cors());
-const Article = require("./models/Article");
+const app = require("./app");
 
-mongoose
-  .connect("mongodb://localhost:27017/Article")
-  .then(() => {
-    console.log("connected successfully");
-  })
-  .catch((error) => {
-    console.log("error with connecting with the DB ", error);
-  });
-// mongodb+srv://<username>:<password>@myfirstnodejscluster.toaytf9.mongodb.net/?retryWrites=true&w=majority
+connectDB();
 
-app.use(express.json());
+const port = 8000 || process.env.PORT;
 
-app.get("/hello", (req, res) => {
-  res.send("hello toto");
-});
-
-app.get("/", (req, res) => {
-  res.send("hello in node js project");
-});
-
-app.get("/numbers", (req, res) => {
-  let numbers = "";
-  for (let i = 0; i <= 100; i++) {
-    numbers += i + " - ";
-  }
-  // res.send(`the numbers are: ${numbers}`);
-
-  // res.send(__dirname + "/views/numbers.html");
-  // res.sendFile(__dirname + "/views/numbers.html");
-  res.render("numbers.ejs", {
-    name: "Ahmad",
-    numbers: numbers,
-  });
-});
-
-app.get("/findSummation/:number1/:number2", (req, res) => {
-  const num1 = req.params.number1;
-  const num2 = req.params.number2;
-
-  const total = Number(num1) + Number(num2);
-
-  res.send(`the total is ${total}`);
-});
-
-app.get("/sayHello", (req, res) => {
-  // console.log(req.body);
-
-  // console.log(req.query);
-  // res.send(`Hello ${req.body.name}, Age is: ${req.query.age}`);
-
-  res.json({
-    name: req.body.name,
-    age: req.query.age,
-    language: "Arabic",
-  });
-});
-
-app.put("/test", (req, res) => {
-  res.send("hello world totoooo11");
-});
-
-app.post("/addComment", (req, res) => {
-  res.send("post request on add comment");
-});
-
-app.delete("/testingDelete", (req, res) => {
-  res.send("delete request");
-});
-
-// ======= ARTICLES ENDPOINTS =====
-app.post("/article", async (req, res) => {
-  res.json("ToTo");
-});
-app.post("/articles", async (req, res) => {
-  const newArticle = new Article();
-
-  const artTitle = req.body.a1;
-  const artBody = req.body.a2;
-
-  newArticle.title = artTitle;
-  newArticle.body = artBody;
-  newArticle.numberOfLikes = 0;
-  await newArticle.save();
-
-  res.json(newArticle);
-});
-
-app.get("/articles", async (req, res) => {
-  const articles = await Article.find();
-  console.log("the articles are", articles);
-
-  res.json(articles);
-});
-
-app.get("/articles/:articleId", async (req, res) => {
-  const id = req.params.articleId;
-
-  try {
-    const article = await Article.findById(id);
-    res.json(article);
-    return;
-  } catch (error) {
-    console.log("error while reading article of id ", id);
-    return res.send("error");
-  }
-});
-
-app.delete("/articles/:articleId", async (req, res) => {
-  const id = req.params.articleId;
-
-  try {
-    const article = await Article.findByIdAndDelete(id);
-    res.json(article);
-    return;
-  } catch (error) {
-    console.log("error while reading article of id ", id);
-    return res.json(error);
-  }
-});
-
-app.get("/showArticles", async (req, res) => {
-  const articles = await Article.find();
-
-  res.render("articles.ejs", {
-    allArticles: articles,
-  });
-});
-app.listen(4000, () => {
-  console.log("I am listening in port 4000");
+app.listen(port, () => {
+  console.log(`App is running on port: ${port}`);
 });
