@@ -1,26 +1,23 @@
 const mongoose = require("mongoose");
 const dotenv = require("dotenv");
 
-// تحميل متغيرات البيئة من ملف .env
+// Load environment variables from .env file
 dotenv.config({ path: "./config.env" });
 
-// دالة الاتصال بقاعدة البيانات MongoDB
+// Function to connect to MongoDB
 const connectDB = async () => {
   try {
-    // استخدام متغير البيئة DATABASE للاتصال
+    // Use environment variable DATABASE for the connection string
     const DB =
       process.env.DATABASE ||
       "mongodb+srv://Ahmed:j3JufYo3YV20IGWT@cluster0.9dk5j.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
 
-    // الاتصال بقاعدة البيانات
-    await mongoose.connect(DB, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
+    // Connect to MongoDB without deprecated options
+    await mongoose.connect(DB);
 
     console.log(`Connected to MongoDB successfully!`);
 
-    // التحقق من الاتصال وعرض قواعد البيانات
+    // Verify the connection and list databases
     mongoose.connection.once("open", async () => {
       console.log("Connection to database established!");
       try {
