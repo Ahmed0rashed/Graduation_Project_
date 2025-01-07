@@ -1,22 +1,21 @@
 const mongoose = require("mongoose");
 const dotenv = require("dotenv");
 
-// Load environment variables from .env file
+
 dotenv.config({ path: "./config.env" });
 
-// Function to connect to MongoDB
+
 const connectDB = async () => {
   try {
     const DB =
       process.env.DATABASE ||
       "mongodb+srv://Ahmed:j3JufYo3YV20IGWT@cluster0.9dk5j.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
 
-    // Connect to MongoDB without deprecated options
+
     await mongoose.connect(DB);
 
     console.log(`Connected to MongoDB successfully!`);
 
-    // Verify the connection and list databases
     mongoose.connection.once("open", async () => {
       console.log("Connection to database established!");
       try {
