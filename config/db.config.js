@@ -1,30 +1,37 @@
-const mongoose = require("mongoose");
-const dotenv = require("dotenv");
+const mongoose = require('mongoose');
+const dotenv = require('dotenv');
 
-dotenv.config();
-
+dotenv.config({ path: './config.env' });
 const connectDB = async () => {
   try {
-  
-    const DB_URI = process.env.DATABASE;
+    const DB = process.env.DATABASE;
+    await mongoose.connect(DB);
+    console.log('Connected to MongoDB successfully!');
 
-    if (!DB_URI) {
-      console.error("MongoDB URI is undefined! Please check your .env file.");
-      process.exit(1); 
-    }
+    mongoose.connection.once('open', () => {
+      console.log('Connection to database established!');
 
-  
-    await mongoose.connect(DB_URI);
-
-    console.log("Connected to MongoDB successfully!");
-
-
-    mongoose.connection.once("open", () => {
-      console.log("Connection to database established!");
+      mongoose.connection.db
+        .admin()
+        .listDatabases((err, result) => {
+          if (err) {
+            console.error('Error listing databases:', err);
+          } else {
+            console.log('Databases:', result.databases);
+            if (result.databases.length === 0) {
+              console.log(
+                'No databases found. Try inserting data first.',
+              );
+            }
+          }
+        });
     });
   } catch (err) {
-    console.error("Error connecting to MongoDB:", err.message);
-    process.exit(1); 
+    console.error(
+      'Error connecting to MongoDB:',
+      err.message,
+    );
+    process.exit(1);
   }
 };
 
