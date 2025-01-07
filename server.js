@@ -1,14 +1,14 @@
-const dotenv = require("dotenv"); // Load dotenv once
+const dotenv = require("dotenv"); 
 const express = require("express");
 const mongoose = require("mongoose");
 const app = require("./app");
 
-dotenv.config({ path: "./config.env" }); // Load environment variables
+dotenv.config({ path: "./config.env" }); 
 
-// Connect to MongoDB
+
 const connectDB = async () => {
   try {
-    const DB = process.env.DATABASE;
+    const DB = "mongodb+srv://Ahmed:j3JufYo3YV20IGWT@cluster0.9dk5j.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
     await mongoose.connect(DB, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
