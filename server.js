@@ -3,12 +3,12 @@ const express = require("express");
 const mongoose = require("mongoose");
 const app = require("./app");
 
-// Load environment variables from .env file
+// تحميل متغيرات البيئة من ملف .env
 dotenv.config({ path: "./config.env" });
 
-// MongoDB connection function optimized for serverless
+// دالة الاتصال بقاعدة البيانات MongoDB
 const connectDB = async () => {
-  // Check if MongoDB is already connected
+  // التأكد لو قاعدة البيانات متصلة بالفعل
   if (mongoose.connection.readyState >= 1) {
     console.log("Already connected to MongoDB");
     return;
@@ -19,14 +19,14 @@ const connectDB = async () => {
       process.env.DATABASE ||
       "mongodb+srv://Ahmed:j3JufYo3YV20IGWT@cluster0.9dk5j.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
 
-    // Connect to MongoDB (no deprecated options like useNewUrlParser and useUnifiedTopology)
+    // الاتصال بقاعدة البيانات بدون إعدادات قديمة
     await mongoose.connect(DB);
     console.log("Connected to MongoDB successfully!");
 
     mongoose.connection.once("open", async () => {
       console.log("Connection to database established!");
       try {
-        // List all databases once when the connection is first established
+        // عرض قواعد البيانات مرة واحدة عند أول اتصال
         const result = await mongoose.connection.db.admin().listDatabases();
         console.log("Databases:", result.databases);
         if (result.databases.length === 0) {
@@ -38,17 +38,17 @@ const connectDB = async () => {
     });
   } catch (err) {
     console.error("Error connecting to MongoDB:", err.message);
-    process.exit(1); // Exit the process if connection fails
+    process.exit(1); // الخروج من البرنامج لو حصل خطأ في الاتصال
   }
 };
 
-// Connect to the database
+// الاتصال بقاعدة البيانات
 connectDB();
 
-// Define server port
+// تحديد البورت
 const port = process.env.PORT || 8000;
 
-// Start the server
+// تشغيل السيرفر
 app.listen(port, () => {
   console.log(`App is running on port: ${port}`);
 });
