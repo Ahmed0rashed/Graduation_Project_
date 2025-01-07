@@ -13,6 +13,5 @@ app.use(morgan('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-
 app.use("/api/patients", pationtRouter);
 module.exports = app;
