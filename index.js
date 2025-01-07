@@ -64,7 +64,7 @@ app.get("/sayHello", (req, res) => {
 });
 
 app.put("/test", (req, res) => {
-  res.send("hello world");
+  res.send("hello world toto");
 });
 
 app.post("/addComment", (req, res) => {
@@ -77,9 +77,8 @@ app.delete("/testingDelete", (req, res) => {
 
 // ======= ARTICLES ENDPOINTS =====
 app.post("/article", async (req, res) => {
-
-	res.json("ToTo");
-  });
+  res.json("ToTo");
+});
 app.post("/articles", async (req, res) => {
   const newArticle = new Article();
 
