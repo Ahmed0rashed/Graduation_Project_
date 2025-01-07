@@ -8,6 +8,9 @@
     "dev": "nodemon server.js"
   },
   "author": "",
+  "engines": {
+    "node": "16.x"
+  },
   "license": "ISC",
   "dependencies": {
     "bcrypt": "^5.1.1",
@@ -17,7 +20,7 @@
     "express": "^4.21.1",
     "helmet": "^6.0.0",
     "moment-timezone": "^0.5.46",
-    "mongoose": "^8.8.3",
+    "mongoose": "^8.9.3",
     "morgan": "^1.10.0",
     "node-cron": "^3.0.3",
     "validator": "^13.12.0"

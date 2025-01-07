@@ -7,7 +7,6 @@ dotenv.config({ path: "./config.env" });
 // Function to connect to MongoDB
 const connectDB = async () => {
   try {
-    // Use environment variable DATABASE for the connection string
     const DB =
       process.env.DATABASE ||
       "mongodb+srv://Ahmed:j3JufYo3YV20IGWT@cluster0.9dk5j.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
