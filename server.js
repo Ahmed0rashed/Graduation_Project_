@@ -1,46 +1,46 @@
-const dotenv = require("dotenv"); 
+const dotenv = require("dotenv");
 const express = require("express");
 const mongoose = require("mongoose");
 const app = require("./app");
 
-// dotenv.config({ path: "./config.env" }); 
-
+// تفعيل المتغيرات البيئية من ملف config.env
+dotenv.config({ path: "./config.env" });
 
 const connectDB = async () => {
   try {
-    const DB = "mongodb+srv://Ahmed:j3JufYo3YV20IGWT@cluster0.9dk5j.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
-    await mongoose.connect(DB, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
+    const DB =
+      process.env.DATABASE ||
+      "mongodb+srv://Ahmed:j3JufYo3YV20IGWT@cluster0.9dk5j.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
+
+    await mongoose.connect(DB); // الخيارات المهملة مش محتاجة هنا
     console.log("Connected to MongoDB successfully!");
 
-    mongoose.connection.once("open", () => {
+    // التعامل مع الاتصال لعرض قواعد البيانات
+    mongoose.connection.once("open", async () => {
       console.log("Connection to database established!");
 
-      mongoose.connection.db.admin().listDatabases((err, result) => {
-        if (err) {
-          console.error("Error listing databases:", err);
-        } else {
-          console.log("Databases:", result.databases);
-          if (result.databases.length === 0) {
-            console.log("No databases found. Try inserting data first.");
-          }
+      try {
+        const result = await mongoose.connection.db.admin().listDatabases();
+        console.log("Databases:", result.databases);
+        if (result.databases.length === 0) {
+          console.log("No databases found. Try inserting data first.");
         }
-      });
+      } catch (err) {
+        console.error("Error listing databases:", err);
+      }
     });
   } catch (err) {
     console.error("Error connecting to MongoDB:", err.message);
-    process.exit(1);
+    process.exit(1); // إنهاء العملية لو الاتصال فشل
   }
 };
 
-// Connect to database
-// connectDB();
+// الاتصال بقاعدة البيانات
+connectDB();
 
 const port = process.env.PORT || 8000;
 
-// Start server
+// بدء تشغيل السيرفر
 app.listen(port, () => {
   console.log(`App is running on port: ${port}`);
 });
