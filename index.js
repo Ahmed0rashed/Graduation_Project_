@@ -19,7 +19,7 @@ mongoose
 app.use(express.json());
 
 app.get("/hello", (req, res) => {
-  res.send("hello");
+  res.send("hello toto");
 });
 
 app.get("/", (req, res) => {
