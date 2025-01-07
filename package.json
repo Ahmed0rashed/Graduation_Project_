@@ -1,16 +1,29 @@
 {
-  "name": "myfirstproject",
+  "name": "backend",
   "version": "1.0.0",
-  "description": "",
+  "description": "Backend server handling API requests, user authentication, and database operations",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node index.js",
+    "dev": "nodemon index.js"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "ejs": "^3.1.9",
-    "express": "^4.18.2",
-    "mongoose": "^7.8.2"
+    "bcrypt": "^5.1.1",
+    "body-parser": "^1.20.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.1",
+    "helmet": "^6.0.0",
+    "moment-timezone": "^0.5.46",
+    "mongoose": "^8.8.3",
+    "morgan": "^1.10.0",
+    "node-cron": "^3.0.3",
+    "validator": "^13.12.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.7",
+    "prettier": "^3.4.1"
   }
 }
