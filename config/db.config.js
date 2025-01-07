@@ -5,8 +5,8 @@ dotenv.config({ path: './config.env' });
 const connectDB = async () => {
   try {
     const DB = process.env.DATABASE;
-    await mongoose.connect(DB);
-    console.log('Connected to MongoDB successfully!');
+    await mongoose.connect("mongodb+srv://Ahmed:j3JufYo3YV20IGWT@cluster0.9dk5j.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0");
+    console.log(`Connected to MongoDB successfully!    `); 
 
     mongoose.connection.once('open', () => {
       console.log('Connection to database established!');
