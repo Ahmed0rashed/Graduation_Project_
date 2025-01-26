@@ -4,8 +4,9 @@ const validator = require("validator");
 
 exports.addPatient = async (req, res) => {
   try {
-    const { firstName, lastName, dateOfBirth, gender, email, password } = req.body;
-    
+    const { firstName, lastName, dateOfBirth, gender, email, password } =
+      req.body;
+
     if (!email || !validator.isEmail(email)) {
       return res.send("A valid Email is Required");
     }
@@ -15,7 +16,7 @@ exports.addPatient = async (req, res) => {
     if (!dateOfBirth) {
       return res.send("Date of birth is required");
     }
-    if (!gender || !['Male', 'Female'].includes(gender)) {
+    if (!gender || !["Male", "Female"].includes(gender)) {
       return res.send("A valid gender is required");
     }
     if (!password) {
@@ -24,7 +25,7 @@ exports.addPatient = async (req, res) => {
     if (await User.findOne({ email })) {
       return res.status(400).send(`This email "${email}" already exists`);
     }
-    
+
     const hashedPassword = await bcrypt.hash(password, 10);
     const newPatient = new User({
       firstName,
@@ -34,7 +35,7 @@ exports.addPatient = async (req, res) => {
       email,
       passwordHash: hashedPassword,
     });
-    
+
     await newPatient.save();
     res.status(201).json(newPatient);
   } catch (error) {
