@@ -45,39 +45,8 @@ const radiologistSchema = new mongoose.Schema({
     enum: ['Active', 'Inactive', 'On Leave', 'Suspended'],
     default: 'Active'
   },
-  email: {
-    type: String,
-    required: [true, 'Email is required'],
-    unique: true,  // يقوم Mongoose بإنشاء فهرس فريد هنا
-    trim: true,
-    lowercase: true,
-    validate: {
-      validator: function(v) {
-        return /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/.test(v);
-      },
-      message: props => `${props.value} is not a valid email address`
-    }
-  },
-  availableHours: {
-    start: {
-      type: String,
-      validate: {
-        validator: function(v) {
-          return /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/.test(v);
-        },
-        message: props => `${props.value} is not a valid time format (HH:MM)`
-      }
-    },
-    end: {
-      type: String,
-      validate: {
-        validator: function(v) {
-          return /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/.test(v);
-        },
-        message: props => `${props.value} is not a valid time format (HH:MM)`
-      }
-    }
-  },
+  email: { type: String, required: true, unique: true },
+
   passwordHash: {
     type: String,
     required: [true, 'Password hash is required']

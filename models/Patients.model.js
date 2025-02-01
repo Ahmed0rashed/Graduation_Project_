@@ -42,19 +42,8 @@ const patientSchema = new mongoose.Schema(
         message: (props) => `${props.value} is not a valid phone number`,
       },
     },
-    email: {
-      type: String,
-      unique: true,
-      sparse: true,
-      trim: true,
-      Lowercase: true,
-      validate: {
-        validator: function (v) {
-          return !v || /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/.test(v);
-        },
-        message: (props) => `${props.value} is not a valid email address`,
-      },
-    },
+    email: { type: String, required: true, unique: true },
+
     passwordHash: {
       type: String,
       required: [true, "Password hash is required"],
