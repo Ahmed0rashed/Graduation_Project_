@@ -1,7 +1,6 @@
 const mongoose = require('mongoose');
 const { Schema } = mongoose;
 
-
 const radiologistSchema = new mongoose.Schema({
   firstName: {
     type: String,
@@ -49,7 +48,7 @@ const radiologistSchema = new mongoose.Schema({
   email: {
     type: String,
     required: [true, 'Email is required'],
-    unique: true,
+    unique: true,  // يقوم Mongoose بإنشاء فهرس فريد هنا
     trim: true,
     lowercase: true,
     validate: {
@@ -83,8 +82,12 @@ const radiologistSchema = new mongoose.Schema({
     type: String,
     required: [true, 'Password hash is required']
   },
-}, {   timestamps: true,
+}, { 
+  timestamps: true,
   toJSON: { virtuals: true },
-  toObject: { virtuals: true } });
+  toObject: { virtuals: true }
+});
+
+// تأكد من أن الفهرس مضاف تلقائيًا في email: { unique: true }
 
 module.exports = mongoose.model('Radiologist', radiologistSchema);
