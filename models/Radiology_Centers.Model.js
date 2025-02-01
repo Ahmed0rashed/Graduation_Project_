@@ -14,7 +14,6 @@ const radiologyCenterSchema = new mongoose.Schema({
     type: String,
     validate: {
       validator: function(v) {
-        // التحقق من صحة رقم الهاتف
         return /^\+?[\d\s-]{10,15}$/.test(v);
       },
       message: props => `${props.value} is not a valid contact number`
@@ -24,12 +23,11 @@ const radiologyCenterSchema = new mongoose.Schema({
   email: {
     type: String,
     required: [true, 'Email is required'],
-    unique: true,  // فهرس فريد للبريد الإلكتروني
+    unique: true,  // تأكد من عدم إضافة schema.index() بشكل مكرر هنا
     trim: true,
     lowercase: true,
     validate: {
       validator: function(v) {
-        // التحقق من صحة البريد الإلكتروني باستخدام تعبير منتظم
         return /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/.test(v);
       },
       message: props => `${props.value} is not a valid email address`
