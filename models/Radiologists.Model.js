@@ -1,6 +1,4 @@
 const mongoose = require('mongoose');
-const { Schema } = mongoose;
-
 
 const radiologistSchema = new mongoose.Schema({
   firstName: {
@@ -49,7 +47,7 @@ const radiologistSchema = new mongoose.Schema({
   email: {
     type: String,
     required: [true, 'Email is required'],
-    unique: true, // كده كفاية، مش محتاج تضيف index تاني
+    unique: true, // كفاية هنا، مش لازم تضيف index()
     trim: true,
     lowercase: true,
   },
@@ -77,8 +75,6 @@ const radiologistSchema = new mongoose.Schema({
     type: String,
     required: [true, 'Password hash is required']
   },
-}, {   timestamps: true,
-  toJSON: { virtuals: true },
-  toObject: { virtuals: true } });
+}, { timestamps: true });
 
 module.exports = mongoose.model('Radiologist', radiologistSchema);

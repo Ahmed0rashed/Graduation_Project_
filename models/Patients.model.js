@@ -1,68 +1,64 @@
-const mongoose = require("mongoose");
-const { isLowercase } = require("validator");
+const mongoose = require('mongoose');
 
-const patientSchema = new mongoose.Schema(
-  {
-    firstName: {
-      type: String,
-      required: [true, "First name is required"],
-      trim: true,
-    },
-    lastName: {
-      type: String,
-      required: [true, "Last name is required"],
-      trim: true,
-    },
-    dateOfBirth: {
-      type: Date,
-      required: [true, "Date of birth is required"],
-      validate: {
-        validator: function (value) {
-          return value <= new Date();
-        },
-        message: "Date of birth cannot be in the future",
+const patientSchema = new mongoose.Schema({
+  firstName: {
+    type: String,
+    required: [true, "First name is required"],
+    trim: true,
+  },
+  lastName: {
+    type: String,
+    required: [true, "Last name is required"],
+    trim: true,
+  },
+  dateOfBirth: {
+    type: Date,
+    required: [true, "Date of birth is required"],
+    validate: {
+      validator: function (value) {
+        return value <= new Date();
       },
-    },
-    gender: {
-      type: String,
-      enum: {
-        values: ["Male", "Female"],
-        message: "{VALUE} is not a valid gender",
-      },
-      required: [true, "Gender is required"],
-      trim: true,
-    },
-    contactNumber: {
-      type: String,
-      trim: true,
-      validate: {
-        validator: function (v) {
-          return !v || /^\+?[\d\s-]+$/.test(v);
-        },
-        message: (props) => `${props.value} is not a valid phone number`,
-      },
-    },
-    email: {
-      type: String,
-      required: [true, 'Email is required'],
-      unique: true, // كده كفاية، مش محتاج تضيف index تاني
-      trim: true,
-      lowercase: true,
-    },
-    passwordHash: {
-      type: String,
-      required: [true, "Password hash is required"],
+      message: "Date of birth cannot be in the future",
     },
   },
-  { timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } }
-);
+  gender: {
+    type: String,
+    enum: {
+      values: ["Male", "Female"],
+      message: "{VALUE} is not a valid gender",
+    },
+    required: [true, "Gender is required"],
+    trim: true,
+  },
+  contactNumber: {
+    type: String,
+    trim: true,
+    validate: {
+      validator: function (v) {
+        return !v || /^\+?[\d\s-]+$/.test(v);
+      },
+      message: (props) => `${props.value} is not a valid phone number`,
+    },
+  },
+  email: {
+    type: String,
+    required: [true, 'Email is required'],
+    unique: true, // كفاية هنا، مش لازم تضيف index()
+    trim: true,
+    lowercase: true,
+  },
+  passwordHash: {
+    type: String,
+    required: [true, "Password hash is required"],
+  },
+}, { timestamps: true });
 
 // Virtual for full name
 patientSchema.virtual("fullName").get(function () {
   return `${this.firstName} ${this.lastName}`;
 });
 
-//Virtual for age calculation based on dateOfBirth field
+// Virtual for age calculation based on dateOfBirth field
 patientSchema.virtual("age").get(function () {
   if (!this.dateOfBirth) return null;
   const today = new Date();
@@ -77,18 +73,6 @@ patientSchema.virtual("age").get(function () {
   }
   return age;
 });
-
-// Indexes for patient collection
-patientSchema.index({ email: 1 }, { unique: true, sparse: true });
-patientSchema.index({ firstName: 1, lastName: 1 });
-patientSchema.index({ dateOfBirth: 1 });
-
-// Method to remove password hash from JSON response
-patientSchema.methods.toPublicJSON = function () {
-  const patient = this.toObject();
-  delete patient.passwordHash;
-  return patient;
-};
 
 // Statics method to find patient by email
 patientSchema.statics.findByEmail = function (email) {

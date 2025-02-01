@@ -1,5 +1,5 @@
 const Patient = require("../models/Patients.model");
-const Radiologist = require("../models/Radiologists.model");
+// const Radiologist = require("../models/Radiologists.model");
 const RadiologyCenter = require("../models/Radiology_Centers.Model");  // تأكد من اسم الملف هنا
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");

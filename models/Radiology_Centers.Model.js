@@ -20,11 +20,10 @@ const radiologyCenterSchema = new mongoose.Schema({
     },
     trim: true,
   },
-
   email: {
     type: String,
     required: [true, 'Email is required'],
-    unique: true, // كده كفاية، مش محتاج تضيف index تاني
+    unique: true, // كفاية هنا، مش لازم تضيف index()
     trim: true,
     lowercase: true,
   },
@@ -32,8 +31,6 @@ const radiologyCenterSchema = new mongoose.Schema({
     type: String,
     required: [true, 'Password hash is required'],
   },
-}, { 
-  timestamps: true
-});
+}, { timestamps: true });
 
 module.exports = mongoose.model('RadiologyCenter', radiologyCenterSchema);
