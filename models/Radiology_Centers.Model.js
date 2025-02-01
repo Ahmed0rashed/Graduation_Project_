@@ -23,16 +23,10 @@ const radiologyCenterSchema = new mongoose.Schema({
 
   email: {
     type: String,
-    required: [true, 'Email is required ...'],
-    unique: true,  // تأكد من عدم إضافة schema.index() بشكل مكرر هنا
+    required: [true, 'Email is required'],
+    unique: true, // كده كفاية، مش محتاج تضيف index تاني
     trim: true,
     lowercase: true,
-    validate: {
-      validator: function(v) {
-        return /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/.test(v);
-      },
-      message: props => `${props.value} is not a valid email address`
-    }
   },
   passwordHash: {
     type: String,

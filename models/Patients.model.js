@@ -44,16 +44,10 @@ const patientSchema = new mongoose.Schema(
     },
     email: {
       type: String,
-      unique: true,
-      sparse: true,
+      required: [true, 'Email is required'],
+      unique: true, // كده كفاية، مش محتاج تضيف index تاني
       trim: true,
-      Lowercase: true,
-      validate: {
-        validator: function (v) {
-          return !v || /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/.test(v);
-        },
-        message: (props) => `${props.value} is not a valid email address`,
-      },
+      lowercase: true,
     },
     passwordHash: {
       type: String,
