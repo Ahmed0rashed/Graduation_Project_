@@ -1,7 +1,6 @@
 const Patient = require("../models/Patients.model");
 const Radiologist = require("../models/Radiologists.model");
-const RadiologyCenter= require("../models/Radiology_Centers.Model");
-// const RadiologyCenter = require("../models/Radiology_Centers.Model");
+const RadiologyCenter = require("../models/Radiology_Centers.Model");  // تأكد من اسم الملف هنا
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 const validator = require("validator");
@@ -176,8 +175,6 @@ exports.registerRadiologist = async (req, res) => {
   }
 };
 
-
-
 // Register Radiology Center
 exports.registerRadiologyCenter = async (req, res) => {
   try {
@@ -220,7 +217,6 @@ exports.registerRadiologyCenter = async (req, res) => {
     res.status(500).json({ message: "Error registering radiology center", error });
   }
 };
-
 
 // Radiology Center Login
 exports.loginRadiologyCenter = async (req, res) => {
