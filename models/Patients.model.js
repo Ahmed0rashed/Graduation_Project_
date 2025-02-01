@@ -43,7 +43,7 @@ const patientSchema = new mongoose.Schema({
   email: {
     type: String,
     required: [true, 'Email is required'],
-    unique: true, // كفاية هنا، مش لازم تضيف index()
+    unique: true, 
     trim: true,
     lowercase: true,
   },
@@ -53,12 +53,11 @@ const patientSchema = new mongoose.Schema({
   },
 }, { timestamps: true });
 
-// Virtual for full name
+
 patientSchema.virtual("fullName").get(function () {
   return `${this.firstName} ${this.lastName}`;
 });
 
-// Virtual for age calculation based on dateOfBirth field
 patientSchema.virtual("age").get(function () {
   if (!this.dateOfBirth) return null;
   const today = new Date();
@@ -74,14 +73,14 @@ patientSchema.virtual("age").get(function () {
   return age;
 });
 
-// Statics method to find patient by email
+
 patientSchema.statics.findByEmail = function (email) {
   return this.findOne({ email: email.toLowerCase() });
 };
 
-// Pre-save middleware to ensure email is lowercase
+
 patientSchema.pre("save", function (next) {
-  // Ensure email is lowercase before saving
+
   if (this.email) {
     this.email = this.email.toLowerCase();
   }
