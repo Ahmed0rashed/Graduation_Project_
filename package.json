@@ -16,17 +16,29 @@
     "body-parser": "^1.20.3",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
-    "express": "^4.21.1",
+    "express": "^4.21.2",
+    "express-session": "^1.18.1",
     "helmet": "^6.0.0",
     "jsonwebtoken": "^9.0.2",
     "moment-timezone": "^0.5.46",
     "mongoose": "^8.9.3",
     "morgan": "^1.10.0",
     "node-cron": "^3.0.3",
+    "passport": "^0.7.0",
+    "passport-google-oauth20": "^2.0.0",
     "validator": "^13.12.0"
   },
   "devDependencies": {
     "nodemon": "^3.1.7",
     "prettier": "^3.4.1"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Ahmed0rashed/Graduation_Project_.git"
+  },
+  "keywords": [],
+  "bugs": {
+    "url": "https://github.com/Ahmed0rashed/Graduation_Project_/issues"
+  },
+  "homepage": "https://github.com/Ahmed0rashed/Graduation_Project_#readme"
 }

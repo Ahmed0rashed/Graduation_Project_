@@ -24,12 +24,13 @@ const patientSchema = new mongoose.Schema({
   gender: {
     type: String,
     enum: {
-      values: ["Male", "Female"],
+      values: ["Male", "Female", "Unspecified"],  
       message: "{VALUE} is not a valid gender",
     },
     required: [true, "Gender is required"],
     trim: true,
   },
+  
   contactNumber: {
     type: String,
     trim: true,
