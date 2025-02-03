@@ -1,12 +1,12 @@
 const Patient = require("../models/Patients.model");
-// const Radiologist = require("../models/Radiologists.model");
-const RadiologyCenter = require("../models/Radiology_Centers.Model");  // تأكد من اسم الملف هنا
+
+const RadiologyCenter = require("../models/Radiology_Centers.Model");  
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 const validator = require("validator");
 const { createToken } = require("../utils/createToken");
 
-// Middleware to check authentication using JWT token
+
 const isAuth = async (req, res, next) => {
   try {
     const token = req.header("Authorization").replace("Bearer ", "");
@@ -27,7 +27,7 @@ const isAuth = async (req, res, next) => {
     res.status(401).json({ message: "Please authenticate", error: error.message });
   }
 };
-// Register Radiology Center
+
 exports.registerRadiologyCenter = async (req, res) => {
   try {
     const { centerName, address, contactNumber, email, password } = req.body;
@@ -70,7 +70,7 @@ exports.registerRadiologyCenter = async (req, res) => {
   }
 };
 
-// Radiology Center Login
+
 exports.loginRadiologyCenter = async (req, res) => {
   try {
     const { email, password } = req.body;
