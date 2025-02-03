@@ -8,7 +8,7 @@ const passport = require('./config/passport');
 
 
 const pationtRouter = require('./routes/pationt.routes');
-const adminRouter = require('./routes/auth.routes');
+const adminRouter = require('./routes/RadiologyCenterAuth.routes');
 const RadiologistAuth = require('./routes/RadiologistAuth.routes');
 const pationtAuth = require('./routes/PationtAuth.routes');
 
