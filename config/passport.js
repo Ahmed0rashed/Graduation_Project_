@@ -14,7 +14,7 @@ passport.use(
     {
       clientID: GOOGLE_CLIENT_ID,
       clientSecret: GOOGLE_CLIENT_SECRET,
-      callbackURL: "/api/patientAuth/google/callback",
+      callbackURL: "https://graduation-project-mmih.vercel.app/api/patientAuth/google/callback",
     },
     async (accessToken, refreshToken, profile, done) => {
       try {
@@ -32,9 +32,9 @@ passport.use(
             email,
             firstName: profile.name?.givenName || "Unknown",
             lastName: profile.name?.familyName || "Unknown",
-            gender: profile.gender || "Unspecified",  // تعيين قيمة افتراضية إذا كانت غير موجودة
+            gender: profile.gender || "Unspecified",  
             dateOfBirth: new Date("2000-01-01"),
-            passwordHash: "google-auth",  // تأكد من أن هذا آمن
+            passwordHash: "google-auth",  
           });
 
           await user.save();
