@@ -2,13 +2,14 @@ const mongoose = require("mongoose");
 const dotenv = require("dotenv");
 
 
-require('dotenv').config({ path: __dirname + '/config.env' }); 
-
+dotenv.config({ path: "./config.env" });
 
 
 const connectDB = async () => {
   try {
-    const DB =process.env.DATABASE ;
+    const DB =
+      process.env.DATABASE ||
+      "mongodb+srv://Ahmed:j3JufYo3YV20IGWT@cluster0.9dk5j.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
 
 
     await mongoose.connect(DB);

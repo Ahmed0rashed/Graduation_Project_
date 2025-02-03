@@ -2,14 +2,18 @@ const passport = require('passport');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const Patient = require('../models/Patients.model'); 
 const session = require("express-session");
-require('dotenv').config({ path: __dirname + '/config.env' }); 
+// require('dotenv').config({ path: __dirname + '/config.env' }); 
+
+
+const GOOGLE_CLIENT_ID = "302606941835-6u1pnqocpbp0juaq99anblgiflc9dran.apps.googleusercontent.com";
+const GOOGLE_CLIENT_SECRET = "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";
 
 
 passport.use(
   new GoogleStrategy(
     {
-      clientID: process.env.GOOGLE_CLIENT_ID,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+      clientID: GOOGLE_CLIENT_ID,
+      clientSecret: GOOGLE_CLIENT_SECRET,
       callbackURL: "/api/patientAuth/google/callback",
     },
     async (accessToken, refreshToken, profile, done) => {
@@ -28,9 +32,9 @@ passport.use(
             email,
             firstName: profile.name?.givenName || "Unknown",
             lastName: profile.name?.familyName || "Unknown",
-            gender: profile.gender || "Unspecified",
+            gender: profile.gender || "Unspecified",  // تعيين قيمة افتراضية إذا كانت غير موجودة
             dateOfBirth: new Date("2000-01-01"),
-            passwordHash: "google-auth",  
+            passwordHash: "google-auth",  // تأكد من أن هذا آمن
           });
 
           await user.save();
@@ -46,10 +50,12 @@ passport.use(
 );
 
 
+// عملية التشفير للمستخدم عند المصادقة
 passport.serializeUser((user, done) => {
   done(null, user.id);
 });
 
+// عملية فك التشفير واسترجاع المستخدم عند الطلب
 passport.deserializeUser(async (id, done) => {
   try {
     const user = await User.findById(id);

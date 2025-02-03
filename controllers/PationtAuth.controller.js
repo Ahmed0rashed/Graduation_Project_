@@ -102,34 +102,6 @@ exports.signWithGoogle = (req, res, next) => {
   })(req, res, next);
 };
 
-// exports.GoogleCallback = (req, res, next) => {
-//   passport.authenticate("google", async (err, patient, info) => {
-//     if (err) {
-//       console.error("Authentication Error:", err);
-//       return res.redirect("/api/patientAuth/failure");
-//     }
-
-//     if (!patient) {
-//       console.log("No user found:", info);
-//       return res.redirect("/api/patientAuth/failure");
-//     }
-
-//     // التحقق من user والمعلومات
-//     console.log("Authenticated user:", patient);
-//     // حف�� المعلومات الشخصية والتوكن للمريض    
-
-//     // متابعة المنطق الذي تم استخدامه لتحميل المريض وإنشاء التوكن
-//     const token = createToken(patient._id);
-//     res.redirect(`/api/patientAuth/success?token=${token}`);
-
-  
-    
-//     res.json({ token, patient });
-
-
-//   })(req, res, next);
-// };
-
 exports.GoogleCallback = (req, res, next) => {
   passport.authenticate("google", async (err, patient, info) => {
     if (err) {
