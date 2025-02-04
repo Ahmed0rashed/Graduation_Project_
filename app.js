@@ -11,6 +11,7 @@ const pationtRouter = require('./routes/pationt.routes');
 const adminRouter = require('./routes/RadiologyCenterAuth.routes');
 const RadiologistAuth = require('./routes/RadiologistAuth.routes');
 const pationtAuth = require('./routes/PationtAuth.routes');
+const aireports = require('./routes/AIReports.routes');
 
 
 
@@ -29,6 +30,7 @@ app.use("/api/patients", pationtRouter);
 app.use("/api/auth", adminRouter);
 app.use("/api/RadiologistAuth", RadiologistAuth);
 app.use("/api/patientAuth", pationtAuth);
+app.use("/api/AIReports", aireports)
 
 
 // app.use(session({
