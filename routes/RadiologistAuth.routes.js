@@ -8,7 +8,8 @@ const authController = require('../controllers/RadiologistAuth.controller');
 
 router.post('/loginRadiologist', authController.loginRadiologist);
 router.post('/registerRadiologist', authController.registerRadiologist);
-
+router.post('/sendOtp', authController.sendOtp);
+router.post('/verifyOtp', authController.verifyOtp);
 // router.post("/registerRadiologyCenter",authController.registerRadiologyCenter);
 // router.get("/loginRadiologyCenter",authController.loginRadiologyCenter);
 
