@@ -10,7 +10,7 @@ const authController = require('../controllers/RadiologyCenterAuth.controller');
 // router.post('/registerRadiologist', authController.registerRadiologist);
 
 router.post("/registerRadiologyCenter",authController.registerRadiologyCenter);
-router.get("/loginRadiologyCenter",authController.loginRadiologyCenter);
+router.post("/loginRadiologyCenter",authController.loginRadiologyCenter);
 
 
 

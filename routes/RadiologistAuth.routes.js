@@ -6,7 +6,7 @@ const authController = require('../controllers/RadiologistAuth.controller');
 // router.get('/loginPatient', authController.loginPatient);
 
 
-router.get('/loginRadiologist', authController.loginRadiologist);
+router.post('/loginRadiologist', authController.loginRadiologist);
 router.post('/registerRadiologist', authController.registerRadiologist);
 
 // router.post("/registerRadiologyCenter",authController.registerRadiologyCenter);
