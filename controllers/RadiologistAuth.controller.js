@@ -19,13 +19,28 @@ const sendOtpEmail = async (email, otp) => {
   const mailOptions = {
     from: "ahmedmohamedrashed236@gmail.com",
     to: email,
-    subject: "OTP Verification",
-    text: `Your OTP is: ${otp}. It is valid for 5 minutes.`,
+    subject: "Your One-Time Password (OTP) for Verification",
+    html: `
+      <div style="font-family: Arial, sans-serif; padding: 20px; border: 1px solid #ddd; border-radius: 8px; max-width: 500px; margin: auto;">
+        <div style="text-align: center;">
+          <img src="https://cdn.dribbble.com/userupload/15606497/file/original-1d7be0867731a998337730f39268a54a.png?format=webp&resize=400x300&vertical=center" alt="Company Logo" style="max-width: 150px; margin-bottom: 20px;">
+        </div>
+        <h2 style="color: #333; text-align: center;">OTP Verification</h2>
+        <p style="font-size: 16px; color: #555;">Dear User,</p>
+        <p style="font-size: 16px; color: #555;">Your One-Time Password (OTP) for verification is:</p>
+        <div style="text-align: center; font-size: 22px; font-weight: bold; color: #007bff; padding: 10px; border: 1px dashed #007bff; border-radius: 5px; display: inline-block;">
+          ${otp}
+        </div>
+        <p style="font-size: 16px; color: #555; margin-top: 20px;">This OTP is valid for <strong>5 minutes</strong>. Please do not share it with anyone.</p>
+        <p style="font-size: 16px; color: #555;">If you did not request this code, please ignore this email or contact our support team.</p>
+        <p style="font-size: 16px; color: #555;">Best regards,<br><strong>Your Company Name</strong></p>
+      </div>
+    `,
   };
-
+  
   return transporter.sendMail(mailOptions);
+  
 };
-
 
 exports.sendOtp = async (req, res) => {
   try {
