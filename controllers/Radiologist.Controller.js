@@ -51,27 +51,9 @@ class RadiologistController{
               }
 
 
-              
-      // Get single radiologist by ID
-     async getRadiologistById(req, res) {
-          try {
-          const radiologist = await Radiologist.findById(req.params.id)
-          .populate('centerId', 'name address')
-          .select('-passwordHash');
-          
-          if (!radiologist) {
-          return res.status(404).json({ message: 'Radiologist not found' });
-          }
-          
-          res.json(radiologist);
-          } catch (error) {
-          if (error.kind === 'ObjectId') {
-          return res.status(400).json({ message: 'Invalid radiologist ID' });
-          }
-          res.status(500).json({ message: error.message });
-          }
-     }
 
+      // Get single radiologist by ID
+     
               
 
 
