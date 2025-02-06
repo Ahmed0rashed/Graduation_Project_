@@ -1,6 +1,4 @@
 const mongoose = require('mongoose');
-const { Schema } = mongoose;
-
 
 const radiologistSchema = new mongoose.Schema({
   firstName: {
@@ -49,15 +47,9 @@ const radiologistSchema = new mongoose.Schema({
   email: {
     type: String,
     required: [true, 'Email is required'],
-    unique: true,
+    unique: true, 
     trim: true,
     lowercase: true,
-    validate: {
-      validator: function(v) {
-        return /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/.test(v);
-      },
-      message: props => `${props.value} is not a valid email address`
-    }
   },
   availableHours: {
     start: {
@@ -83,8 +75,6 @@ const radiologistSchema = new mongoose.Schema({
     type: String,
     required: [true, 'Password hash is required']
   },
-}, {   timestamps: true,
-  toJSON: { virtuals: true },
-  toObject: { virtuals: true } });
+}, { timestamps: true });
 
 module.exports = mongoose.model('Radiologist', radiologistSchema);
