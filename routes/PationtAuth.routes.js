@@ -3,7 +3,7 @@ const router = express.Router();
 const authController = require('../controllers/PationtAuth.controller');
 
 router.post('/registerPatient', authController.registerPatient);
-router.get('/loginPatient', authController.loginPatient);
+router.post('/loginPatient', authController.loginPatient);
 router.get('/lik', authController.Link);
 router.get('/signWithGoogle', authController.signWithGoogle);
 router.get('/google/callback', authController.GoogleCallback);
