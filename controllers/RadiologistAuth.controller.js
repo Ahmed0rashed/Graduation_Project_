@@ -33,7 +33,7 @@ const sendOtpEmail = async (email, otp) => {
         </div>
         <p style="font-size: 16px; color: #555; margin-top: 20px;">This OTP is valid for <strong>5 minutes</strong>. Please do not share it with anyone.</p>
         <p style="font-size: 16px; color: #555;">If you did not request this code, please ignore this email or contact our support team.</p>
-        <p style="font-size: 16px; color: #555;">Best regards,<br><strong>Your Company Name</strong></p>
+        <p style="font-size: 16px; color: #555;">Best regards,<br><strong>The Registration Team</strong></p>
       </div>
     `,
   };
