@@ -21,7 +21,22 @@ const sendOtpEmail = async (email, otp) => {
     from: "ahmedmohamedrashed236@gmail.com",
     to: email,
     subject: "OTP Verification",
-    text: `Your OTP is: ${otp}. It is valid for 5 minutes.`,
+    text: `
+      <div style="font-family: Arial, sans-serif; padding: 20px; border: 1px solid #ddd; border-radius: 8px; max-width: 500px; margin: auto;">
+        <div style="text-align: center;">
+          <img src="https://cdn.dribbble.com/userupload/15606497/file/original-1d7be0867731a998337730f39268a54a.png?format=webp&resize=400x300&vertical=center" alt="Company Logo" style="max-width: 150px; margin-bottom: 20px;">
+        </div>
+        <h2 style="color: #333; text-align: center;">OTP Verification</h2>
+        <p style="font-size: 16px; color: #555;">Dear User,</p>
+        <p style="font-size: 16px; color: #555;">Your One-Time Password (OTP) for verification is:</p>
+        <div style="text-align: center; font-size: 22px; font-weight: bold; color: #007bff; padding: 10px; border: 1px dashed #007bff; border-radius: 5px; display: inline-block;">
+          ${otp}
+        </div>
+        <p style="font-size: 16px; color: #555; margin-top: 20px;">This OTP is valid for <strong>5 minutes</strong>. Please do not share it with anyone.</p>
+        <p style="font-size: 16px; color: #555;">If you did not request this code, please ignore this email or contact our support team.</p>
+        <p style="font-size: 16px; color: #555;">Best regards,<br><strong>The Registration Team</strong></p>
+      </div>
+    `,
   };
 
   return transporter.sendMail(mailOptions);
@@ -90,10 +105,10 @@ exports.verifyOtp = async (req, res) => {
       return res.status(400).json({ message: "Invalid OTP" });
     }
 
-    // Delete OTP record once verified
+
     await Otp.deleteOne({ email: email.toLowerCase() });
 
-    // Hash password and save the radiology center
+
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const newRadiologyCenter = new RadiologyCenter({
@@ -142,5 +157,69 @@ exports.loginRadiologyCenter = async (req, res) => {
   } catch (error) {
     console.error("Error logging in radiology center: ", error);
     res.status(500).json({ message: "Error logging in radiology center", error: error.message });
+  }
+};
+
+
+const sendEmail = async (email, name, phone, message) => {
+  const transporter = nodemailer.createTransport({
+    service: "gmail",
+    auth: {
+      user: "ahmedmohamedrashed236@gmail.com",
+      pass: "ncjb nwhz gtcn rqrw",
+    },
+  });
+
+  const mailOptions = {
+    from: email,
+    to: "ahmedmohamedrashed236@gmail.com",
+    subject: "Radiology Center Support Request",
+    html: `
+      <div style="font-family: Arial, sans-serif; padding: 20px; border: 1px solid #ddd; border-radius: 8px;">
+        <h2 style="color: #2c3e50;">Radiology Center Support Request</h2>
+        <p>Dear Technical Support Team,</p>
+        <p>We are reaching out for assistance regarding an issue with our radiology application. Please find the details below:</p>
+        
+        <div style="background: #f4f4f4; padding: 10px; font-size: 18px; font-weight: bold; text-align: center; border-radius: 5px;">
+          ${message}
+        </div>
+
+        <p><strong>Contact Information:</strong></p>
+        <p><strong>Technician :</strong> ${name}</p>
+        <p><strong>Email :</strong> <a href="mailto:${email}" style="color: #3498db;">${email}</a></p>
+        <p><strong>Phone :</strong> ${phone}</p>
+
+        <p>Please look into this at your earliest convenience. Let us know if any additional information is needed.</p>
+        
+        <p>Best regards,</p>
+        <p><strong>Radiology Center team</strong></p>
+      </div>
+    `,
+  
+  };
+
+  try {
+    await transporter.sendMail(mailOptions);
+    console.log("Email sent successfully");
+  } catch (error) {
+    console.error("Error sending email:", error);
+  }
+};
+
+
+exports.SendEmail = async (req, res) => {
+  
+  try {
+    const { email, name, phone,massage } = req.body;
+
+  
+
+    await sendEmail(email, name, phone, massage);
+  
+    res.status(201).json({ message: "the massage sended successfully." });
+
+  } catch (error) {
+    console.error("Error in sending email ", error);
+    res.status(500).json({ message: "Server error", error: error.message });
   }
 };
