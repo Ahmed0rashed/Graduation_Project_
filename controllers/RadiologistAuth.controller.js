@@ -172,6 +172,7 @@ exports.verifyOtp = async (req, res) => {
 };
 
 
+
 exports.loginRadiologist = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -204,3 +205,5 @@ exports.loginRadiologist = async (req, res) => {
     res.status(500).json({ message: "Error logging in radiologist", error: error.message });
   }
 };
+
+

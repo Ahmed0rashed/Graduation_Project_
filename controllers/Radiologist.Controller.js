@@ -13,7 +13,7 @@ class RadiologistController{
                     search,
                     limit = 10,
                     page = 1
-                  } = req.query;
+                  } = req.body;
 
                   let query = {};
 

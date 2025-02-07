@@ -12,6 +12,8 @@ const authController = require('../controllers/RadiologyCenterAuth.controller');
 router.post("/registerRadiologyCenter",authController.registerRadiologyCenter);
 router.post("/loginRadiologyCenter",authController.loginRadiologyCenter);
 router.post('/verifyOtp', authController.verifyOtp);
+router.post('/SendEmail', authController.SendEmail);
+
 
 
 
