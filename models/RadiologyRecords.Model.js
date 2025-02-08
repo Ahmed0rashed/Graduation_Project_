@@ -1,34 +1,46 @@
 const mongoose = require('mongoose');
 
 const radiologyRecordSchema = new mongoose.Schema({
-  patient: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Patient',
-    required: true
-  },
-  center: {
+
+  centerId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'RadiologyCenter',
     required: true
   },
-  radiationType: {
+  patient_name: {
     type: String,
   },
-  uploadDate: {
+  study_date: {
     type: Date,
     default: Date.now
   },
-  dicoPath: {
+  patient_id: {
     type: String,
   },
-  comments: {
+  sex: {
+    type: String,
+    enum: ['M', 'F'],
+  },
+  modality: {
     type: String,
   },
-  recordStatus: {
+  PatientBirthDate: {
+    type: Date,
+  },
+  age: {
     type: String,
-    enum: ['Pending', 'Reviewed', 'Confirmed'],
-    required: true
-  }
+  },
+  body_part_examined: {
+    type: String,
+  },
+  description: {
+    type: String,
+  },
+  email: {
+    type: String,
+    required: true,
+    unique: true
+  },
 }, { timestamps: true });
 
 module.exports = mongoose.model('RadiologyRecord', radiologyRecordSchema);
