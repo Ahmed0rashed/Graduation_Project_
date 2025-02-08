@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 
 const radiologyRecordSchema = new mongoose.Schema({
 
-  center: {
+  centerId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'RadiologyCenter',
     required: true
@@ -35,6 +35,11 @@ const radiologyRecordSchema = new mongoose.Schema({
   },
   description: {
     type: String,
+  },
+  email: {
+    type: String,
+    required: true,
+    unique: true
   },
 }, { timestamps: true });
 
