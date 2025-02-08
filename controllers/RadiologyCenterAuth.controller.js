@@ -7,7 +7,7 @@ const nodemailer = require("nodemailer");
 const otpGenerator = require("otp-generator");
 const Otp = require("../models/OTP");
 
-// Helper function to send OTP email
+
 const sendOtpEmail = async (email, otp) => {
   const transporter = nodemailer.createTransport({
     service: "gmail",
@@ -20,8 +20,8 @@ const sendOtpEmail = async (email, otp) => {
   const mailOptions = {
     from: "ahmedmohamedrashed236@gmail.com",
     to: email,
-    subject: "OTP Verification",
-    text: `
+    subject: "Your One-Time Password (OTP) for Verification",
+    html: `
       <div style="font-family: Arial, sans-serif; padding: 20px; border: 1px solid #ddd; border-radius: 8px; max-width: 500px; margin: auto;">
         <div style="text-align: center;">
           <img src="https://cdn.dribbble.com/userupload/15606497/file/original-1d7be0867731a998337730f39268a54a.png?format=webp&resize=400x300&vertical=center" alt="Company Logo" style="max-width: 150px; margin-bottom: 20px;">
@@ -38,8 +38,9 @@ const sendOtpEmail = async (email, otp) => {
       </div>
     `,
   };
-
+  
   return transporter.sendMail(mailOptions);
+  
 };
 
 // Register Radiology Center
@@ -87,7 +88,6 @@ exports.registerRadiologyCenter = async (req, res) => {
   }
 };
 
-// OTP verification and completing the registration
 exports.verifyOtp = async (req, res) => {
   try {
     const { email, otp, password, centerName, address, contactNumber } = req.body;
