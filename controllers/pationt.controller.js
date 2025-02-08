@@ -1,6 +1,7 @@
 const User = require("../models/Patients.model");
 const bcrypt = require("bcrypt");
 const validator = require("validator");
+const Patient = require("../models/Patients.model");
 
 exports.addPatient = async (req, res) => {
   try {
@@ -37,7 +38,7 @@ exports.addPatient = async (req, res) => {
     });
 
     await newPatient.save();
-    res.status(201).json(newPatient);
+    res.status(201).json(newPatient); 
   } catch (error) {
     res.status(500).json({ message: "Error registering patient", error });
     console.log(`this error is ${error}`);
@@ -52,5 +53,89 @@ exports.getAllPatients = async (req, res) => {
     console.log(`this error is ${error}`);
   }
 };
+
+ /**
+   * Get patient statistics
+   * This API function is designed to fetch patient statistics from a MongoDB collection using Mongoose and return them as a JSON response.
+   * @route GET /api/patients/statistics
+   */
+exports.getPatientStatistics = async (req, res) => {
+  try {
+    const today = new Date();
+    const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+    const startOfYear = new Date(today.getFullYear(), 0, 1);
+    // Fetch all required statistics in parallel using Promise.all
+    const [
+      totalPatients,
+      newPatientsThisMonth,
+      newPatientsThisYear,
+      genderDistribution,
+      ageDistribution
+    ] = await Promise.all([
+      Patient.countDocuments(),
+      Patient.countDocuments({ registrationDate: { $gte: startOfMonth } }),
+      Patient.countDocuments({ registrationDate: { $gte: startOfYear } }),
+      // Fetch gender distribution statistics
+      Patient.aggregate([
+        {
+          $group: {
+            _id: "$gender",
+            count: { $sum: 1 }
+          }
+        }
+      ]),
+      // Fetch age distribution statistics
+      Patient.aggregate([
+        {
+          $addFields: {
+            age: {
+              $floor: {
+                $divide: [
+                  { $subtract: [today, "$dateOfBirth"] },
+                  365.25 * 24 * 60 * 60 * 1000
+                ]
+              }
+            }
+          }
+        },
+        {
+          $bucket: {
+            groupBy: "$age",
+            boundaries: [0, 18, 30, 45, 60, 75, 100],
+            default: "100+",
+            output: {
+              count: { $sum: 1 }
+            }
+          }
+        }
+      ])
+    ]);
+    const genderStats = Object.fromEntries(
+      genderDistribution.map(({ _id, count }) => [_id, count])
+    );
+    // Return the statistics as a JSON response
+    res.status(200).json({
+      data: {
+        totalPatients,
+        newPatients: {
+          thisMonth: newPatientsThisMonth,
+          thisYear: newPatientsThisYear
+        },
+        genderDistribution: genderStats,
+        ageDistribution: ageDistribution.map(({ _id, count }) => ({
+          range: _id === "100+" ? _id : `${_id}-${_id + 14}`,
+          count
+        }))
+      }
+    });
+    // Handle potential errors in fetching statistics
+  } catch (error) {
+    console.error("Error in getPatientStatistics:", error);
+    res.status(500).json({
+      error: "Internal Server Error",
+      message: "Error fetching patient statistics"
+    });
+  }
+}
 
 module.exports = exports;
