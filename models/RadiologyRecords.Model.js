@@ -1,46 +1,50 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
-const radiologyRecordSchema = new mongoose.Schema({
+const radiologyRecordSchema = new mongoose.Schema(
+  {
+    centerId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "RadiologyCenter",
+      required: true,
+    },
+    patient_name: {
+      type: String,
+    },
+    study_date: {
+      type: Date,
+      default: Date.now,
+    },
+    patient_id: {
+      type: String,
+    },
+    sex: {
+      type: String,
+      enum: ["M", "F"],
+    },
+    modality: {
+      type: String,
+    },
+    PatientBirthDate: {
+      type: Date,
+    },
+    age: {
+      type: String,
+    },
+    body_part_examined: {
+      type: String,
+    },
+    description: {
+      type: String,
+    },
+    email: {
+      type: String,
+    },
+    DicomId: {
+      type: String,
+      required: true,
+    },
+  },
+  { timestamps: true }
+);
 
-  centerId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'RadiologyCenter',
-    required: true
-  },
-  patient_name: {
-    type: String,
-  },
-  study_date: {
-    type: Date,
-    default: Date.now
-  },
-  patient_id: {
-    type: String,
-  },
-  sex: {
-    type: String,
-    enum: ['M', 'F'],
-  },
-  modality: {
-    type: String,
-  },
-  PatientBirthDate: {
-    type: Date,
-  },
-  age: {
-    type: String,
-  },
-  body_part_examined: {
-    type: String,
-  },
-  description: {
-    type: String,
-  },
-  email: {
-    type: String,
-    required: true,
-    unique: true
-  },
-}, { timestamps: true });
-
-module.exports = mongoose.model('RadiologyRecord', radiologyRecordSchema);
+module.exports = mongoose.model("RadiologyRecord", radiologyRecordSchema);
