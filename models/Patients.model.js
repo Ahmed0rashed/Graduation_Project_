@@ -106,7 +106,7 @@ const patientSchema = new mongoose.Schema(
       ],
       allergies: [
         {
-          type: String,
+          name: String, 
           severity: {
             type: String,
             enum: ["Mild", "Moderate", "Severe"],
@@ -122,20 +122,7 @@ const patientSchema = new mongoose.Schema(
           endDate: Date,
         },
       ],
-    },
-    emergencyContact: {
-      name: String,
-      relationship: String,
-      contactNumber: {
-        type: String,
-        validate: {
-          validator: function (v) {
-            return !v || /^\+?[\d\s-]+$/.test(v);
-          },
-          message: "Please enter a valid emergency contact number",
-        },
-      },
-    },
+    },    
     registrationDate: {
       type: Date,
       default: Date.now,
