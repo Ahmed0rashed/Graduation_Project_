@@ -6,14 +6,24 @@ const patientSchema = new mongoose.Schema(
     nationalId: {
       type: String,
       required: [true, "National ID is required"],
-      unique: true,
+      unique: true,  // This already creates a unique index
       trim: true,
       validate: {
         validator: function (v) {
-          // This is a basic validation pattern - adjust according to your country's ID format
           return /^[A-Z0-9]{10,14}$/.test(v);
         },
         message: "Please enter a valid National ID",
+      },
+    },
+    email: {
+      type: String,
+      required: [true, "Email is required"],
+      unique: true,  // This already creates a unique index
+      trim: true,
+      lowercase: true,
+      validate: {
+        validator: validator.isEmail,
+        message: "Please enter a valid email address",
       },
     },
     firstName: {
@@ -43,21 +53,7 @@ const patientSchema = new mongoose.Schema(
     gender: {
       type: String,
       required: [true, "Gender is required"],
-      enum: {
-        values: ["Male", "Female", "Other"],
-        message: "{VALUE} is not a valid gender",
-      },
-    },
-    email: {
-      type: String,
-      required: [true, "Email is required"],
-      unique: true,
-      trim: true,
-      lowercase: true,
-      validate: {
-        validator: validator.isEmail,
-        message: "Please enter a valid email address",
-      },
+      enum: ["Male", "Female", "Other"],
     },
     passwordHash: {
       type: String,
@@ -75,26 +71,11 @@ const patientSchema = new mongoose.Schema(
       },
     },
     address: {
-      street: {
-        type: String,
-        trim: true,
-      },
-      city: {
-        type: String,
-        trim: true,
-      },
-      state: {
-        type: String,
-        trim: true,
-      },
-      zipCode: {
-        type: String,
-        trim: true,
-      },
-      country: {
-        type: String,
-        trim: true,
-      },
+      street: { type: String, trim: true },
+      city: { type: String, trim: true },
+      state: { type: String, trim: true },
+      zipCode: { type: String, trim: true },
+      country: { type: String, trim: true },
     },
     medicalHistory: {
       conditions: [
@@ -106,11 +87,8 @@ const patientSchema = new mongoose.Schema(
       ],
       allergies: [
         {
-          name: String, 
-          severity: {
-            type: String,
-            enum: ["Mild", "Moderate", "Severe"],
-          },
+          name: String,
+          severity: { type: String, enum: ["Mild", "Moderate", "Severe"] },
         },
       ],
       medications: [
@@ -122,7 +100,7 @@ const patientSchema = new mongoose.Schema(
           endDate: Date,
         },
       ],
-    },    
+    },
     registrationDate: {
       type: Date,
       default: Date.now,
@@ -151,9 +129,11 @@ const patientSchema = new mongoose.Schema(
   }
 );
 
-// Indexes for improved query performance
-patientSchema.index({ nationalId: 1 }, { unique: true });
-patientSchema.index({ email: 1 }, { unique: true });
+// Remove duplicate indexes
+// patientSchema.index({ nationalId: 1 }, { unique: true }); // Remove
+// patientSchema.index({ email: 1 }, { unique: true }); // Remove
+
+// Other indexes for search and performance
 patientSchema.index({ firstName: 1, lastName: 1 });
 patientSchema.index({ dateOfBirth: 1 });
 patientSchema.index({ registrationDate: 1 });
@@ -176,10 +156,7 @@ patientSchema.virtual("age").get(function () {
   let age = today.getFullYear() - birthDate.getFullYear();
   const monthDiff = today.getMonth() - birthDate.getMonth();
 
-  if (
-    monthDiff < 0 ||
-    (monthDiff === 0 && today.getDate() < birthDate.getDate())
-  ) {
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
     age--;
   }
   return age;
@@ -194,17 +171,8 @@ patientSchema.methods.updateLastVisit = async function () {
 // Static method to find patients by age range
 patientSchema.statics.findByAgeRange = function (minAge, maxAge) {
   const today = new Date();
-  const minDate = new Date(
-    today.getFullYear() - maxAge - 1,
-    today.getMonth(),
-    today.getDate()
-  );
-  // Add 1 day to the max date to include patients who have just turned the max age
-  const maxDate = new Date(
-    today.getFullYear() - minAge,
-    today.getMonth(),
-    today.getDate()
-  );
+  const minDate = new Date(today.getFullYear() - maxAge - 1, today.getMonth(), today.getDate());
+  const maxDate = new Date(today.getFullYear() - minAge, today.getMonth(), today.getDate());
 
   return this.find({
     dateOfBirth: { $gte: minDate, $lte: maxDate },
@@ -213,7 +181,6 @@ patientSchema.statics.findByAgeRange = function (minAge, maxAge) {
 
 // Pre-save middleware
 patientSchema.pre("save", function (next) {
-  // Update timestamps
   if (this.isNew) {
     this.registrationDate = new Date();
   }

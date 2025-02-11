@@ -13,7 +13,8 @@ router.post("/registerRadiologyCenter",authController.registerRadiologyCenter);
 router.post("/loginRadiologyCenter",authController.loginRadiologyCenter);
 router.post('/verifyOtp', authController.verifyOtp);
 router.post('/SendEmail', authController.SendEmail);
-
+router.post('/forgotPassword', authController.forgotPassword);
+router.post('/resetPassword', authController.resetPassword);
 
 
 
