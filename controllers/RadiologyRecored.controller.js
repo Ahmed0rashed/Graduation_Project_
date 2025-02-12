@@ -65,14 +65,16 @@ exports.deleteRecordById = async (req, res) => {
   }
 };
 
+// get number of records by center id
 exports.getNumberOfRecords = async (req, res) => {
+  const { centerId } = req.params;
+
   try {
-    const count = await RadiologyRecord.countDocuments();
+    const count = await RadiologyRecord.countDocuments({ centerId });
     res.status(200).json({ count });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
-
 
 module.exports = exports;
