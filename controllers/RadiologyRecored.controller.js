@@ -31,10 +31,10 @@ const savedRecord = await record.save();
 
 
 exports.getRecordsByCenterId = async (req, res) => {
-  const { centerId } = req.params;
+  const { id } = req.params;
 
   try {
-    const records = await RadiologyRecord.find({ centerId }).sort({ createdAt: -1 });
+    const records = await RadiologyRecord.find({ centerId : id }).sort({ createdAt: -1 });
     res.status(200).json(records);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -65,16 +65,29 @@ exports.deleteRecordById = async (req, res) => {
   }
 };
 
-// get number of records by center id
+
 exports.getNumberOfRecords = async (req, res) => {
-  const { centerId } = req.params;
+  const { id } = req.params;
 
   try {
-    const count = await RadiologyRecord.countDocuments({ centerId });
+    const count = await RadiologyRecord.countDocuments({ centerId: id });
     res.status(200).json({ count });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
+
+exports.getRecordsByRediologyId = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const records = await RadiologyRecord.find({ radiologistId : id }).sort({ createdAt: -1 });
+    res.status(200).json(records);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+
 
 module.exports = exports;
