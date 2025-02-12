@@ -88,6 +88,7 @@ exports.registerRadiologyCenter = async (req, res) => {
   }
 };
 
+
 exports.verifyOtp = async (req, res) => {
   try {
     const { email, otp, password, centerName, address, contactNumber } = req.body;
@@ -119,16 +120,58 @@ exports.verifyOtp = async (req, res) => {
       passwordHash: hashedPassword,
     });
 
-    await newRadiologyCenter.save();
-    const token = createToken(newRadiologyCenter._id);
+    // await newRadiologyCenter.save();
+    // const token = createToken(newRadiologyCenter._id);
 
-    res.status(201).json({ message: "Registration successful. You can now log in.", token, radiologyCenter: newRadiologyCenter });
+    await sendEmailWithAllINformations(newRadiologyCenter.email, newRadiologyCenter.centerName, newRadiologyCenter.contactNumber, newRadiologyCenter.address);
+  
+    res.status(201).json({ message: "the request has been sent successfully", radiologyCenter: newRadiologyCenter });
 
   } catch (error) {
     console.error("Error verifying OTP: ", error);
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
+
+const sendEmailWithAllINformations = async (email, centerName, contactNumber, address) => {
+  const transporter = nodemailer.createTransport({
+    service: "gmail",
+    auth: {
+      user: "ahmedmohamedrashed236@gmail.com",
+      pass: "ncjb nwhz gtcn rqrw",
+    },
+  });
+
+  const mailOptions = {
+    from: email,
+    to: "ahmedmohamedrashed236@gmail.com", 
+    subject: "New Registration Request from Radiology Center",
+    html: `
+      <div style="font-family: Arial, sans-serif; padding: 20px; border: 1px solid #ddd; border-radius: 8px; max-width: 500px; margin: auto;">
+        <div style="text-align: center;">
+          <img src="https://cdn.dribbble.com/userupload/15606497/file/original-1d7be0867731a998337730f39268a54a.png?format=webp&resize=400x300&vertical=center" alt="Company Logo" style="max-width: 150px; margin-bottom: 20px;">
+        </div>
+        <h2 style="color: #333; text-align: center;">New Registration Request</h2>
+        <p style="font-size: 16px; color: #555;">Dear Support Team,</p>
+        <p style="font-size: 16px; color: #555;">A new radiology center has submitted a request for registration. Please review the details below:</p>
+        <ul style="list-style-type: none; padding: 0; margin: 0;">
+          <li style="margin-bottom: 10px;"><strong>Center Name:</strong> ${centerName}</li>
+          <li style="margin-bottom: 10px;"><strong>Email:</strong> ${email}</li>
+          <li style="margin-bottom: 10px;"><strong>Contact Number:</strong> ${contactNumber}</li>
+          <li style="margin-bottom: 10px;"><strong>Address:</strong> ${address}</li>
+        </ul>
+        <p style="font-size: 16px; color: #555;">Please process this request and confirm the registration status.</p>
+        <p style="font-size: 16px; color: #555;">Best regards,</p>
+        <p style="font-size: 16px; color: #555;"><strong>Automated Registration System</strong></p>
+      </div>
+    `,
+  };
+  
+  return transporter.sendMail(mailOptions);
+};
+
+
+
 
 // Login Radiology Center
 exports.loginRadiologyCenter = async (req, res) => {

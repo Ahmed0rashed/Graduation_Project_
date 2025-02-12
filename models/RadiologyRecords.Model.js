@@ -7,6 +7,11 @@ const radiologyRecordSchema = new mongoose.Schema(
       ref: "RadiologyCenter",
       required: true,
     },
+    radiologistId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Radiologist",
+      required: true,
+    },
     patient_name: {
       type: String,
     },

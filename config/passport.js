@@ -50,12 +50,12 @@ passport.use(
 );
 
 
-// عملية التشفير للمستخدم عند المصادقة
+
 passport.serializeUser((user, done) => {
   done(null, user.id);
 });
 
-// عملية فك التشفير واسترجاع المستخدم عند الطلب
+
 passport.deserializeUser(async (id, done) => {
   try {
     const user = await User.findById(id);
