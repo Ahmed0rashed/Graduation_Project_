@@ -1,13 +1,20 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const RadiologyRecord = require("../models/RadiologyRecords.Model"); 
+const AIReport = require("../models/AIReports.Model");
+
 
 const router = express.Router();
 
 exports.addRecord = async (req, res) => {
   try {
-    const { centerId, patient_name, study_date, patient_id, sex, modality, PatientBirthDate, age, study_description ,email,DicomId,series ,radiologistId,body_part_examined} = req.body;
+    const { 
+      centerId, patient_name, study_date, patient_id, sex, modality, 
+      PatientBirthDate, age, study_description, email, DicomId, series, 
+      radiologistId, body_part_examined 
+    } = req.body;
 
+    
     const record = await RadiologyRecord.create({
       centerId,
       radiologistId,
@@ -22,15 +29,28 @@ exports.addRecord = async (req, res) => {
       email,
       body_part_examined,
       series,
-      
       DicomId
     });
-const savedRecord = await record.save();
-    res.status(200).json(savedRecord);
+
+    const savedRecord = await record.save();
+
+  
+    const aiReport = await AIReport.create({
+      record: savedRecord._id, 
+      diagnosisReport:" ", 
+      confidenceLevel:0.0, 
+      generatedDate: new Date(),
+    });
+
+    const savedAIReport = await aiReport.save();
+
+    
+    res.status(200).json({ record: savedRecord, aiReport: savedAIReport });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
+
 
 
 exports.getRecordsByCenterId = async (req, res) => {
