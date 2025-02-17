@@ -6,7 +6,7 @@ const router = express.Router();
 
 exports.addRecord = async (req, res) => {
   try {
-    const { centerId, patient_name, study_date, patient_id, sex, modality, PatientBirthDate, age, study_description ,email,DicomId ,radiologistId} = req.body;
+    const { centerId, patient_name, study_date, patient_id, sex, modality, PatientBirthDate, age, study_description ,email,DicomId,series ,radiologistId,body_part_examined} = req.body;
 
     const record = await RadiologyRecord.create({
       centerId,
@@ -20,6 +20,9 @@ exports.addRecord = async (req, res) => {
       age,
       study_description,
       email,
+      body_part_examined,
+      series,
+      
       DicomId
     });
 const savedRecord = await record.save();

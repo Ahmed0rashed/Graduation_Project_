@@ -48,6 +48,15 @@ const radiologyRecordSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    series: {
+      type: String,
+    },
+    deadline: {
+      type: Date,
+      default: function () {
+        return new Date(Date.now() + 60 * 60 * 1000); 
+      },
+    },
   },
   { timestamps: true }
 );
