@@ -53,14 +53,6 @@ const aiReportSchema = new mongoose.Schema(
       type: Number,
       default: 1,
     },
-    auditLog: [
-      {
-        user: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-        action: String,
-        timestamp: { type: Date, default: Date.now },
-      },
-    ],
-  },
   { timestamps: true }
 );
 
