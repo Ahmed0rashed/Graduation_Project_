@@ -24,7 +24,7 @@ const radiologyRecordSchema = new mongoose.Schema(
     },
     sex: {
       type: String,
-      enum: ["M", "F"],
+      enum: ["Male", "Female"],
     },
     modality: {
       type: String,
