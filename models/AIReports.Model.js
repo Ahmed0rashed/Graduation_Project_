@@ -6,12 +6,25 @@ const aiReportSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "RadiologyRecord",
       required: true,
+      index: true,
     },
-    diagnosisReport: {
-      type: String,
+    centerId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "RadiologyCenter",
       required: true,
     },
-    // add status
+    radiologistID: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Radiologist",
+    },
+    diagnosisReportFinding: {
+      type:String,
+    },
+    diagnosisReportImpration: {
+      type: String,
+    }, diagnosisReportComment: {
+      type: String,
+    },
     result: {
       type: String,
       enum: ["New", "Normal", "Critical", "Follow-up"],
@@ -19,20 +32,34 @@ const aiReportSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ["Available", "Claimed", "Pending", "Reviewed"],
+      enum: ["Available", "Pending", "Reviewed"],
       default: "Available",
     },
     confidenceLevel: {
       type: Number,
-      required: true,
-      min: 0,
-      max: 100,
-      default: 0,
+      min: [0, "Confidence level cannot be less than 0"],
+      max: [100, "Confidence level cannot be greater than 100"],
+      default: -1,
     },
     generatedDate: {
       type: Date,
       default: Date.now,
     },
+    deleted: {
+      type: Boolean,
+      default: false,
+    },
+    version: {
+      type: Number,
+      default: 1,
+    },
+    auditLog: [
+      {
+        user: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+        action: String,
+        timestamp: { type: Date, default: Date.now },
+      },
+    ],
   },
   { timestamps: true }
 );

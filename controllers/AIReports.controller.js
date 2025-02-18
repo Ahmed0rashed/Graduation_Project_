@@ -7,17 +7,12 @@ const router = express.Router();
 // Create AIReport
 exports.createAIReport = async (req, res) => {
   try {
-    const { record, diagnosisReport, confidenceLevel, generatedDate } =
+    const body =
       req.body;
 
-    if (!record || !diagnosisReport || confidenceLevel === undefined) {
-      return res.status(400).json({ error: "Missing required fields" });
-    }
 
     const newReport = new AIReport({
-      record,
-      diagnosisReport,
-      confidenceLevel,
+      body,
       generatedDate: generatedDate || new Date(), // Default to current date
     });
 
@@ -126,4 +121,3 @@ exports.deleteAIReport = async (req, res) => {
 };
 
 module.exports = exports;
- 
