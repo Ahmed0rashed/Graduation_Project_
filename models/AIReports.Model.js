@@ -18,7 +18,7 @@ const aiReportSchema = new mongoose.Schema(
       ref: "Radiologist",
     },
     diagnosisReportFinding: {
-      type:String,
+      type: String,
     },
     diagnosisReportImpration: {
       type: String,
@@ -53,6 +53,7 @@ const aiReportSchema = new mongoose.Schema(
       type: Number,
       default: 1,
     },
+  },
   { timestamps: true }
 );
 
