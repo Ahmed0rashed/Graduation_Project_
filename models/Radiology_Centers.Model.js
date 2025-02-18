@@ -23,7 +23,7 @@ const radiologyCenterSchema = new mongoose.Schema({
   email: {
     type: String,
     required: [true, 'Email is required'],
-    unique: true, // كفاية هنا، مش لازم تضيف index()
+    unique: true, 
     trim: true,
     lowercase: true,
   },

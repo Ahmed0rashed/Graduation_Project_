@@ -1,34 +1,64 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
-const radiologyRecordSchema = new mongoose.Schema({
-  patient: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Patient',
-    required: true
+const radiologyRecordSchema = new mongoose.Schema(
+  {
+    centerId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "RadiologyCenter",
+      required: true,
+    },
+    radiologistId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Radiologist",
+      required: true,
+    },
+    patient_name: {
+      type: String,
+    },
+    study_date: {
+      type: Date,
+      default: Date.now,
+    },
+    patient_id: {
+      type: String,
+    },
+    sex: {
+      type: String,
+      enum: ["Male", "Female"],
+    },
+    modality: {
+      type: String,
+    },
+    PatientBirthDate: {
+      type: Date,
+    },
+    age: {
+      type: String,
+    },
+    body_part_examined: {
+      type: String,
+    },
+    description: {
+      type: String,
+    },
+    email: {
+      type: String,
+    },
+    DicomId: {
+      type: String,
+      required: true,
+    },
+    series: {
+      type: String,
+    },
+    deadline: {
+      type: Date,
+      default: function () {
+        return new Date(Date.now() + 60 * 60 * 1000); 
+      },
+    },
   },
-  center: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'RadiologyCenter',
-    required: true
-  },
-  radiationType: {
-    type: String,
-  },
-  uploadDate: {
-    type: Date,
-    default: Date.now
-  },
-  dicoPath: {
-    type: String,
-  },
-  comments: {
-    type: String,
-  },
-  recordStatus: {
-    type: String,
-    enum: ['Pending', 'Reviewed', 'Confirmed'],
-    required: true
-  }
-}, { timestamps: true });
+  { timestamps: true }
+);
 
-module.exports = mongoose.model('RadiologyRecord', radiologyRecordSchema);
+module.exports = mongoose.model("RadiologyRecord", radiologyRecordSchema);
