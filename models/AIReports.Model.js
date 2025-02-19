@@ -8,15 +8,6 @@ const aiReportSchema = new mongoose.Schema(
       required: true,
       index: true,
     },
-    centerId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "RadiologyCenter",
-      required: true,
-    },
-    radiologistID: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Radiologist",
-    },
     diagnosisReportFinding: {
       type:String,
     },
