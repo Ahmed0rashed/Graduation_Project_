@@ -11,18 +11,23 @@ const router = express.Router();
 exports.addRecord = async (req, res) => {
   try {
 
-    const {
-      centerId, patient_name, study_date, patient_id, sex, modality,
-      PatientBirthDate, age, study_description, email, DicomId, series,
-      radiologistId, body_part_examined
+    const { 
+      centerId, radiologistId, patient_name, study_date, patient_id, sex, modality, 
+      PatientBirthDate, age, study_description, email, DicomId, series, 
+      body_part_examined 
     } = req.body;
 
+    if (!centerId) {
+      return res.status(400).json({ error: "centerId is missing from request" });
+    }
+
+    const validCenterId = new mongoose.Types.ObjectId(centerId);
+    const validRadiologistId = new mongoose.Types.ObjectId(radiologistId);
 
 
-    
     const record = await RadiologyRecord.create({
-      centerId,
-      radiologistId,
+      centerId: validCenterId,
+      radiologistId: validRadiologistId,
       patient_name,
       study_date,
       patient_id,
@@ -39,6 +44,7 @@ exports.addRecord = async (req, res) => {
 
     const savedRecord = await record.save();
 
+
     const aiReport = await AIReport.create({
       record: savedRecord._id, 
       diagnosisReport:" ", 
@@ -49,11 +55,14 @@ exports.addRecord = async (req, res) => {
 
     const savedAIReport = await aiReport.save();
 
-    res.status(200).json({ record: savedRecord, aiReport: savedAIReport });
+
   } catch (error) {
+    console.error("Error in addRecord:", error);
     res.status(500).json({ error: error.message });
   }
 };
+
+
 
 
 
