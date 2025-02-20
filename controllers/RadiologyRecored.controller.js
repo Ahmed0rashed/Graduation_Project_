@@ -1,6 +1,8 @@
 const express = require("express");
 const mongoose = require("mongoose");
+
 const RadiologyRecord = require("../models/RadiologyRecords.Model"); 
+
 const AIReport = require("../models/AIReports.Model");
 
 
@@ -8,11 +10,14 @@ const router = express.Router();
 
 exports.addRecord = async (req, res) => {
   try {
-    const { 
-      centerId, patient_name, study_date, patient_id, sex, modality, 
-      PatientBirthDate, age, study_description, email, DicomId, series, 
-      radiologistId, body_part_examined 
+
+    const {
+      centerId, patient_name, study_date, patient_id, sex, modality,
+      PatientBirthDate, age, study_description, email, DicomId, series,
+      radiologistId, body_part_examined
     } = req.body;
+
+
 
     
     const record = await RadiologyRecord.create({
@@ -20,8 +25,8 @@ exports.addRecord = async (req, res) => {
       radiologistId,
       patient_name,
       study_date,
-      patient_id, 
-      sex, 
+      patient_id,
+      sex,
       modality,
       PatientBirthDate,
       age,
@@ -34,17 +39,16 @@ exports.addRecord = async (req, res) => {
 
     const savedRecord = await record.save();
 
-  
     const aiReport = await AIReport.create({
       record: savedRecord._id, 
       diagnosisReport:" ", 
       confidenceLevel:0.0, 
+
       generatedDate: new Date(),
     });
 
     const savedAIReport = await aiReport.save();
 
-    
     res.status(200).json({ record: savedRecord, aiReport: savedAIReport });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -57,7 +61,9 @@ exports.getRecordsByCenterId = async (req, res) => {
   const { id } = req.params;
 
   try {
+
     const records = await RadiologyRecord.find({ centerId : id }).sort({ createdAt: -1 });
+
     res.status(200).json(records);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -67,8 +73,10 @@ exports.getRecordsByCenterId = async (req, res) => {
 exports.getRecordById = async (req, res) => {
   const { id } = req.params;
 
-  try { 
-    const record = await RadiologyRecord.findById(id);  
+  try {
+    const record = await RadiologyRecord.findById(id);
+    if (!record) return res.status(404).json({ message: "Record not found" });
+
     res.status(200).json(record);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -104,7 +112,7 @@ exports.getRecordsByRediologyId = async (req, res) => {
   const { id } = req.params;
 
   try {
-    
+
     const records = await RadiologyRecord.find({ radiologistId: id })
       .sort({ createdAt: -1 });
 
@@ -112,7 +120,6 @@ exports.getRecordsByRediologyId = async (req, res) => {
       return res.status(404).json({ message: "No records found for this radiologist" });
     }
 
-    
     const recordsWithAIReports = await Promise.all(
       records.map(async (record) => {
         const aiReport = await AIReport.findOne({ record: record._id });

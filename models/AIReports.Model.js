@@ -8,6 +8,7 @@ const aiReportSchema = new mongoose.Schema(
       required: true,
       index: true,
     },
+
     centerId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "RadiologyCenter",
@@ -25,6 +26,7 @@ const aiReportSchema = new mongoose.Schema(
     }, diagnosisReportComment: {
       type: String,
     },
+
     result: {
       type: String,
       enum: ["New", "Normal", "Critical", "Follow-up"],
@@ -53,13 +55,7 @@ const aiReportSchema = new mongoose.Schema(
       type: Number,
       default: 1,
     },
-    auditLog: [
-      {
-        user: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-        action: String,
-        timestamp: { type: Date, default: Date.now },
-      },
-    ],
+
   },
   { timestamps: true }
 );
