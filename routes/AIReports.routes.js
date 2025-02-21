@@ -7,10 +7,16 @@ router.get("/getAllAIReports", userController.getAllAIReports);
 router.get("/getOneAIReport/:id", userController.getOneAIReport);
 router.put("/updateAIReport/:id", userController.updateAIReport);
 router.delete("/deleteAIReport/:id", userController.deleteAIReport);
+router.post("/analyzeImage/:id", userController.analyzeImage);
+
 // routes with options
 router.get(
   "/getAllAIReports/result/:result",
   userController.getAllAIReportsByResult
+);
+router.get(
+  "/getAllAIReports/status/:status",
+  userController.getAllAIReportsByStatus
 );
 router.get(
   "/getAllAIReports/status/:status",

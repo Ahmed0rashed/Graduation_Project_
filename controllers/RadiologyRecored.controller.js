@@ -109,21 +109,16 @@ exports.getNumberOfRecords = async (req, res) => {
 
 exports.getRecordsByRediologyId = async (req, res) => {
   const { id } = req.params;
-
   try {
-    
     const records = await RadiologyRecord.find({ radiologistId: id })
       .sort({ createdAt: -1 });
 
     if (!records.length) {
       return res.status(404).json({ message: "No records found for this radiologist" });
     }
-
-    
     const recordsWithAIReports = await Promise.all(
       records.map(async (record) => {
         const aiReport = await AIReport.findOne({ record: record._id });
-
         return {
           ...record._doc,  
           aiReportStatus: aiReport ? aiReport.status : "Available",
@@ -131,7 +126,6 @@ exports.getRecordsByRediologyId = async (req, res) => {
         };
       })
     );
-
     res.status(200).json(recordsWithAIReports);
   } catch (error) {
     res.status(500).json({ error: error.message });
