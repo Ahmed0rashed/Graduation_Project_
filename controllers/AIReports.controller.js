@@ -135,26 +135,26 @@ exports.analyzeImage = async (req, res) => {
       
       
     } ,
-    {timeout: 10000});
+    {timeout: 60000});
 
     const imprationResponse = await axios.post("https://graduation-project-ml-api.vercel.app/analyze-image", {
       text: "Provide the diagnostic impression based on the image.",
       image_url: imageUrl,
     },
-    {timeout: 10000}
+    {timeout: 60000}
   );
 
     const commentResponse = await axios.post("https://graduation-project-ml-api.vercel.app/analyze-image", {
       text: "Write additional comments or observations regarding the diagnosis.",
       image_url: imageUrl,
     },
-    {timeout: 10000}
+    {timeout: 60000}
   );
 
     
-    aiReport.diagnosisReportFinding = findingResponse.data.diagnosis || "Not Available";
-    aiReport.diagnosisReportImpration = imprationResponse.data.diagnosis || "Not Available";
-    aiReport.diagnosisReportComment = commentResponse.data.diagnosis || "Not Available";
+    aiReport.diagnosisReportFinding = findingResponse.data.diagnosis || "";
+    aiReport.diagnosisReportImpration = imprationResponse.data.diagnosis || "";
+    aiReport.diagnosisReportComment = commentResponse.data.diagnosis || "";
 
     await aiReport.save();
     res.status(200).json(aiReport);
