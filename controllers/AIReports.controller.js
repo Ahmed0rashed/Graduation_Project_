@@ -1,7 +1,7 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const AIReport = require("../models/AIReports.Model.js"); // Adjust the path if needed
-
+const axios = require("axios");
 const router = express.Router();
 
 // Create AIReport
@@ -119,5 +119,50 @@ exports.deleteAIReport = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+exports.analyzeImage = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { imageUrl } = req.body;
+
+    const aiReport = await AIReport.findById(id);
+    if (!aiReport) {
+      return res.status(404).json({ error: "AI Report not found" });
+    }
+
+    const findingResponse = await axios.post("https://graduation-project-ml-api.vercel.app/analyze-image", {
+      text: "Describe the findings of this image in detail.",
+      image_url: imageUrl,
+      
+      
+    } ,
+    {timeout: 60000});
+
+    const imprationResponse = await axios.post("https://graduation-project-ml-api.vercel.app/analyze-image", {
+      text: "Provide the diagnostic impression based on the image.",
+      image_url: imageUrl,
+    },
+    {timeout: 60000}
+  );
+
+    const commentResponse = await axios.post("https://graduation-project-ml-api.vercel.app/analyze-image", {
+      text: "Write additional comments or observations regarding the diagnosis.",
+      image_url: imageUrl,
+    },
+    {timeout: 60000}
+  );
+
+    
+    aiReport.diagnosisReportFinding = findingResponse.data.diagnosis || "";
+    aiReport.diagnosisReportImpration = imprationResponse.data.diagnosis || "";
+    aiReport.diagnosisReportComment = commentResponse.data.diagnosis || "";
+
+    await aiReport.save();
+    res.status(200).json(aiReport);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+
 
 module.exports = exports;

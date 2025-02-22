@@ -39,21 +39,7 @@ const aiReportSchema = new mongoose.Schema(
       type: Number,
       min: [0, "Confidence level cannot be less than 0"],
       max: [100, "Confidence level cannot be greater than 100"],
-      default: -1,
-    },
-    generatedDate: {
-      type: Date,
-      default: Date.now,
-    },
-    deleted: {
-      type: Boolean,
-      default: false,
-    },
-    version: {
-      type: Number,
-      default: 1,
-    },
-  },
+      defaulyyyyyyyyy},
   { timestamps: true }
 );
 
