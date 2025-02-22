@@ -10,10 +10,10 @@ const radiologyRecordSchema = new mongoose.Schema(
     radiologistId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Radiologist",
-      required: true,
     },
     patient_name: {
       type: String,
+      required: true,
     },
     study_date: {
       type: Date,
@@ -24,13 +24,15 @@ const radiologyRecordSchema = new mongoose.Schema(
     },
     sex: {
       type: String,
-      enum: ["Male", "Female"],
+      enum: ["Male", "Female","Other"],
+      required: true,
     },
     modality: {
       type: String,
     },
     PatientBirthDate: {
       type: Date,
+      required: true,
     },
     age: {
       type: String,
@@ -57,6 +59,15 @@ const radiologyRecordSchema = new mongoose.Schema(
         return new Date(Date.now() + 60 * 60 * 1000); 
       },
     },
+    status: {
+      type: String,
+      enum: ["Available", "Pending", "Reviewed"],
+      default: "Available",
+    },
+    deleted: {
+      type: Boolean,
+      default: false,
+    }
   },
   { timestamps: true }
 );
