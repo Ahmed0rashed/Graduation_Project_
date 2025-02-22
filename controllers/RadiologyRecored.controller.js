@@ -159,12 +159,13 @@ exports.updateRecordById = async (req, res) => {
     try {
       const deletedRecord = await RadiologyRecord.findByIdAndDelete(req.params.id);
       if (!deletedRecord)
-        return res.status(404).json({ message: "Record not found" });
+        return res.status(404).json({ message: "Record not found." });
       res.status(200).json({ message: "Record deleted successfully" });
     } catch (error) {
       res.status(500).json({ error: error.message });
     }
   };
+
 
   // exports.getRecordsByRediologyId = async (req, res) => {
   //   const { id } = req.params;
