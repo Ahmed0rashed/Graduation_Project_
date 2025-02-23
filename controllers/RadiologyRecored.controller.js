@@ -11,7 +11,7 @@ exports.addRecord = async (req, res) => {
     const {
       centerId, radiologistId, patient_name, study_date, patient_id, sex, modality,
       PatientBirthDate, age, study_description, email, DicomId, series,
-      body_part_examined, status,cloudinary_url
+      body_part_examined, status
     } = req.body;
 
     if (!centerId) {
@@ -36,7 +36,6 @@ exports.addRecord = async (req, res) => {
       body_part_examined,
       series,
       DicomId,
-      cloudinary_url,
       status
     });
     const savedRecord = await record.save();

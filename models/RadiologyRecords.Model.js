@@ -67,10 +67,6 @@ const radiologyRecordSchema = new mongoose.Schema(
     deleted: {
       type: Boolean,
       default: false,
-    },
-    cloudinary_url: {
-      type: String,
-      default: false,
     }
   },
   { timestamps: true }
