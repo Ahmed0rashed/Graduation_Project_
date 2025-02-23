@@ -30,11 +30,6 @@ const aiReportSchema = new mongoose.Schema(
       enum: ["New", "Normal", "Critical", "Follow-up"],
       default: "New",
     },
-    status: {
-      type: String,
-      enum: ["Available", "Pending", "Reviewed"],
-      default: "Available",
-    },
     confidenceLevel: {
       type: Number,
       min: [0, "Confidence level cannot be less than 0"],
