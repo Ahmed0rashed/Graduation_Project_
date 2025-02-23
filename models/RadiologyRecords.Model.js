@@ -70,7 +70,7 @@ const radiologyRecordSchema = new mongoose.Schema(
     },
     cloudinary_url: {
       type: String,
-      default: true,
+      default: false,
     }
   },
   { timestamps: true }
