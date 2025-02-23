@@ -8,8 +8,6 @@ const router = express.Router();
 
 exports.addRecord = async (req, res) => {
   try {
-
-
     const {
       centerId, radiologistId, patient_name, study_date, patient_id, sex, modality,
       PatientBirthDate, age, study_description, email, DicomId, series,
@@ -116,18 +114,18 @@ exports.updateRecordById = async (req, res) => {
     }
   };
 
-  exports.getRecordsByRadiologistId = async (req, res) => {
-    try {
-      const records = await RadiologyRecord.find({ radiologistId: req.params.id }).sort({ createdAt: -1 });
-      if (!records) return res.status(404).json({ error: "Records not found" });
-      res.status(200).json({
-        numOfRecords: records.length,
-        records,
-      });
-    } catch (error) {
-      res.status(500).json({ error: error.message });
-    }
-  };
+  // exports.getRecordsByRadiologistId = async (req, res) => {
+  //   try {
+  //     const records = await RadiologyRecord.find({ radiologistId: req.params.id }).sort({ createdAt: -1 });
+  //     if (!records) return res.status(404).json({ error: "Records not found" });
+  //     res.status(200).json({
+  //       numOfRecords: records.length,
+  //       records,
+  //     });
+  //   } catch (error) {
+  //     res.status(500).json({ error: error.message });
+  //   }
+  // };
 
 
   exports.getRecordsByCenterId = async (req, res) => {
@@ -159,12 +157,13 @@ exports.updateRecordById = async (req, res) => {
     try {
       const deletedRecord = await RadiologyRecord.findByIdAndDelete(req.params.id);
       if (!deletedRecord)
-        return res.status(404).json({ message: "Record not found" });
+        return res.status(404).json({ message: "Record not found." });
       res.status(200).json({ message: "Record deleted successfully" });
     } catch (error) {
       res.status(500).json({ error: error.message });
     }
   };
+
 
   // exports.getRecordsByRediologyId = async (req, res) => {
   //   const { id } = req.params;
@@ -174,28 +173,72 @@ exports.updateRecordById = async (req, res) => {
   //     const records = await RadiologyRecord.find({ radiologistId: id })
   //       .sort({ createdAt: -1 });
 
-  //     if (!records.length) {
-  //       return res.status(404).json({ message: "No records found for this radiologist" });
-  //     }
 
 
-  //     const recordsWithAIReports = await Promise.all(
-  //       records.map(async (record) => {
-  //         const aiReport = await AIReport.findOne({ record: record._id });
+//     if (!records.length) {
+//       return res.status(404).json({ message: "No records found for this radiologist." });
+//     }
+//     const recordsWithAIReports = await Promise.all(
+//       records.map(async (record) => {
+//         const aiReport = await AIReport.findOne({ record: record._id });
+//         return {
+//           ...record._doc,  
+//           aiReportStatus: aiReport ? aiReport.status : "Available",
+//           aiReportResult: aiReport ? aiReport.result : "New",
+//         };
+//       })
+//     );
+//     res.status(200).json(recordsWithAIReports);
+//   } catch (error) {
+//     res.status(500).json({ error: error.message });
+//   }
+// };
 
-  //         return {
-  //           ...record._doc,  
-  //           aiReportStatus: aiReport ? aiReport.status : "Available",
-  //           aiReportResult: aiReport ? aiReport.result : "New",
-  //         };
-  //       })
-  //     );
 
-  //     res.status(200).json(recordsWithAIReports);
-  //   } catch (error) {
-  //     res.status(500).json({ error: error.message });
-  //   }
-  // };
+
+//       const recordsWithAIReports = await Promise.all(
+//         records.map(async (record) => {
+//           const aiReport = await AIReport.findOne({ record: record._id });
+
+//           return {
+//             ...record._doc,  
+//             aiReportStatus: aiReport ? aiReport.status : "Available",
+//             aiReportResult: aiReport ? aiReport.result : "New",
+//           };
+//         })
+//       );
+
+//       res.status(200).json(recordsWithAIReports);
+//     } catch (error) {
+//       res.status(500).json({ error: error.message });
+//     }
+//   };
+
+exports.getRecordsByRadiologistId = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const records = await RadiologyRecord.find({ radiologistId: id })
+      .sort({ createdAt: -1 });
+
+    if (!records.length) {
+      return res.status(404).json({ message: "No records found for this radiologist" });
+    }
+    const recordsWithAIReports = await Promise.all(
+      records.map(async (record) => {
+        const aiReport = await AIReport.findOne({ record: record._id });
+        return {
+          ...record._doc,  
+          aiReportStatus: aiReport ? aiReport.status : "Available",
+          aiReportResult: aiReport ? aiReport.result : "New",
+        };
+      })
+    );
+    res.status(200).json(recordsWithAIReports);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
 
 
 
