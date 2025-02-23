@@ -5,7 +5,7 @@ const radiologyRecordSchema = new mongoose.Schema(
     centerId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "RadiologyCenter",
-      required: true,
+      required: false,
     },
     radiologistId: {
       type: mongoose.Schema.Types.ObjectId,
@@ -66,6 +66,10 @@ const radiologyRecordSchema = new mongoose.Schema(
     },
     deleted: {
       type: Boolean,
+      default: false,
+    },
+    cloudinary_url: {
+      type: String,
       default: false,
     }
   },
