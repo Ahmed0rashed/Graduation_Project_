@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 
-const centerRadiologistsSchema = new mongoose.Schema(
+const centerRadiologistsRelationSchema = new mongoose.Schema(
   {  
     // Center ID 
     center: {
@@ -53,12 +53,12 @@ const centerRadiologistsSchema = new mongoose.Schema(
 );
 
 // Indexes for improved query performance
-centerRadiologistsSchema.index({ center: 1 }, { unique: true });
-centerRadiologistsSchema.index({ radiologists: 1 });
-centerRadiologistsSchema.index({ status: 1 });
+centerRadiologistsRelationSchema.index({ center: 1 }, { unique: true });
+centerRadiologistsRelationSchema.index({ radiologists: 1 });
+centerRadiologistsRelationSchema.index({ status: 1 });
 
 // Method to add a radiologist
-centerRadiologistsSchema.methods.addRadiologist = async function (
+centerRadiologistsRelationSchema.methods.addRadiologist = async function (
   radiologistId
 ) {
   if (!this.radiologists.includes(radiologistId)) {
@@ -70,7 +70,7 @@ centerRadiologistsSchema.methods.addRadiologist = async function (
 };
 
 // Method to remove a radiologist
-centerRadiologistsSchema.methods.removeRadiologist = async function (
+centerRadiologistsRelationSchema.methods.removeRadiologist = async function (
   radiologistId
 ) {
   this.radiologists = this.radiologists.filter(
@@ -81,7 +81,7 @@ centerRadiologistsSchema.methods.removeRadiologist = async function (
 };
 
 // Static method to find by center with populated radiologists
-centerRadiologistsSchema.statics.findByCenterWithRadiologists = async function (
+centerRadiologistsRelationSchema.statics.findByCenterWithRadiologists = async function (
   centerId
 ) {
   return this.findOne({ center: centerId })
@@ -90,7 +90,7 @@ centerRadiologistsSchema.statics.findByCenterWithRadiologists = async function (
 };
 
 // Static method to find centers by radiologist
-centerRadiologistsSchema.statics.findByRadiologist = async function (
+centerRadiologistsRelationSchema.statics.findByRadiologist = async function (
   radiologistId
 ) {
   return this.find({
@@ -100,9 +100,9 @@ centerRadiologistsSchema.statics.findByRadiologist = async function (
 };
 
 // Pre-save middleware
-centerRadiologistsSchema.pre("save", function (next) {
+centerRadiologistsRelationSchema.pre("save", function (next) {
   // Remove duplicates from radiologists array
   this.radiologists = [...new Set(this.radiologists)];
   next();
 });
-module.exports = mongoose.model("CenterRadiologists", centerRadiologistsSchema);
+module.exports = mongoose.model("CenterRadiologistsRelation", centerRadiologistsRelationSchema);
