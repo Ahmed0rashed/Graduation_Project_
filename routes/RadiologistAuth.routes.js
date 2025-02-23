@@ -4,7 +4,7 @@ const authController = require('../controllers/RadiologistAuth.controller');
 
 
 
-router.post('/loginRadiologist', authController.loginRadiologist);
+router.post('/login', authController.login);
 router.post('/registerRadiologist', authController.registerRadiologist);
 router.post('/sendOtp', authController.sendOtp);
 router.post('/verifyOtp', authController.verifyOtp);

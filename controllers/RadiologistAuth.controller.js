@@ -1,4 +1,5 @@
 const Radiologist = require("../models/Radiologists.Model");
+const RadiologyCenter = require("../models/Radiology_Centers.Model");
 const bcrypt = require("bcrypt");
 const validator = require("validator");
 const { createToken } = require("../utils/createToken");
@@ -173,11 +174,10 @@ exports.verifyOtp = async (req, res) => {
 
 
 
-exports.loginRadiologist = async (req, res) => {
+exports.login= async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    
     if (!email || !validator.isEmail(email)) {
       return res.status(400).json({ message: "A valid email is required" });
     }
@@ -185,26 +185,31 @@ exports.loginRadiologist = async (req, res) => {
       return res.status(400).json({ message: "Password is required" });
     }
 
+    const radiologyCenter = await RadiologyCenter.findOne({ email: email });
+    const radiologist = await Radiologist.findOne({ email: email });
 
-    const radiologist = await Radiologist.findOne({ email: email.toLowerCase() });
-    if (!radiologist) {
-      return res.status(404).json({ message: "No radiologist found with this email" });
+    if (!radiologyCenter && !radiologist) { 
+        return res.status(404).json({ message: "No account found with this email" });
     }
-
     
-    const isMatch = await bcrypt.compare(password, radiologist.passwordHash);
+    const user = radiologyCenter || radiologist;
+    const role = radiologyCenter ? "RadiologyCenter" : "Radiologist"; 
+
+    const isMatch = await bcrypt.compare(password, user.passwordHash);
     if (!isMatch) {
-      return res.status(401).json({ message: "Invalid password" });
+        return res.status(401).json({ message: "Invalid password" });
     }
 
+    const token = createToken(user._id);
+    res.status(200).json({ token, user, role });
     
-    const token = createToken(radiologist._id);
-    res.status(200).json({ token, radiologist });
   } catch (error) {
-    console.error("Error logging in radiologist: ", error);
-    res.status(500).json({ message: "Error logging in radiologist", error: error.message });
+    console.error("Error logging in this account: ", error);
+    res.status(500).json({ message: "Error logging in this account", error: error.message });
   }
 };
+
+
 
 const sendOtpForReset = async (email, otp) => {
   const transporter = nodemailer.createTransport({
@@ -252,7 +257,7 @@ exports.forgotPassword = async (req, res) => {
       return res.status(400).json({ message: "A valid email is required" });
     }
 
-    const user = await Radiologist.findOne({ email: email.toLowerCase() });
+    const user = await Radiologist.findOne({ email: email });
     if (!user) {
       return res.status(404).json({ message: "No account found with this email" });
     }
