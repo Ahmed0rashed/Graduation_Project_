@@ -94,20 +94,20 @@ exports.analyzeImage = async (req, res) => {
       
       
     } ,
-    {timeout: 60000});
+    {timeout: 100000});
 
     const imprationResponse = await axios.post("https://graduation-project-ml-api.vercel.app/analyze-image", {
       text: "Provide the diagnostic impression based on the image.",
       image_url: imageUrl,
     },
-    {timeout: 60000}
+    {timeout: 100000}
   );
 
     const commentResponse = await axios.post("https://graduation-project-ml-api.vercel.app/analyze-image", {
       text: "Write additional comments or observations regarding the diagnosis.",
       image_url: imageUrl,
     },
-    {timeout: 60000}
+    {timeout: 100000}
   );
 
     

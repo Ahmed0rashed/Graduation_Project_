@@ -13,7 +13,7 @@ const radiologyRecordSchema = new mongoose.Schema(
     },
     patient_name: {
       type: String,
-      required: true,
+      required: false,
     },
     study_date: {
       type: Date,
@@ -25,7 +25,7 @@ const radiologyRecordSchema = new mongoose.Schema(
     sex: {
       type: String,
       enum: ["Male", "Female","Other"],
-      required: true,
+      required: false,
     },
     modality: {
       type: String,
