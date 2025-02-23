@@ -43,6 +43,7 @@ exports.addRecord = async (req, res) => {
 
     const aiReport = await AIReport.create({
       record: savedRecord._id,
+      centerId: validCenterId,
       diagnosisReportFinding: " ",
       diagnosisReportImpration: " ",
       diagnosisReportComment: " ",
