@@ -9,6 +9,7 @@ const RadiologistAuth = require('./routes/RadiologistAuth.routes');
 const pationtAuth = require('./routes/PationtAuth.routes');
 const aireports = require('./routes/AIReports.routes');
 const record = require('./routes/radiologyRecords.routes');
+const CenterRadiologistsRelationRoutes = require('./routes/CenterRadiologistsRelation.Routes');
 
 const app = express();
 
@@ -27,5 +28,5 @@ app.use("/api/RadiologistAuth", RadiologistAuth);
 app.use("/api/patientAuth", pationtAuth);
 app.use("/api/AIReports", aireports)
 app.use("/api/Record",record);
-
+app.use("/api/relations", CenterRadiologistsRelationRoutes);
 module.exports = app;
