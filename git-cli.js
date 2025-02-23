@@ -15,8 +15,8 @@ const branchName = args[0];
 const commitMessage = args.slice(1).join(' '); // Support multi-word commit messages
 
 try {
-  console.log('📌 Switching to branch:', branchName);
-  execSync(`git checkout ${branchName}`, { stdio: 'inherit' });
+  console.log(`📌 Creating and switching to new branch: ${branchName}`);
+  execSync(`git checkout -b ${branchName}`, { stdio: 'inherit' });
 
   console.log('✅ Adding changes...');
   execSync('git add .', { stdio: 'inherit' });
@@ -24,10 +24,10 @@ try {
   console.log('✅ Committing changes...');
   execSync(`git commit -m "${commitMessage}"`, { stdio: 'inherit' });
 
-  console.log('🚀 Pushing changes to GitHub...');
-  execSync(`git push origin ${branchName}`, { stdio: 'inherit' });
+  console.log(`🚀 Pushing new branch "${branchName}" to GitHub...`);
+  execSync(`git push --set-upstream origin ${branchName}`, { stdio: 'inherit' });
 
-  console.log('🎉 All changes successfully pushed!');
+  console.log('🎉 All changes successfully pushed to GitHub!');
 } catch (error) {
   console.error('❌ Error:', error.message);
   process.exit(1);
