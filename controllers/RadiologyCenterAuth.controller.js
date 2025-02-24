@@ -13,6 +13,7 @@ const multer = require("multer");
 const path = require("path");
 
 
+
 cloudinary.config({
   cloud_name: 'dncawa23w',
   api_key: '451913596668632',
@@ -117,7 +118,7 @@ exports.registerRadiologyCenter = async (req, res) => {
 
 exports.verifyOtp = async (req, res) => {
   try {
-    const { email, otp, password, centerName, address, contactNumber } = req.body;  
+    const { email, otp, password, centerName, address, contactNumber } = req.params;  
     
     const otpRecord = await Otp.findOne({ email: email.toLowerCase() });
     if (!otpRecord) {
