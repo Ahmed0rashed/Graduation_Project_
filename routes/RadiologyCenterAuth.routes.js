@@ -6,12 +6,7 @@ const multer = require('multer');
 const upload = require('../middleware/upload'); 
 
 
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, 'uploads/');
-  },
-
-});
+const storage = multer.memoryStorage();
 const fileUpload = multer({ storage: storage });
 
 

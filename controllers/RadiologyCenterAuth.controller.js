@@ -1,4 +1,6 @@
 const RadiologyCenter = require("../models/Radiology_Centers.Model");
+const Radiologist = require("../models/Radiologists.Model");
+
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 const validator = require("validator");
@@ -84,16 +86,20 @@ exports.registerRadiologyCenter = async (req, res) => {
     if (!password) {
       return res.status(400).json({ message: "Password is required" });
     }
-    if (await RadiologyCenter.findOne({ email })) {
-      return res.status(400).json({ message: `This email "${email}" already exists` });
+    if (await RadiologyCenter.findOne({ email }) ) {
+      return res.status(400).json({ message: `This email already exists as a radiology center` });
     }
+    if (await Radiologist.findOne({ email }) ) {
+      return res.status(400).json({ message: `This email already exists as a radiologist` });
+    }
+
 
     const otp = otpGenerator.generate(6, { upperCase: false, specialChars: false });
     const expiry = new Date();
     expiry.setMinutes(expiry.getMinutes() + 5);
 
     await Otp.findOneAndUpdate(
-      { email: email.toLowerCase() },
+      { email: email },
       { otp, expiry },
       { upsert: true, new: true }
     );
@@ -111,7 +117,7 @@ exports.registerRadiologyCenter = async (req, res) => {
 
 exports.verifyOtp = async (req, res) => {
   try {
-    const { email, otp, password, centerName, address, contactNumber } = req.params;
+    const { email, otp, password, centerName, address, contactNumber } = req.body;  
     
     const otpRecord = await Otp.findOne({ email: email.toLowerCase() });
     if (!otpRecord) {
@@ -132,9 +138,20 @@ exports.verifyOtp = async (req, res) => {
 
     let uploadedFileUrl = null;
     if (req.file) {
-      const uploadResult = await cloudinary.uploader.upload(req.file.path, {
-        folder: "radiology_centers",
+      const uploadResult = await new Promise((resolve, reject) => {
+        const stream = cloudinary.uploader.upload_stream(
+          { folder: "radiology_centers" },
+          (error, result) => {
+            if (error) {
+              reject(error);
+            } else {
+              resolve(result);
+            }
+          }
+        );
+        stream.end(req.file.buffer); 
       });
+
       uploadedFileUrl = uploadResult.secure_url;
     }
 
@@ -149,7 +166,13 @@ exports.verifyOtp = async (req, res) => {
 
     await newRadiologyCenter.save();
     
-    await sendEmailWithAllINformations(newRadiologyCenter.email, newRadiologyCenter.centerName, newRadiologyCenter.contactNumber, newRadiologyCenter.address, newRadiologyCenter.path);
+    await sendEmailWithAllINformations(
+      newRadiologyCenter.email, 
+      newRadiologyCenter.centerName, 
+      newRadiologyCenter.contactNumber, 
+      newRadiologyCenter.address, 
+      newRadiologyCenter.path
+    );
 
     res.status(201).json({ 
       message: "The request has been sent successfully", 
