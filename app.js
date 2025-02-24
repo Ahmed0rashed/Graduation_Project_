@@ -18,6 +18,9 @@ const CenterRadiologistsRelationRoutes = require('./routes/CenterRadiologistsRel
 
 const app = express();
 
+
+
+
 app.use(cors());
 
 app.use(morgan("dev"));
