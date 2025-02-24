@@ -4,14 +4,17 @@
   "description": "Backend server handling API requests, user authentication, and database operations",
   "main": "index.js",
   "scripts": {
-    "start": "nodemon server.js"
+    "start": "nodemon server.js",
+    "gitpush":"node git-cli.js"
   },
+  
   "author": "",
   "engines": {
     "node": "22.x"
   },
   "license": "ISC",
   "dependencies": {
+    "axios": "^1.7.9",
     "bcrypt": "^5.1.1",
     "body-parser": "^1.20.3",
     "cloudinary": "^1.41.3",

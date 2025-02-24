@@ -5,15 +5,15 @@ const radiologyRecordSchema = new mongoose.Schema(
     centerId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "RadiologyCenter",
-      required: true,
+      required: false,
     },
     radiologistId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Radiologist",
-      required: true,
     },
     patient_name: {
       type: String,
+      required: false,
     },
     study_date: {
       type: Date,
@@ -24,13 +24,15 @@ const radiologyRecordSchema = new mongoose.Schema(
     },
     sex: {
       type: String,
-      enum: ["M", "F"],
+      enum: ["Male", "Female", "Other"],
+      required: false,
     },
     modality: {
       type: String,
     },
     PatientBirthDate: {
       type: Date,
+      required: true,
     },
     age: {
       type: String,
@@ -45,6 +47,28 @@ const radiologyRecordSchema = new mongoose.Schema(
       type: String,
     },
     DicomId: {
+      type: String,
+      required: true,
+    },
+    series: {
+      type: String,
+    },
+    deadline: {
+      type: Date,
+      default: function () {
+        return new Date(Date.now() + 60 * 60 * 1000);
+      },
+    },
+    status: {
+      type: String,
+      enum: ["Available", "Pending", "Reviewed"],
+      default: "Available",
+    },
+    deleted: {
+      type: Boolean,
+      default: false,
+    },
+    Dicom_url: {
       type: String,
       required: true,
     },
