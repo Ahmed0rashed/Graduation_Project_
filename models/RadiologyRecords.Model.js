@@ -24,7 +24,7 @@ const radiologyRecordSchema = new mongoose.Schema(
     },
     sex: {
       type: String,
-      enum: ["Male", "Female","Other"],
+      enum: ["Male", "Female", "Other"],
       required: false,
     },
     modality: {
@@ -56,7 +56,7 @@ const radiologyRecordSchema = new mongoose.Schema(
     deadline: {
       type: Date,
       default: function () {
-        return new Date(Date.now() + 60 * 60 * 1000); 
+        return new Date(Date.now() + 60 * 60 * 1000);
       },
     },
     status: {
@@ -68,10 +68,10 @@ const radiologyRecordSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
-    cloudinary_url: {
+    Dicom_url: {
       type: String,
-      default: false,
-    }
+      required: true,
+    },
   },
   { timestamps: true }
 );
