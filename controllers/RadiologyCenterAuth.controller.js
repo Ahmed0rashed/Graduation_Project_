@@ -6,6 +6,27 @@ const { createToken } = require("../utils/createToken");
 const nodemailer = require("nodemailer");
 const otpGenerator = require("otp-generator");
 const Otp = require("../models/OTP");
+const cloudinary = require("cloudinary").v2;
+const multer = require("multer");
+const path = require("path");
+
+
+cloudinary.config({
+  cloud_name: 'dncawa23w',
+  api_key: '451913596668632',
+  api_secret: 'KboaQ-CpKdNpD0oJ0JvAagR3N_4',
+});
+
+
+const storage = multer.diskStorage({
+  filename: function (req, file, cb) {
+    cb(null, `${Date.now()}_${file.originalname}`);
+  },
+});
+
+const upload = multer({ storage });
+
+
 
 
 const sendOtpEmail = async (email, otp) => {
@@ -43,11 +64,11 @@ const sendOtpEmail = async (email, otp) => {
   
 };
 
-// Register Radiology Center
+
 exports.registerRadiologyCenter = async (req, res) => {
   try {
     const { centerName, address, contactNumber, email, password } = req.body;
-
+    
     if (!email || !validator.isEmail(email)) {
       return res.status(400).json({ message: "A valid email is required" });
     }
@@ -57,7 +78,7 @@ exports.registerRadiologyCenter = async (req, res) => {
     if (!address) {
       return res.status(400).json({ message: "Address is required" });
     }
-    if (!contactNumber || !/^\+?[\d\s-]{10,15}$/.test(contactNumber)) {
+    if (!contactNumber) {
       return res.status(400).json({ message: "A valid contact number is required" });
     }
     if (!password) {
@@ -67,12 +88,11 @@ exports.registerRadiologyCenter = async (req, res) => {
       return res.status(400).json({ message: `This email "${email}" already exists` });
     }
 
-    // Send OTP for verification
     const otp = otpGenerator.generate(6, { upperCase: false, specialChars: false });
     const expiry = new Date();
     expiry.setMinutes(expiry.getMinutes() + 5);
 
-    const otpRecord = await Otp.findOneAndUpdate(
+    await Otp.findOneAndUpdate(
       { email: email.toLowerCase() },
       { otp, expiry },
       { upsert: true, new: true }
@@ -91,8 +111,8 @@ exports.registerRadiologyCenter = async (req, res) => {
 
 exports.verifyOtp = async (req, res) => {
   try {
-    const { email, otp, password, centerName, address, contactNumber } = req.body;
-
+    const { email, otp, password, centerName, address, contactNumber } = req.params;
+    
     const otpRecord = await Otp.findOne({ email: email.toLowerCase() });
     if (!otpRecord) {
       return res.status(400).json({ message: "OTP not found for this email" });
@@ -106,11 +126,17 @@ exports.verifyOtp = async (req, res) => {
       return res.status(400).json({ message: "Invalid OTP" });
     }
 
-
     await Otp.deleteOne({ email: email.toLowerCase() });
 
-
     const hashedPassword = await bcrypt.hash(password, 10);
+
+    let uploadedFileUrl = null;
+    if (req.file) {
+      const uploadResult = await cloudinary.uploader.upload(req.file.path, {
+        folder: "radiology_centers",
+      });
+      uploadedFileUrl = uploadResult.secure_url;
+    }
 
     const newRadiologyCenter = new RadiologyCenter({
       centerName,
@@ -118,14 +144,18 @@ exports.verifyOtp = async (req, res) => {
       contactNumber,
       email: email.toLowerCase(),
       passwordHash: hashedPassword,
+      path: uploadedFileUrl, 
     });
 
-    // await newRadiologyCenter.save();
-    // const token = createToken(newRadiologyCenter._id);
+    await newRadiologyCenter.save();
+    
+    await sendEmailWithAllINformations(newRadiologyCenter.email, newRadiologyCenter.centerName, newRadiologyCenter.contactNumber, newRadiologyCenter.address, newRadiologyCenter.path);
 
-    await sendEmailWithAllINformations(newRadiologyCenter.email, newRadiologyCenter.centerName, newRadiologyCenter.contactNumber, newRadiologyCenter.address);
-  
-    res.status(201).json({ message: "the request has been sent successfully", radiologyCenter: newRadiologyCenter });
+    res.status(201).json({ 
+      message: "The request has been sent successfully", 
+      _id: newRadiologyCenter._id, 
+      radiologyCenter: newRadiologyCenter 
+    });
 
   } catch (error) {
     console.error("Error verifying OTP: ", error);
@@ -133,7 +163,7 @@ exports.verifyOtp = async (req, res) => {
   }
 };
 
-const sendEmailWithAllINformations = async (email, centerName, contactNumber, address) => {
+const sendEmailWithAllINformations = async (email, centerName, contactNumber, address,path) => {
   const transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
@@ -159,6 +189,8 @@ const sendEmailWithAllINformations = async (email, centerName, contactNumber, ad
           <li style="margin-bottom: 10px;"><strong>Email:</strong> ${email}</li>
           <li style="margin-bottom: 10px;"><strong>Contact Number:</strong> ${contactNumber}</li>
           <li style="margin-bottom: 10px;"><strong>Address:</strong> ${address}</li>
+          <li style="margin-bottom: 10px;"><strong>License:</strong> <a href="${path}">View License</a></li>
+          
         </ul>
         <p style="font-size: 16px; color: #555;">Please process this request and confirm the registration status.</p>
         <p style="font-size: 16px; color: #555;">Best regards,</p>

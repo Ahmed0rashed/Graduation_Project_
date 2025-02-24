@@ -1,17 +1,26 @@
 const express = require('express');
 const router = express.Router();
 const authController = require('../controllers/RadiologyCenterAuth.controller');
+const {verifyOtp} = require('../controllers/RadiologyCenterAuth.controller');
+const multer = require('multer');
+const upload = require('../middleware/upload'); 
 
-// router.post('/registerPatient', authController.registerPatient);
-// router.get('/loginPatient', authController.loginPatient);
 
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, 'uploads/');
+  },
 
-// router.get('/loginRadiologist', authController.loginRadiologist);
-// router.post('/registerRadiologist', authController.registerRadiologist);
+});
+const fileUpload = multer({ storage: storage });
+
 
 router.post("/registerRadiologyCenter",authController.registerRadiologyCenter);
 router.post("/loginRadiologyCenter",authController.loginRadiologyCenter);
-router.post('/verifyOtp', authController.verifyOtp);
+router.post("/verify-otp/:email/:otp/:password/:centerName/:address/:contactNumber", 
+    fileUpload.single("path"), 
+    verifyOtp
+  );
 router.post('/SendEmail', authController.SendEmail);
 router.post('/forgotPassword', authController.forgotPassword);
 router.post('/resetPassword', authController.resetPassword);

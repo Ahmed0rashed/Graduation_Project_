@@ -29,8 +29,12 @@ const radiologyCenterSchema = new mongoose.Schema({
   },
   passwordHash: {
     type: String,
-    required: [true, 'Password hash is required'],
+    required: [false, 'Password hash is required'],
   },
+  path: {  
+    type: String,
+    required: true
+  }
 }, { timestamps: true });
 
 module.exports = mongoose.model('RadiologyCenter', radiologyCenterSchema);
