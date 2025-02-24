@@ -99,9 +99,11 @@ exports.registerRadiologist = async (req, res) => {
     }
 
     
-    const existingRadiologist = await Radiologist.findOne({ email: email.toLowerCase() });
-    if (existingRadiologist) {
-      return res.status(400).json({ message: `This email "${email}" is already registered.` });
+    if (await RadiologyCenter.findOne({ email }) ) {
+      return res.status(400).json({ message: `This email already exists as a radiology center` });
+    }
+    if (await Radiologist.findOne({ email }) ) {
+      return res.status(400).json({ message: `This email already exists as a radiologist` });
     }
 
     
