@@ -164,9 +164,9 @@ exports.verifyOtp = async (req, res) => {
     });
 
     await newRadiologist.save();
-    const token = createToken(newRadiologist._id);
+    // const token = createToken(newRadiologist._id);
 
-    res.status(201).json({ message: "Registration successful. You can now log in.", token, Radiologist: newRadiologist });
+    res.status(201).json({ message: "Registration successful. You can now log in.", Radiologist: newRadiologist });
 
   } catch (error) {
     console.error("Error verifying OTP: ", error);
