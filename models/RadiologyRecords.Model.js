@@ -32,7 +32,7 @@ const radiologyRecordSchema = new mongoose.Schema(
     },
     PatientBirthDate: {
       type: Date,
-      required: true,
+      required: false,
     },
     age: {
       type: String,
