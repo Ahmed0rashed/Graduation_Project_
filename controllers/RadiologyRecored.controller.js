@@ -1,6 +1,7 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const RadiologyRecord = require("../models/RadiologyRecords.Model");
+const RadiologyCenter = require("../models/Radiology_Centers.Model");
 const AIReport = require("../models/AIReports.Model");
 
 
@@ -219,27 +220,42 @@ exports.updateRecordById = async (req, res) => {
 exports.getRecordsByRadiologistId = async (req, res) => {
   const { id } = req.params;
   try {
-    const records = await RadiologyRecord.find({ radiologistId: id })
-      .sort({ createdAt: -1 });
+    
+    const records = await RadiologyRecord.find({ radiologistId: id }).sort({ createdAt: -1 });
 
+    
     if (!records.length) {
       return res.status(404).json({ message: "No records found for this radiologist" });
     }
-    const recordsWithAIReports = await Promise.all(
-      records.map(async (record) => {
-        const aiReport = await AIReport.findOne({ record: record._id });
-        return {
-          ...record._doc,  
-          aiReportStatus: aiReport ? aiReport.status : "Available",
-          aiReportResult: aiReport ? aiReport.result : "New",
-        };
-      })
-    );
-    res.status(200).json(recordsWithAIReports);
+
+   
+    const recordIds = records.map(record => record._id);
+    const centerIds = [...new Set(records.map(record => record.centerId.toString()))]; 
+
+    
+    const aiReports = await AIReport.find({ record: { $in: recordIds } });
+
+    
+    const centers = await RadiologyCenter.find({ _id: { $in: centerIds } });
+
+    
+    const aiReportMap = new Map(aiReports.map(report => [report.record.toString(), report]));
+    const centerMap = new Map(centers.map(center => [center._id.toString(), center.centerName]));
+
+  
+    const recordsWithDetails = records.map(record => ({
+      ...record.toObject(),
+      aiReportStatus: aiReportMap.get(record._id.toString())?.status || "Available",
+      aiReportResult: aiReportMap.get(record._id.toString())?.result || "New",
+      centerName: centerMap.get(record.centerId?.toString()) || "Unknown"
+    }));
+
+    res.status(200).json(recordsWithDetails);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
+
 
 
 

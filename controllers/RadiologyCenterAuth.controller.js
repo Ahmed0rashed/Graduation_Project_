@@ -369,10 +369,10 @@ exports.forgotPassword = async (req, res) => {
       return res.status(400).json({ message: "A valid email is required" });
     }
 
-    const normalizedEmail = email.toLowerCase();
 
-    const radiologyCenter = await RadiologyCenter.findOne({ email: normalizedEmail });
-    const radiologist = await Radiologist.findOne({ email: normalizedEmail });
+
+    const radiologyCenter = await RadiologyCenter.findOne({ email: email });
+    const radiologist = await Radiologist.findOne({ email: email });
 
     if (!radiologyCenter && !radiologist) { 
         return res.status(404).json({ message: "No account found with this email" });
