@@ -5,19 +5,20 @@ const axios = require("axios");
 const router = express.Router();
 
 // Create AIReport
-exports.createAIReport = async (req, res) => {
-  try {
-    const { record } = req.body;
-    const newReport = new AIReport({
+  exports.createAIReport = async (req, res) => {
+    try {
+      const { record ,centerId,radiologistID} = req.body;
+      const newReport = new AIReport({
       record: record,
-      generatedDate: generatedDate || new Date(), // Default to current date
-    });
-    const savedReport = await newReport.save();
-    res.status(201).json(savedReport);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
+      centerId: centerId,
+      radiologistID: radiologistID
+      });
+      const savedReport = await newReport.save();
+      res.status(201).json(savedReport);
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  };
 
 // Update AIReport
 exports.updateAIReport = async (req, res) => {

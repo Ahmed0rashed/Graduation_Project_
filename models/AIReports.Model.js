@@ -16,6 +16,7 @@ const aiReportSchema = new mongoose.Schema(
     radiologistID: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Radiologist",
+      required: true,
     },
     diagnosisReportFinding: {
       type: String,
@@ -32,13 +33,9 @@ const aiReportSchema = new mongoose.Schema(
     },
     confidenceLevel: {
       type: Number,
-      min: [0, "Confidence level cannot be less than 0"],
+      
       max: [100, "Confidence level cannot be greater than 100"],
       default: -1,
-    },
-    generatedDate: {
-      type: Date,
-      default: Date.now,
     },
     deleted: {
       type: Boolean,
