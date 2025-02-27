@@ -21,7 +21,7 @@ exports.addRecord = async (req, res) => {
 
     const validCenterId = new mongoose.Types.ObjectId(centerId);
     const validRadiologistId = new mongoose.Types.ObjectId(radiologistId);
-
+    
     const record = await RadiologyRecord.create({
       centerId: validCenterId,
       radiologistId: validRadiologistId,
@@ -45,6 +45,7 @@ exports.addRecord = async (req, res) => {
     const aiReport = await AIReport.create({
       record: savedRecord._id,
       centerId: validCenterId,
+      radiologistID: validRadiologistId,
       diagnosisReportFinding: " ",
       diagnosisReportImpration: " ",
       diagnosisReportComment: " ",
