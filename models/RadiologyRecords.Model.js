@@ -11,6 +11,10 @@ const radiologyRecordSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "Radiologist",
     },
+    reportId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "AIReport",
+    },
     patient_name: {
       type: String,
       required: false,

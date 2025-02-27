@@ -25,7 +25,7 @@ exports.addRecord = async (req, res) => {
     const record = await RadiologyRecord.create({
       centerId: validCenterId,
       radiologistId: validRadiologistId,
-      patient_name,
+      patient_name, 
       study_date,
       patient_id,
       sex,
@@ -54,6 +54,10 @@ exports.addRecord = async (req, res) => {
     });
 
     const savedAIReport = await aiReport.save();
+
+    savedRecord.reportId = savedAIReport._id;
+    await savedRecord.save();
+
     res.status(200).json({ record: savedRecord, savedAIReport: savedAIReport });
   } catch (error) {
     console.error("Error in addRecord:", error);
