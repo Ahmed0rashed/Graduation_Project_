@@ -9,9 +9,8 @@ const RadiologistAuth = require('./routes/RadiologistAuth.routes');
 const pationtAuth = require('./routes/PationtAuth.routes');
 const aireports = require('./routes/AIReports.routes');
 const record = require('./routes/radiologyRecords.routes');
-
 const RadiologyCenter = require("./routes/RadiologyCenter.Routes");
-
+const massage = require("./routes/Char.routes");
 
 const CenterRadiologistsRelationRoutes = require('./routes/CenterRadiologistsRelation.Routes');
 
@@ -39,7 +38,7 @@ app.use("/api/AIReports", aireports)
 app.use("/api/Record",record);  
 app.use("/api/centers", RadiologyCenter);
 
-
+app.use('/api/messages', massage);
 
 app.use("/api/relations", CenterRadiologistsRelationRoutes);
 
