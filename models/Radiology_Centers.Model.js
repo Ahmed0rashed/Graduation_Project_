@@ -13,12 +13,12 @@ const radiologyCenterSchema = new mongoose.Schema(
     address: {
       street: {
         type: String,
-        required: [true, "Street address is required"],
+        // required: [false, "Street address is required"],
         trim: true,
       },
       city: {
         type: String,
-        required: [true, "City is required"],
+        required: [false, "City is required"],
         trim: true,
       },
       state: {
@@ -37,25 +37,24 @@ const radiologyCenterSchema = new mongoose.Schema(
           message: "Invalid ZIP code format",
         },
       },
-      country: {
-        type: String,
-        required: [true, "Country is required"],
-        trim: true,
-      },
-      coordinates: {
-        latitude: {
-          type: Number,
-          min: -90,
-          max: 90,
-        },
-        longitude: {
-          type: Number,
-          min: -180,
-          max: 180,
-        },
-      },
+      // country: {
+      //   type: String,
+      //   // required: [true, "Country is required"],
+      //   trim: true,
+      // },
+      // coordinates: {
+      //   latitude: {
+      //     type: Number,
+      //     min: -90,
+      //     max: 90,
+      //   },
+      //   longitude: {
+      //     type: Number,
+      //     min: -180,
+      //     max: 180,
+      //   },
+      // },
     },
-
     contactNumber: {
       type: String,
       required: [true, "Contact number is required"],
@@ -91,7 +90,7 @@ const radiologyCenterSchema = new mongoose.Schema(
       {
         name: {
           type: String,
-          required: true,
+          // required: true,
           trim: true,
         },
         description: {
@@ -112,7 +111,7 @@ const radiologyCenterSchema = new mongoose.Schema(
       weekdays: {
         open: {
           type: String,
-          required: [true, "Weekday opening time is required"],
+          // required: [true, "Weekday opening time is required"],
           validate: {
             validator: function (v) {
               return /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/.test(v);
@@ -122,7 +121,7 @@ const radiologyCenterSchema = new mongoose.Schema(
         },
         close: {
           type: String,
-          required: [true, "Weekday closing time is required"],
+          // required: [true, "Weekday closing time is required"],
           validate: {
             validator: function (v) {
               return /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/.test(v);
@@ -169,21 +168,21 @@ const radiologyCenterSchema = new mongoose.Schema(
       {
         name: {
           type: String,
-          required: true,
+          // required: true,
           trim: true,
         },
         issuedBy: {
           type: String,
-          required: true,
+          // required: true,
           trim: true,
         },
         issueDate: {
           type: Date,
-          required: true,
+          // required: true,
         },
         expiryDate: {
           type: Date,
-          required: true,
+          // required: true,
           validate: {
             validator: function (v) {
               return v > this.issueDate;
@@ -201,12 +200,12 @@ const radiologyCenterSchema = new mongoose.Schema(
     emergencyContact: {
       name: {
         type: String,
-        required: [true, "Emergency contact name is required"],
+        // required: [true, "Emergency contact name is required"],
         trim: true,
       },
       number: {
         type: String,
-        required: [true, "Emergency contact number is required"],
+        // required: [true, "Emergency contact number is required"],
         trim: true,
         validate: {
           validator: function (v) {
@@ -224,6 +223,10 @@ const radiologyCenterSchema = new mongoose.Schema(
       type: String,
       required: [true, "Password hash is required"],
     },
+    path: {  
+      type: String,
+      required: true
+    }
   },
   {
     timestamps: true,

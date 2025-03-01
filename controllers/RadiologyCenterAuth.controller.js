@@ -93,7 +93,25 @@ exports.registerRadiologyCenter = async (req, res) => {
     if (await Radiologist.findOne({ email }) ) {
       return res.status(400).json({ message: `This email already exists as a radiologist` });
     }
-
+    if (!validator.isLength(password, { min: 8 })) {
+      return res.status(400).json({ message: "Password should be at least 8 characters long" });
+    }
+    const specialCharacters = /[ !@#$%^&*(),.?":{}|<>\-_=+]/;
+    if (!specialCharacters.test(password)) {
+      return res.status(400).json({ message: "Password should contain at least one special character" });
+    }
+    if (!validator.isNumeric(contactNumber)) {
+      return res.status(400).json({ message: "Contact number should be numeric" });
+    }
+    if (!validator.isNumeric(address.zipCode)) {
+      return res.status(400).json({ message: "ZIP code should be numeric" });
+    }
+    if (!validator.isLength(address.zipCode, { min: 5, max: 5 })) {
+      return res.status(400).json({ message: "ZIP code should be 5 digits" });
+    }
+    if (!validator.isLength(contactNumber, { min: 10, max: 15 })) {
+      return res.status(400).json({ message: "Contact number should be between 10 and 15 digits" });
+    }
 
     const otp = otpGenerator.generate(6, { upperCase: false, specialChars: false });
     const expiry = new Date();
@@ -118,8 +136,9 @@ exports.registerRadiologyCenter = async (req, res) => {
 
 exports.verifyOtp = async (req, res) => {
   try {
-    const { email, otp, password, centerName, address, contactNumber } = req.params;  
+    const { email, otp, password, centerName, contactNumber,zipCode,street,city,state } = req.params;  
     
+
     const otpRecord = await Otp.findOne({ email: email.toLowerCase() });
     if (!otpRecord) {
       return res.status(400).json({ message: "OTP not found for this email" });
@@ -132,6 +151,12 @@ exports.verifyOtp = async (req, res) => {
     if (otpRecord.otp !== otp) {
       return res.status(400).json({ message: "Invalid OTP" });
     }
+    const parsedAddress = {
+      street,
+      city,
+      state,
+      zipCode,  
+    };
 
     await Otp.deleteOne({ email: email.toLowerCase() });
 
@@ -158,9 +183,9 @@ exports.verifyOtp = async (req, res) => {
 
     const newRadiologyCenter = new RadiologyCenter({
       centerName,
-      address,
+      address : parsedAddress,
       contactNumber,
-      email: email.toLowerCase(),
+      email: email,
       passwordHash: hashedPassword,
       path: uploadedFileUrl, 
     });
@@ -212,7 +237,7 @@ const sendEmailWithAllINformations = async (email, centerName, contactNumber, ad
           <li style="margin-bottom: 10px;"><strong>Center Name:</strong> ${centerName}</li>
           <li style="margin-bottom: 10px;"><strong>Email:</strong> ${email}</li>
           <li style="margin-bottom: 10px;"><strong>Contact Number:</strong> ${contactNumber}</li>
-          <li style="margin-bottom: 10px;"><strong>Address:</strong> ${address}</li>
+          <li style="margin-bottom: 10px;"><strong>Address:</strong> ${address.street}, ${address.city}, ${address.state}, ${address.zipCode}</li>
           <li style="margin-bottom: 10px;"><strong>License:</strong> <a href="${path}">View License</a></li>
           
         </ul>

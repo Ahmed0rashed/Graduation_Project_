@@ -97,13 +97,19 @@ exports.registerRadiologist = async (req, res) => {
     if (!password) {
       return res.status(400).json({ message: "A valid password is required" });
     }
-
-    
     if (await RadiologyCenter.findOne({ email }) ) {
       return res.status(400).json({ message: `This email already exists as a radiology center` });
     }
+
     if (await Radiologist.findOne({ email }) ) {
       return res.status(400).json({ message: `This email already exists as a radiologist` });
+    }
+    if (!validator.isLength(password, { min: 8 })) {
+      return res.status(400).json({ message: "Password should be at least 8 characters long" });
+    }
+    const specialCharacters = /[ !@#$%^&*(),.?":{}|<>\-_=+]/;
+    if (!specialCharacters.test(password)) {
+      return res.status(400).json({ message: "Password should contain at least one special character" });
     }
 
     

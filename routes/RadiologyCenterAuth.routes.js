@@ -11,7 +11,7 @@ const fileUpload = multer({ storage: storage });
 router.post("/registerRadiologyCenter", authController.registerRadiologyCenter);
 router.post("/loginRadiologyCenter", authController.loginRadiologyCenter);
 router.post(
-  "/verify-otp/:email/:otp/:password/:centerName/:address/:contactNumber",
+  "/verify-otp/:email/:otp/:password/:centerName/:contactNumber/:zipCode/:street/:city/:state",
   fileUpload.single("path"),
   verifyOtp
 );
