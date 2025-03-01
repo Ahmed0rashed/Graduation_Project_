@@ -5,7 +5,7 @@ const {
   getRadiologistsByCenter,
   getUnreadCount
 } = require('../controllers/Massage.controller');
-const { authenticateUser } = require('../middleware/auth.middleware');
+const { authenticateUser } = require('../middleware/Auth.middleware');
 
 const router = express.Router();
 
