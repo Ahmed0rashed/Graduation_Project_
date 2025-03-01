@@ -1,6 +1,8 @@
 const express = require('express');
 const morgan = require('morgan');
 const cors = require('cors');
+const http = require("http");
+const { Server } = require("socket.io");
 const passport = require('./config/passport');
 const radiologistRouter = require("./routes/Radiologist.Routes");
 const pationtRouter = require('./routes/pationt.routes');
@@ -17,6 +19,19 @@ const CenterRadiologistsRelationRoutes = require('./routes/CenterRadiologistsRel
 
 const app = express();
 
+const server = http.createServer(app);
+const io = new Server(server);
+
+io.on("connection", (socket) => {
+    console.log("User connected:", socket.id);
+
+    // إرسال إشعار للمستخدم
+    socket.emit("notification", { message: "مرحبًا، لديك إشعار جديد!" });
+
+    socket.on("disconnect", () => {
+        console.log("User disconnected:", socket.id);
+    });
+});
 
 
 

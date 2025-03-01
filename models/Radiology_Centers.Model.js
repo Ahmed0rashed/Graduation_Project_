@@ -70,7 +70,6 @@ const radiologyCenterSchema = new mongoose.Schema(
     email: {
       type: String,
       required: [true, "Email is required"],
-      unique: true,
       trim: true,
       lowercase: true,
       validate: {
@@ -241,7 +240,6 @@ const radiologyCenterSchema = new mongoose.Schema(
 // Indexes for improved query performance
 radiologyCenterSchema.index({ name: 1 });
 radiologyCenterSchema.index({ "address.city": 1, "address.state": 1 });
-radiologyCenterSchema.index({ email: 1 }, { unique: true });
 radiologyCenterSchema.index({ status: 1 });
 radiologyCenterSchema.index(
   { name: "text", "address.city": "text", "address.state": "text" },
