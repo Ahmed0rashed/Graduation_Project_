@@ -55,6 +55,7 @@ const radiologyCenterSchema = new mongoose.Schema(
         },
       },
     },
+
     contactNumber: {
       type: String,
       required: [true, "Contact number is required"],
@@ -302,5 +303,6 @@ radiologyCenterSchema.pre("save", function (next) {
 
   next();
 });
+
 
 module.exports = mongoose.model("RadiologyCenter", radiologyCenterSchema);
