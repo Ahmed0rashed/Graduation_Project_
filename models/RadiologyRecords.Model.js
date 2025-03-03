@@ -28,7 +28,7 @@ const radiologyRecordSchema = new mongoose.Schema(
     },
     sex: {
       type: String,
-      enum: ["Male", "Female", "Other"],
+      enum: ["Male", "Female", "Unknown"],
       required: false,
     },
     modality: {
@@ -75,6 +75,9 @@ const radiologyRecordSchema = new mongoose.Schema(
     Dicom_url: {
       type: String,
       required: true,
+    },
+    study_description: {
+      type: String,
     },
   },
   { timestamps: true }
