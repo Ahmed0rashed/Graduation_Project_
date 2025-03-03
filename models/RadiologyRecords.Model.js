@@ -76,6 +76,9 @@ const radiologyRecordSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    study_description: {
+      type: String,
+    },
   },
   { timestamps: true }
 );
