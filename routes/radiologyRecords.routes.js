@@ -5,7 +5,7 @@ const authController =  require('../controllers/RadiologyRecored.controller');
 
 router.get('/getAllRecords', authController.getAllRecords);
 router.get('/getOneRecordById/:id', authController.getOneRecordById);
-router.get("/getAllRecords/status/:status", authController.getAllRecordsByStatus);
+router.get("/getAllRecords/status/:status/:id", authController.getAllRecordsByStatus);
 router.get('/getRecordsByRadiologistId/:id', authController.getRecordsByRadiologistId);
 router.get('/getRecordsByCenterId/:id', authController.getRecordsByCenterId);
 
