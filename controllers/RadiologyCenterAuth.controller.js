@@ -394,29 +394,24 @@ exports.forgotPassword = async (req, res) => {
       return res.status(400).json({ message: "A valid email is required" });
     }
 
+    const radiologyCenter = await RadiologyCenter.findOne({ email });
+    const radiologist = await Radiologist.findOne({ email });
 
-
-    const radiologyCenter = await RadiologyCenter.findOne({ email: email });
-    const radiologist = await Radiologist.findOne({ email: email });
-
-    if (!radiologyCenter && !radiologist) { 
-        return res.status(404).json({ message: "No account found with this email" });
+    if (!radiologyCenter && !radiologist) {
+      return res.status(404).json({ message: "No account found with this email" });
     }
 
     const otp = otpGenerator.generate(6, { upperCase: false, specialChars: false });
     const expiry = new Date();
     expiry.setMinutes(expiry.getMinutes() + 5);
 
+    await Otp.deleteOne({ email });
 
-    await Otp.deleteOne({ email: normalizedEmail });
-
-  
-    const otpRecord = new Otp({ email: normalizedEmail, otp, expiry });
+    const otpRecord = new Otp({ email, otp, expiry });
     await otpRecord.save();
 
-    
     try {
-      await sendOtpForReset(normalizedEmail, otp);
+      await sendOtpForReset(email, otp);
     } catch (emailError) {
       console.error("Error sending OTP email:", emailError);
       return res.status(500).json({ message: "Failed to send OTP email." });
@@ -429,6 +424,7 @@ exports.forgotPassword = async (req, res) => {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
+
 
 
 
