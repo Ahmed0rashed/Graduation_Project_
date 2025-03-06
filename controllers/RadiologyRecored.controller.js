@@ -3,7 +3,7 @@ const mongoose = require("mongoose");
 const RadiologyRecord = require("../models/RadiologyRecords.Model");
 const RadiologyCenter = require("../models/Radiology_Centers.Model");
 const AIReport = require("../models/AIReports.Model");
-
+const Radiologist = require("../models/Radiologists.Model");
 
 const router = express.Router();
 
@@ -148,9 +148,17 @@ exports.getRecordsByCenterId = async (req, res) => {
   try {
     const records = await RadiologyRecord.find({ centerId: req.params.id }).sort({ createdAt: -1 });
     if (!records) return res.status(404).json({ error: "records not found" });
+    const recordsWithRadiologistName = await Promise.all(records.map(async (record) => {
+      const radiologist = await Radiologist.findById(record.radiologistId);
+      return {
+        ...record.toObject(),
+        radiologistName: radiologist ? `${radiologist.firstName} ${radiologist.lastName}` : "Unknown"
+      };
+    }));
+
     res.status(200).json({
-      numOfRecords: records.length,
-      records,
+      numOfRecords: recordsWithRadiologistName.length,
+      records: recordsWithRadiologistName,
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
