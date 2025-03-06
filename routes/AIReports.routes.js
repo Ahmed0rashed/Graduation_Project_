@@ -7,7 +7,9 @@ router.get("/getOneAIReport/:id", userController.getOneAIReport);
 router.put("/updateAIReport/:id", userController.updateAIReport);
 router.delete("/deleteAIReport/:id", userController.deleteAIReport);
 router.post("/analyzeImage/:id", userController.analyzeImage);
-
+router.post("/analyzeFindings/:id", userController.analyzeFindings);
+router.post("/analyzeImpression/:id", userController.analyzeImpression);
+router.post("/analyzeComments/:id", userController.analyzeComments);
 // routes with options
 router.get(
   "/getAllAIReports/result/:result",

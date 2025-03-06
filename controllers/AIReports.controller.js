@@ -119,6 +119,46 @@ exports.analyzeImage = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+exports.analyzeFindings = async (req, res) => {
+  try {
+    const { imageUrl } = req.body;
+    const response = await axios.post("https://graduation-project-ml-api.vercel.app/analyze-image", {
+      text: "Describe the findings of this image in detail.",
+      image_url: imageUrl
+    }, { timeout: 100000 });
+
+    res.status(200).json({ findings: response.data.diagnosis || "" });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+exports.analyzeImpression = async (req, res) => {
+  try {
+    const { imageUrl } = req.body;
+    const response = await axios.post("https://graduation-project-ml-api.vercel.app/analyze-image", {
+      text: "Provide the diagnostic impression based on the image.",
+      image_url: imageUrl
+    }, { timeout: 100000 });
+
+    res.status(200).json({ impression: response.data.diagnosis || "" });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+exports.analyzeComments = async (req, res) => {
+  try {
+    const { imageUrl } = req.body;
+    const response = await axios.post("https://graduation-project-ml-api.vercel.app/analyze-image", {
+      text: "Write additional comments or observations regarding the diagnosis.",
+      image_url: imageUrl
+    }, { timeout: 100000 });
+
+    res.status(200).json({ comments: response.data.diagnosis || "" });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
 
 
 
