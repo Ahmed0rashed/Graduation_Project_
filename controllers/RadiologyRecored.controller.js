@@ -148,6 +148,11 @@ exports.getRecordsByCenterId = async (req, res) => {
   try {
     const records = await RadiologyRecord.find({ centerId: req.params.id }).sort({ createdAt: -1 });
     if (!records) return res.status(404).json({ error: "records not found" });
+    // res.status(200).json({
+    //   numOfRecords: records.length,
+    //   records,
+      
+    // });
     const recordsWithRadiologistName = await Promise.all(records.map(async (record) => {
       const radiologist = await Radiologist.findById(record.radiologistId);
       return {

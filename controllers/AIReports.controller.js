@@ -89,34 +89,31 @@ exports.analyzeImage = async (req, res) => {
       return res.status(404).json({ error: "AI Report not found" });
     }
 
-    const findingResponse = await axios.post("https://graduation-project-ml-api.vercel.app/analyze-image", {
-      text: "Describe the findings of this image in detail.",
-      image_url: imageUrl,
-      
-      
-    } ,
-    {timeout: 100000});
+    // Run all API calls in parallel
+    const [findingResponse, imprationResponse, commentResponse] = await Promise.all([
+      axios.post("https://graduation-project-ml-api.vercel.app/analyze-image", {
+        text: "Describe the findings of this image in detail.",
+        image_url: imageUrl
+      }, { timeout: 100000 }),
 
-    const imprationResponse = await axios.post("https://graduation-project-ml-api.vercel.app/analyze-image", {
-      text: "Provide the diagnostic impression based on the image.",
-      image_url: imageUrl,
-    },
-    {timeout: 100000}
-  );
+      axios.post("https://graduation-project-ml-api.vercel.app/analyze-image", {
+        text: "Provide the diagnostic impression based on the image.",
+        image_url: imageUrl
+      }, { timeout: 100000 }),
 
-    const commentResponse = await axios.post("https://graduation-project-ml-api.vercel.app/analyze-image", {
-      text: "Write additional comments or observations regarding the diagnosis.",
-      image_url: imageUrl,
-    },
-    {timeout: 100000}
-  );
+      axios.post("https://graduation-project-ml-api.vercel.app/analyze-image", {
+        text: "Write additional comments or observations regarding the diagnosis.",
+        image_url: imageUrl
+      }, { timeout: 100000 })
+    ]);
 
-    
     aiReport.diagnosisReportFinding = findingResponse.data.diagnosis || "";
     aiReport.diagnosisReportImpration = imprationResponse.data.diagnosis || "";
     aiReport.diagnosisReportComment = commentResponse.data.diagnosis || "";
 
-    await aiReport.save();
+    // Save without blocking response
+    aiReport.save().catch(err => console.error("Error saving AI report:", err));
+
     res.status(200).json(aiReport);
   } catch (error) {
     res.status(500).json({ error: error.message });
