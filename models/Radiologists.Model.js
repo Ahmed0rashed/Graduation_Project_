@@ -75,6 +75,14 @@ const radiologistSchema = new mongoose.Schema({
     type: String,
     required: [true, 'Password hash is required']
   },
+  image: {
+    type: String ,
+    default: 'https://www.viverefermo.it/images/user.png',
+  },
+  numderOfReports: {
+    type: Number,
+    default: 0
+  }
 }, { timestamps: true });
 
 module.exports = mongoose.model('Radiologist', radiologistSchema);
