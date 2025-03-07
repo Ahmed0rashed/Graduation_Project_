@@ -12,8 +12,8 @@ const radiologistSchema = new mongoose.Schema({
     trim: true,
   },
   specialization: {
-    type: String,
-    required: [true, 'Specialization is required'],
+    type: [String], 
+    required: [true, 'At least one specialization is required'],
     trim: true,
     enum: {
       values: [
