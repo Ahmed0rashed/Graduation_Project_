@@ -79,7 +79,7 @@ const radiologistSchema = new mongoose.Schema({
     type: String ,
     default: 'https://www.viverefermo.it/images/user.png',
   },
-  numderOfReports: {
+  numberOfReports: {
     type: Number,
     default: 0
   }
