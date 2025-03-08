@@ -1,6 +1,8 @@
 const express = require("express");
-const morgan = require("morgan");
+const mongoose = require("mongoose");
 const cors = require("cors");
+const dotenv = require("dotenv");
+
 const passport = require("./config/passport");
 const radiologistRouter = require("./routes/Radiologist.Routes");
 const pationtRouter = require("./routes/pationt.routes");
@@ -22,6 +24,7 @@ app.use(morgan("dev"));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use("/uploads", express.static("uploads")); // جعل مجلد `uploads` متاحًا عبر الإنترنت
 
 app.use("/api/radiologists", radiologistRouter);
 app.use("/api/patients", pationtRouter);
