@@ -97,11 +97,19 @@ exports.registerRadiologist = async (req, res) => {
     if (!password) {
       return res.status(400).json({ message: "A valid password is required" });
     }
+    if (await RadiologyCenter.findOne({ email }) ) {
+      return res.status(400).json({ message: `This email already exists as a radiology center` });
+    }
 
-    
-    const existingRadiologist = await Radiologist.findOne({ email: email.toLowerCase() });
-    if (existingRadiologist) {
-      return res.status(400).json({ message: `This email "${email}" is already registered.` });
+    if (await Radiologist.findOne({ email }) ) {
+      return res.status(400).json({ message: `This email already exists as a radiologist` });
+    }
+    if (!validator.isLength(password, { min: 8 })) {
+      return res.status(400).json({ message: "Password should be at least 8 characters long" });
+    }
+    const specialCharacters = /[ !@#$%^&*(),.?":{}|<>\-_=+]/;
+    if (!specialCharacters.test(password)) {
+      return res.status(400).json({ message: "Password should contain at least one special character" });
     }
 
     
@@ -162,9 +170,9 @@ exports.verifyOtp = async (req, res) => {
     });
 
     await newRadiologist.save();
-    const token = createToken(newRadiologist._id);
+    // const token = createToken(newRadiologist._id);
 
-    res.status(201).json({ message: "Registration successful. You can now log in.", token, Radiologist: newRadiologist });
+    res.status(201).json({ message: "Registration successful. You can now log in.", Radiologist: newRadiologist });
 
   } catch (error) {
     console.error("Error verifying OTP: ", error);

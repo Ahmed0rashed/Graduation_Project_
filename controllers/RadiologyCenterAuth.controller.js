@@ -1,4 +1,6 @@
 const RadiologyCenter = require("../models/Radiology_Centers.Model");
+const Radiologist = require("../models/Radiologists.Model");
+
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 const validator = require("validator");
@@ -6,6 +8,28 @@ const { createToken } = require("../utils/createToken");
 const nodemailer = require("nodemailer");
 const otpGenerator = require("otp-generator");
 const Otp = require("../models/OTP");
+const cloudinary = require("cloudinary").v2;
+const multer = require("multer");
+const path = require("path");
+
+
+
+cloudinary.config({
+  cloud_name: 'dncawa23w',
+  api_key: '451913596668632',
+  api_secret: 'KboaQ-CpKdNpD0oJ0JvAagR3N_4',
+});
+
+
+const storage = multer.diskStorage({
+  filename: function (req, file, cb) {
+    cb(null, `${Date.now()}_${file.originalname}`);
+  },
+});
+
+const upload = multer({ storage });
+
+
 
 
 const sendOtpEmail = async (email, otp) => {
@@ -43,11 +67,11 @@ const sendOtpEmail = async (email, otp) => {
   
 };
 
-// Register Radiology Center
+
 exports.registerRadiologyCenter = async (req, res) => {
   try {
     const { centerName, address, contactNumber, email, password } = req.body;
-
+    
     if (!email || !validator.isEmail(email)) {
       return res.status(400).json({ message: "A valid email is required" });
     }
@@ -57,23 +81,44 @@ exports.registerRadiologyCenter = async (req, res) => {
     if (!address) {
       return res.status(400).json({ message: "Address is required" });
     }
-    if (!contactNumber || !/^\+?[\d\s-]{10,15}$/.test(contactNumber)) {
+    if (!contactNumber) {
       return res.status(400).json({ message: "A valid contact number is required" });
     }
     if (!password) {
       return res.status(400).json({ message: "Password is required" });
     }
-    if (await RadiologyCenter.findOne({ email })) {
-      return res.status(400).json({ message: `This email "${email}" already exists` });
+    if (await RadiologyCenter.findOne({ email }) ) {
+      return res.status(400).json({ message: `This email already exists as a radiology center` });
+    }
+    if (await Radiologist.findOne({ email }) ) {
+      return res.status(400).json({ message: `This email already exists as a radiologist` });
+    }
+    if (!validator.isLength(password, { min: 8 })) {
+      return res.status(400).json({ message: "Password should be at least 8 characters long" });
+    }
+    const specialCharacters = /[ !@#$%^&*(),.?":{}|<>\-_=+]/;
+    if (!specialCharacters.test(password)) {
+      return res.status(400).json({ message: "Password should contain at least one special character" });
+    }
+    if (!validator.isNumeric(contactNumber)) {
+      return res.status(400).json({ message: "Contact number should be numeric" });
+    }
+    if (!validator.isNumeric(address.zipCode)) {
+      return res.status(400).json({ message: "ZIP code should be numeric" });
+    }
+    if (!validator.isLength(address.zipCode, { min: 5, max: 5 })) {
+      return res.status(400).json({ message: "ZIP code should be 5 digits" });
+    }
+    if (!validator.isLength(contactNumber, { min: 10, max: 15 })) {
+      return res.status(400).json({ message: "Contact number should be between 10 and 15 digits" });
     }
 
-    // Send OTP for verification
     const otp = otpGenerator.generate(6, { upperCase: false, specialChars: false });
     const expiry = new Date();
     expiry.setMinutes(expiry.getMinutes() + 5);
 
-    const otpRecord = await Otp.findOneAndUpdate(
-      { email: email.toLowerCase() },
+    await Otp.findOneAndUpdate(
+      { email: email },
       { otp, expiry },
       { upsert: true, new: true }
     );
@@ -91,7 +136,8 @@ exports.registerRadiologyCenter = async (req, res) => {
 
 exports.verifyOtp = async (req, res) => {
   try {
-    const { email, otp, password, centerName, address, contactNumber } = req.body;
+    const { email, otp, password, centerName, contactNumber,zipCode,street,city,state } = req.params;  
+    
 
     const otpRecord = await Otp.findOne({ email: email.toLowerCase() });
     if (!otpRecord) {
@@ -105,27 +151,60 @@ exports.verifyOtp = async (req, res) => {
     if (otpRecord.otp !== otp) {
       return res.status(400).json({ message: "Invalid OTP" });
     }
-
+    const parsedAddress = {
+      street,
+      city,
+      state,
+      zipCode,  
+    };
 
     await Otp.deleteOne({ email: email.toLowerCase() });
 
-
     const hashedPassword = await bcrypt.hash(password, 10);
+
+    let uploadedFileUrl = null;
+    if (req.file) {
+      const uploadResult = await new Promise((resolve, reject) => {
+        const stream = cloudinary.uploader.upload_stream(
+          { folder: "radiology_centers" },
+          (error, result) => {
+            if (error) {
+              reject(error);
+            } else {
+              resolve(result);
+            }
+          }
+        );
+        stream.end(req.file.buffer); 
+      });
+
+      uploadedFileUrl = uploadResult.secure_url;
+    }
 
     const newRadiologyCenter = new RadiologyCenter({
       centerName,
-      address,
+      address : parsedAddress,
       contactNumber,
-      email: email.toLowerCase(),
+      email: email,
       passwordHash: hashedPassword,
+      path: uploadedFileUrl, 
     });
 
-    // await newRadiologyCenter.save();
-    // const token = createToken(newRadiologyCenter._id);
+    await newRadiologyCenter.save();
+    
+    await sendEmailWithAllINformations(
+      newRadiologyCenter.email, 
+      newRadiologyCenter.centerName, 
+      newRadiologyCenter.contactNumber, 
+      newRadiologyCenter.address, 
+      newRadiologyCenter.path
+    );
 
-    await sendEmailWithAllINformations(newRadiologyCenter.email, newRadiologyCenter.centerName, newRadiologyCenter.contactNumber, newRadiologyCenter.address);
-  
-    res.status(201).json({ message: "the request has been sent successfully", radiologyCenter: newRadiologyCenter });
+    res.status(201).json({ 
+      message: "The request has been sent successfully", 
+      _id: newRadiologyCenter._id, 
+      radiologyCenter: newRadiologyCenter 
+    });
 
   } catch (error) {
     console.error("Error verifying OTP: ", error);
@@ -133,7 +212,7 @@ exports.verifyOtp = async (req, res) => {
   }
 };
 
-const sendEmailWithAllINformations = async (email, centerName, contactNumber, address) => {
+const sendEmailWithAllINformations = async (email, centerName, contactNumber, address,path) => {
   const transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
@@ -158,7 +237,9 @@ const sendEmailWithAllINformations = async (email, centerName, contactNumber, ad
           <li style="margin-bottom: 10px;"><strong>Center Name:</strong> ${centerName}</li>
           <li style="margin-bottom: 10px;"><strong>Email:</strong> ${email}</li>
           <li style="margin-bottom: 10px;"><strong>Contact Number:</strong> ${contactNumber}</li>
-          <li style="margin-bottom: 10px;"><strong>Address:</strong> ${address}</li>
+          <li style="margin-bottom: 10px;"><strong>Address:</strong> ${address.street}, ${address.city}, ${address.state}, ${address.zipCode}</li>
+          <li style="margin-bottom: 10px;"><strong>License:</strong> <a href="${path}">View License</a></li>
+          
         </ul>
         <p style="font-size: 16px; color: #555;">Please process this request and confirm the registration status.</p>
         <p style="font-size: 16px; color: #555;">Best regards,</p>
@@ -305,7 +386,6 @@ const sendOtpForReset = async (email, otp) => {
 
 
 
-// forgot password
 exports.forgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
@@ -314,8 +394,10 @@ exports.forgotPassword = async (req, res) => {
       return res.status(400).json({ message: "A valid email is required" });
     }
 
-    const user = await RadiologyCenter.findOne({ email: email.toLowerCase() });
-    if (!user) {
+    const radiologyCenter = await RadiologyCenter.findOne({ email });
+    const radiologist = await Radiologist.findOne({ email });
+
+    if (!radiologyCenter && !radiologist) {
       return res.status(404).json({ message: "No account found with this email" });
     }
 
@@ -323,20 +405,26 @@ exports.forgotPassword = async (req, res) => {
     const expiry = new Date();
     expiry.setMinutes(expiry.getMinutes() + 5);
 
-    await Otp.findOneAndUpdate(
-      { email: email.toLowerCase() },
-      { otp, expiry },
-      { upsert: true, new: true }
-    );
+    await Otp.deleteOne({ email });
 
-    await sendOtpForReset(email, otp);
+    const otpRecord = new Otp({ email, otp, expiry });
+    await otpRecord.save();
+
+    try {
+      await sendOtpForReset(email, otp);
+    } catch (emailError) {
+      console.error("Error sending OTP email:", emailError);
+      return res.status(500).json({ message: "Failed to send OTP email." });
+    }
 
     res.status(200).json({ message: "OTP sent to email. Please use it to reset your password." });
+
   } catch (error) {
-    console.error("Error in forgot password: ", error);
+    console.error("Error in forgot password:", error);
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
+
 
 
 
@@ -348,7 +436,7 @@ exports.resetPassword = async (req, res) => {
       return res.status(400).json({ message: "A valid email is required" });
     }
 
-    if (!otp ) {
+    if (!otp) {
       return res.status(400).json({ message: "A valid OTP is required" });
     }
 
@@ -356,6 +444,7 @@ exports.resetPassword = async (req, res) => {
       return res.status(400).json({ message: "A strong password is required" });
     }
 
+    
     const otpRecord = await Otp.findOne({ email: email.toLowerCase(), otp: otp });
     if (!otpRecord || otpRecord.expiry < new Date()) {
       return res.status(400).json({ message: "Invalid OTP or OTP has expired" });
@@ -363,12 +452,27 @@ exports.resetPassword = async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(newPassword, 12);
 
-    await RadiologyCenter.findOneAndUpdate(
-      { email: email.toLowerCase() },
-      { passwordHash: hashedPassword },
-      { new: true }
+    
+    let userModel = null;
+    let user = await RadiologyCenter.findOne({ email: email });
+    if (!user) {
+      user = await Radiologist.findOne({ email: email });
+      userModel = Radiologist;
+    } else {
+      userModel = RadiologyCenter;
+    }
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    
+    await userModel.updateOne(
+      { email: email },
+      { passwordHash: hashedPassword }
     );
 
+    
     await Otp.findOneAndDelete({ email: email.toLowerCase() });
 
     res.status(200).json({ message: "Password reset successfully." });

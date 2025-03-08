@@ -5,19 +5,20 @@ const axios = require("axios");
 const router = express.Router();
 
 // Create AIReport
-exports.createAIReport = async (req, res) => {
-  try {
-    const { record } = req.body;
-    const newReport = new AIReport({
+  exports.createAIReport = async (req, res) => {
+    try {
+      const { record ,centerId,radiologistID} = req.body;
+      const newReport = new AIReport({
       record: record,
-      generatedDate: generatedDate || new Date(), // Default to current date
-    });
-    const savedReport = await newReport.save();
-    res.status(201).json(savedReport);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
+      centerId: centerId,
+      radiologistID: radiologistID
+      });
+      const savedReport = await newReport.save();
+      res.status(201).json(savedReport);
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  };
 
 // Update AIReport
 exports.updateAIReport = async (req, res) => {
@@ -88,39 +89,76 @@ exports.analyzeImage = async (req, res) => {
       return res.status(404).json({ error: "AI Report not found" });
     }
 
-    const findingResponse = await axios.post("https://graduation-project-ml-api.vercel.app/analyze-image", {
-      text: "Describe the findings of this image in detail.",
-      image_url: imageUrl,
-      
-      
-    } ,
-    {timeout: 100000});
+    // Run all API calls in parallel
+    const [findingResponse, imprationResponse, commentResponse] = await Promise.all([
+      axios.post("https://graduation-project-ml-api--mqcc1q.fly.dev/analyze-image/", {
+        text: "Describe the findings of this image in detail.",
+        image_url: imageUrl
+      }, { timeout: 100000 }),
 
-    const imprationResponse = await axios.post("https://graduation-project-ml-api.vercel.app/analyze-image", {
-      text: "Provide the diagnostic impression based on the image.",
-      image_url: imageUrl,
-    },
-    {timeout: 100000}
-  );
+      axios.post("https://graduation-project-ml-api--mqcc1q.fly.dev/analyze-image/", {
+        text: "Provide the diagnostic impression based on the image.",
+        image_url: imageUrl
+      }, { timeout: 100000 }),
 
-    const commentResponse = await axios.post("https://graduation-project-ml-api.vercel.app/analyze-image", {
-      text: "Write additional comments or observations regarding the diagnosis.",
-      image_url: imageUrl,
-    },
-    {timeout: 100000}
-  );
+      axios.post("https://graduation-project-ml-api--mqcc1q.fly.dev/analyze-image/", {
+        text: "Write additional comments or observations regarding the diagnosis.",
+        image_url: imageUrl
+      }, { timeout: 100000 })
+    ]);
 
-    
     aiReport.diagnosisReportFinding = findingResponse.data.diagnosis || "";
     aiReport.diagnosisReportImpration = imprationResponse.data.diagnosis || "";
     aiReport.diagnosisReportComment = commentResponse.data.diagnosis || "";
 
-    await aiReport.save();
+    // Save without blocking response
+    aiReport.save().catch(err => console.error("Error saving AI report:", err));
+
     res.status(200).json(aiReport);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
+exports.analyzeFindings = async (req, res) => {
+  try {
+    const { imageUrl } = req.body;
+    const response = await axios.post("https://graduation-project-ml-api.vercel.app/analyze-image", {
+      text: "Describe the findings of this image in detail.",
+      image_url: imageUrl
+    }, { timeout: 100000 });
+
+    res.status(200).json({ findings: response.data.diagnosis || "" });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+exports.analyzeImpression = async (req, res) => {
+  try {
+    const { imageUrl } = req.body;
+    const response = await axios.post("https://graduation-project-ml-api.vercel.app/analyze-image", {
+      text: "Provide the diagnostic impression based on the image.",
+      image_url: imageUrl
+    }, { timeout: 100000 });
+
+    res.status(200).json({ impression: response.data.diagnosis || "" });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+exports.analyzeComments = async (req, res) => {
+  try {
+    const { imageUrl } = req.body;
+    const response = await axios.post("https://graduation-project-ml-api.vercel.app/analyze-image", {
+      text: "Write additional comments or observations regarding the diagnosis.",
+      image_url: imageUrl
+    }, { timeout: 100000 });
+
+    res.status(200).json({ comments: response.data.diagnosis || "" });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
 
 
 

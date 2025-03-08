@@ -12,8 +12,8 @@ const radiologistSchema = new mongoose.Schema({
     trim: true,
   },
   specialization: {
-    type: String,
-    required: [true, 'Specialization is required'],
+    type: [String], 
+    required: [true, 'At least one specialization is required'],
     trim: true,
     enum: {
       values: [
@@ -75,6 +75,14 @@ const radiologistSchema = new mongoose.Schema({
     type: String,
     required: [true, 'Password hash is required']
   },
+  image: {
+    type: String ,
+    default: 'https://www.viverefermo.it/images/user.png',
+  },
+  numderOfReports: {
+    type: Number,
+    default: 0
+  }
 }, { timestamps: true });
 
 module.exports = mongoose.model('Radiologist', radiologistSchema);
