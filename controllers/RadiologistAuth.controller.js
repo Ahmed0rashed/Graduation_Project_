@@ -88,9 +88,10 @@ exports.registerRadiologist = async (req, res) => {
     if (!firstName || !lastName) {
       return res.status(400).json({ message: "First name and last name are required" });
     }
-    if (!specialization || !Radiologist.schema.path("specialization").enumValues.includes(specialization)) {
-      return res.status(400).json({ message: "A valid specialization is required" });
+    if (!specialization || !Array.isArray(specialization) || !specialization.every(sp => Radiologist.schema.path("specialization").options.enum.values.includes(sp))) {
+      return res.status(400).json({ message: "A valid specialization is required and should be an array with correct values" });
     }
+    
     if (!contactNumber || !/^\+?[\d\s-]{10,15}$/.test(contactNumber)) {
       return res.status(400).json({ message: "A valid contact number is required" });
     }
@@ -133,33 +134,50 @@ exports.registerRadiologist = async (req, res) => {
   }
 };
 exports.verifyOtp = async (req, res) => {
-  
   try {
     const { email, otp, password, firstName, lastName, specialization, contactNumber } = req.body;
 
-  
+    if (!email || !otp || !password || !firstName || !lastName || !specialization || !contactNumber) {
+      return res.status(400).json({ message: "All fields are required" });
+    }
+
+    // Find OTP record
     const otpRecord = await Otp.findOne({ email: email.toLowerCase() });
 
     if (!otpRecord) {
       return res.status(400).json({ message: "OTP not found for this email" });
     }
 
-    
+    // Check if OTP is expired
     if (otpRecord.expiry < new Date()) {
+      await Otp.deleteOne({ email: email.toLowerCase() }); // Cleanup expired OTP
       return res.status(400).json({ message: "OTP has expired" });
     }
 
-    
+    // Validate OTP
     if (otpRecord.otp !== otp) {
+      await Otp.deleteOne({ email: email.toLowerCase() }); // Cleanup invalid OTP
       return res.status(400).json({ message: "Invalid OTP" });
     }
 
-    
+    // Delete OTP after successful verification
     await Otp.deleteOne({ email: email.toLowerCase() });
 
-    
+    // Ensure specialization is an array
+    if (!Array.isArray(specialization)) {
+      return res.status(400).json({ message: "Specialization must be an array" });
+    }
+
+    // Validate specialization values
+    const validSpecializations = Radiologist.schema.path("specialization").options.enum.values;
+    if (!specialization.every(sp => validSpecializations.includes(sp))) {
+      return res.status(400).json({ message: "Invalid specialization provided" });
+    }
+
+    // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
+    // Create a new radiologist record
     const newRadiologist = new Radiologist({
       firstName,
       lastName,
@@ -170,7 +188,6 @@ exports.verifyOtp = async (req, res) => {
     });
 
     await newRadiologist.save();
-    // const token = createToken(newRadiologist._id);
 
     res.status(201).json({ message: "Registration successful. You can now log in.", Radiologist: newRadiologist });
 
@@ -179,6 +196,7 @@ exports.verifyOtp = async (req, res) => {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
+
 
 
 
