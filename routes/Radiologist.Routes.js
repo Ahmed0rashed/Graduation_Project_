@@ -3,6 +3,6 @@ const router = express.Router();
 const RadiologistController = require('../controllers/Radiologist.Controller');
 
 //Get all radiologists with filters and pagination
-router.put('/getRadiologistById/:id', RadiologistController.getRadiologistById);
+router.patch('/getRadiologistById/:id', RadiologistController.getRadiologistById);
 
 module.exports = router;
