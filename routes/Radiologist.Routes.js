@@ -10,8 +10,9 @@ const storage = multer.memoryStorage();
 const fileUpload = multer({ storage: storage });
 
 router.get('/getRadiologistById/:id', RadiologistController.getRadiologistById);
-
-router.get('/editRadiologist/:id', RadiologistController.editRadiologist);
+router.delete('/deleteRadiologistById/:id', RadiologistController.deleteRadiologist);
+router.put('/updateRadiologist/:id', RadiologistController.updateRadiologist);
+router.patch('/editRadiologist/:id', RadiologistController.editRadiologist);
 
 router.post("/upload/:id", fileUpload.single("image"), uploadImage);
 router.get("/getImage/:id", uploadImag.getImage);
