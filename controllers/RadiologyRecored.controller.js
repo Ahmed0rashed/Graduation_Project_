@@ -1,32 +1,54 @@
 const express = require("express");
 const mongoose = require("mongoose");
+const axios = require("axios");
 const RadiologyRecord = require("../models/RadiologyRecords.Model");
 const RadiologyCenter = require("../models/Radiology_Centers.Model");
 const AIReport = require("../models/AIReports.Model");
 const Radiologist = require("../models/Radiologists.Model");
+const CenterRadiologistsRelation = require("../models/CenterRadiologistsRelation.Model");
 
-const router = express.Router();
+
 
 exports.addRecord = async (req, res) => {
   try {
-    const {
-      centerId, radiologistId, patient_name, study_date, patient_id, sex, modality,
-      PatientBirthDate, age, study_description, email, DicomId, series,
+    const { centerId, patient_name, study_date, patient_id,sex,
+            modality, PatientBirthDate, age,study_description,email,
+            DicomId, series, body_part_examined, status, Dicom_url } = req.body;
 
-      body_part_examined, status,Dicom_url,
+    if (!mongoose.Types.ObjectId.isValid(centerId)) {
+      return res.status(400).json({ error: "Invalid centerId format" });
+    }
+    const validCenterId = new mongoose.Types.ObjectId(centerId);
 
-    } = req.body;
+    const radiologistSpecialty = await axios.post("https://ml-api-7yq4la.fly.dev/predict/", {
+      modality: modality,  
+      body_part_examined: body_part_examined,  
+      description: study_description  
+    }, { timeout: 100000 });
+    
+    console.log("Radiologist API Response:", radiologistSpecialty.data.Specialty);
+    
 
-    if (!centerId) {
-      return res.status(400).json({ error: "centerId is missing from request" });
+    const radiologistsInCenter = await CenterRadiologistsRelation.findOne({ center: validCenterId });
+    
+    if (!radiologistsInCenter || radiologistsInCenter.radiologists.length === 0) {
+      return res.status(404).json({ message: "No radiologists found in center" });
+    }
+    
+    let radiologist = await Radiologist.findOne({
+      _id: { $in: radiologistsInCenter.radiologists },
+      specialization: radiologistSpecialty.data.Specialty 
+    });
+    
+
+    if (!radiologist) {
+      radiologist = await Radiologist.findOne({ _id: { $in: radiologistsInCenter.radiologists } });
     }
 
-    const validCenterId = new mongoose.Types.ObjectId(centerId);
-    const validRadiologistId = new mongoose.Types.ObjectId(radiologistId);
 
-    const record = await RadiologyRecord.create({
+    const record = new RadiologyRecord({
       centerId: validCenterId,
-      radiologistId: validRadiologistId,
+      radiologistId: radiologist._id,
       patient_name,
       study_date,
       patient_id,
@@ -42,12 +64,13 @@ exports.addRecord = async (req, res) => {
       Dicom_url,
       status
     });
+
     const savedRecord = await record.save();
 
-    const aiReport = await AIReport.create({
+    const aiReport = new AIReport({
       record: savedRecord._id,
       centerId: validCenterId,
-      radiologistID: validRadiologistId,
+      radiologistID: radiologist._id, 
       diagnosisReportFinding: " ",
       diagnosisReportImpration: " ",
       diagnosisReportComment: " ",
@@ -60,12 +83,13 @@ exports.addRecord = async (req, res) => {
     savedRecord.reportId = savedAIReport._id;
     await savedRecord.save();
 
-    res.status(200).json({ record: savedRecord, savedAIReport: savedAIReport });
+    res.status(200).json({ record: savedRecord, savedAIReport });
   } catch (error) {
     console.error("Error in addRecord:", error);
     res.status(500).json({ error: error.message });
   }
 };
+
 
 exports.updateRecordById = async (req, res) => {
   try {

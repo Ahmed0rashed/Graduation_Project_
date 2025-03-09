@@ -17,13 +17,13 @@ const radiologistSchema = new mongoose.Schema({
     trim: true,
     enum: {
       values: [
-        'Diagnostic Radiology',
-        'Interventional Radiology',
-        'Nuclear Medicine',
-        'Pediatric Radiology',
-        'Neuroradiology',
+        'Chest Radiology',
+        'Abdominal Radiology',
+        'Head and Neck Radiology',
         'Musculoskeletal Radiology',
-        'Emergency Radiology'
+        'Neuroradiology',
+        'Thoracic Radiology',
+        'Cardiovascular Radiology'
       ],
       message: '{VALUE} is not a valid specialization'
     }
@@ -80,6 +80,38 @@ const radiologistSchema = new mongoose.Schema({
     default: 'https://www.viverefermo.it/images/user.png',
   },
   numberOfReports: {
+    type: Number,
+    default: 0,
+    ChestRadiology :{
+      type: Number,
+      default: 0
+    },
+    AbdominalRadiology :{
+      type: Number,
+      default: 0
+      },
+      Neuroradiology :{
+      type: Number,
+      default: 0
+    },
+    HeadandNeckRadiology :{
+      type: Number,
+      default: 0
+    },
+    MusculoskeletalRadiology :{
+      type: Number,
+      default: 0
+    },
+    ThoracicRadiology :{
+      type: Number,
+      default: 0
+    },
+    CardiovascularRadiology :{
+      type: Number,
+      default: 0
+    }
+  },
+  experience: {
     type: Number,
     default: 0
   }
