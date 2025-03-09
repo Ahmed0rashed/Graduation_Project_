@@ -430,24 +430,20 @@ exports.forgotPassword = async (req, res) => {
 
 exports.resetPassword = async (req, res) => {
   try {
-    const { email, otp, newPassword } = req.body;
+    const { email, newPassword } = req.body;
 
     if (!email || !validator.isEmail(email)) {
       return res.status(400).json({ message: "A valid email is required" });
     }
-
-    if (!otp) {
-      return res.status(400).json({ message: "A valid OTP is required" });
+    if (!validator.isLength(newPassword, { min: 8 })) {
+      return res.status(400).json({ message: "Password should be at least 8 characters long" });
     }
-
+    const specialCharacters = /[ !@#$%^&*(),.?":{}|<>\-_=+]/;
+    if (!specialCharacters.test(newPassword)) {
+      return res.status(400).json({ message: "Password should contain at least one special character" });
+    }
     if (!newPassword) {
       return res.status(400).json({ message: "A strong password is required" });
-    }
-
-    
-    const otpRecord = await Otp.findOne({ email: email.toLowerCase(), otp: otp });
-    if (!otpRecord || otpRecord.expiry < new Date()) {
-      return res.status(400).json({ message: "Invalid OTP or OTP has expired" });
     }
 
     const hashedPassword = await bcrypt.hash(newPassword, 12);
@@ -482,3 +478,40 @@ exports.resetPassword = async (req, res) => {
   }
 };
 
+exports.checkOtp = async (req, res) => {
+  try {
+    const { email, otp} = req.body;
+
+    if (!email || !validator.isEmail(email)) {
+      return res.status(400).json({ message: "A valid email is required" });
+    }
+
+    if (!otp) {
+      return res.status(400).json({ message: "A valid OTP is required" });
+    }
+
+    const otpRecord = await Otp.findOne({ email: email.toLowerCase(), otp: otp });
+    if (!otpRecord || otpRecord.expiry < new Date()) {
+      return res.status(400).json({ message: "Invalid OTP or OTP has expired" });
+    }
+
+    let userModel = null;
+    let user = await RadiologyCenter.findOne({ email: email });
+    if (!user) {
+      user = await Radiologist.findOne({ email: email });
+      userModel = Radiologist;
+    } else {
+      userModel = RadiologyCenter;
+    }
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    await Otp.findOneAndDelete({ email: email.toLowerCase() });
+
+    res.status(200).json({ message: "OTP is valid." });
+  } catch (error) {
+    console.error("Error in checking OTP: ", error);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
