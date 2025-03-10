@@ -403,7 +403,7 @@ exports.forgotPassword = async (req, res) => {
 
     const otp = otpGenerator.generate(6, { upperCase: false, specialChars: false });
     const expiry = new Date();
-    expiry.setMinutes(expiry.getMinutes() + 5);
+    expiry.setMinutes(expiry.getMinutes() + 10);
 
     await Otp.deleteOne({ email });
 

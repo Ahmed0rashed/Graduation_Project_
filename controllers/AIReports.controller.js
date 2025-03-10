@@ -91,17 +91,17 @@ exports.analyzeImage = async (req, res) => {
 
     // Run all API calls in parallel
     const [findingResponse, imprationResponse, commentResponse] = await Promise.all([
-      axios.post("https://graduation-project-ml-api--mqcc1q.fly.dev/analyze-image/", {
+      axios.post("https://llama-9xgzsq.fly.dev/Radio/", {
         text: "Describe the findings of this image in detail.",
         image_url: imageUrl
       }, { timeout: 100000 }),
 
-      axios.post("https://graduation-project-ml-api--mqcc1q.fly.dev/analyze-image/", {
+      axios.post("https://llama-9xgzsq.fly.dev/Radio/", {
         text: "Provide the diagnostic impression based on the image.",
         image_url: imageUrl
       }, { timeout: 100000 }),
 
-      axios.post("https://graduation-project-ml-api--mqcc1q.fly.dev/analyze-image/", {
+      axios.post("https://llama-9xgzsq.fly.dev/Radio/", {
         text: "Write additional comments or observations regarding the diagnosis.",
         image_url: imageUrl
       }, { timeout: 100000 })
