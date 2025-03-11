@@ -94,21 +94,27 @@ exports.addRecord = async (req, res) => {
 exports.updateRecordById = async (req, res) => {
   try {
     const { status } = req.body;
-    if (!status) return res.status(400).json({ error: "status is missing from request" });
+    if (!status) return res.status(400).json({ error: "Status is missing from request" });
+
+    if (!req.params.id) return res.status(400).json({ error: "Record ID is missing" });
+
     const updatedRecord = await RadiologyRecord.findByIdAndUpdate(
       req.params.id,
-      status,
+      { status }, 
       {
         new: true,
         runValidators: true,
       }
     );
+
     if (!updatedRecord) return res.status(404).json({ error: "Record not found" });
+
     res.status(200).json({ message: "Record updated successfully", updatedRecord });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
-}
+};
+
 exports.getAllRecords = async (req, res) => {
   try {
     const Records = await RadiologyRecord.find().sort({ createdAt: -1 });
