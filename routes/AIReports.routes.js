@@ -10,6 +10,9 @@ router.post("/analyzeImage/:id", userController.analyzeImage);
 router.post("/analyzeFindings/:id", userController.analyzeFindings);
 router.post("/analyzeImpression/:id", userController.analyzeImpression);
 router.post("/analyzeComments/:id", userController.analyzeComments);
+router.put("/Reviewed/:id", userController.updateAIReport1);
+
+
 // routes with options
 router.get(
   "/getAllAIReports/result/:result",

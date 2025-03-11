@@ -1,6 +1,7 @@
 const express = require("express");
 const mongoose = require("mongoose");
-const AIReport = require("../models/AIReports.Model.js"); // Adjust the path if needed
+const AIReport = require("../models/AIReports.Model.js"); 
+const RadiologyRecord = require("../models/RadiologyRecords.Model"); 
 const axios = require("axios");
 const router = express.Router();
 
@@ -32,6 +33,30 @@ exports.updateAIReport = async (req, res) => {
         new: true,
         runValidators: true,
       }
+    );
+    if (!updatedReport) return res.status(404).json({ message: "Report not found" });
+    res.status(200).json(updatedReport);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+};
+exports.updateAIReport1 = async (req, res) => {
+  try {
+    const stutes = req.body;
+    if (!stutes) return res.status(400).json({ message: "Stutes are required" });
+    const updatedReport = await AIReport.findByIdAndUpdate(
+      req.params.id,
+      stutes,
+      {
+        new: true,
+        runValidators: true,
+      }
+    );
+    const foundAIReport = await AIReport.findById(req.params.id);
+    await RadiologyRecord.findByIdAndUpdate(
+      foundAIReport.record,
+      { status: "Reviewed" },
+      { new: true, runValidators: true }
     );
     if (!updatedReport) return res.status(404).json({ message: "Report not found" });
     res.status(200).json(updatedReport);
