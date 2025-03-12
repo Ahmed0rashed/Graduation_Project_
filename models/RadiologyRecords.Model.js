@@ -52,7 +52,7 @@ const radiologyRecordSchema = new mongoose.Schema(
     },
     DicomId: {
       type: String,
-      required: true,
+      required: false,
     },
     series: {
       type: String,
@@ -79,8 +79,15 @@ const radiologyRecordSchema = new mongoose.Schema(
     study_description: {
       type: String,
     },
+cancledby: [
+  {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Radiologist",
+  },
+]
   },
   { timestamps: true }
+
 );
 
 module.exports = mongoose.model("RadiologyRecord", radiologyRecordSchema);

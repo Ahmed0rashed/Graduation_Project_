@@ -14,7 +14,7 @@ router.put('/updateRecordById/:id', authController.updateRecordById);
 
 router.delete('/deleteRecordById/:id', authController.deleteRecordById);
 router.delete('/realDeleteRecordById/:id', authController.realDeleteRecordById);
-
+router.post('/cancel/:id',authController.cancel);
 
 
 
