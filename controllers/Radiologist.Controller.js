@@ -2,7 +2,7 @@ const express = require("express");
 const mongoose = require("mongoose");
 const Radiologist = require("../models/Radiologists.Model"); 
 const cloudinary = require("cloudinary").v2;
-
+const activeUsers =require("../server");
 cloudinary.config({
   cloud_name: "dncawa23w",
   api_key: "451913596668632",
@@ -122,7 +122,7 @@ class RadiologistController {
     }
   }
 
-  // Get image
+  
   async getImage(req, res) {
     try {
       const radiologist = await Radiologist.findById(req.params.id);
@@ -136,7 +136,10 @@ class RadiologistController {
       res.status(500).json({ message: "Server error", error: error.message });
     }
   }
-}
 
-// Export as an instance of the class
+} 
+
+
+
 module.exports = new RadiologistController();
+

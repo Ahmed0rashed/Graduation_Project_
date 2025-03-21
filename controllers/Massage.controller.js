@@ -3,11 +3,21 @@ const Radiologist = require('../models/Radiologists.Model');
 const RadiologyCenter = require('../models/Radiology_Centers.Model');
 
 
+const { io, activeUsers } = require("../middleware/socketManager");
+
+
+
+
+exports.io = null; 
+
+exports.setSocketIO = (socketIO) => {
+  exports.io = socketIO;
+};
+
 exports.getConversation = async (req, res) => {
   try {
     const { userId, userType, partnerId, partnerType } = req.query;
     
-
     if (!userId || !userType || !partnerId || !partnerType) {
       return res.status(400).json({ 
         success: false, 
@@ -47,7 +57,8 @@ exports.getConversation = async (req, res) => {
       ]
     }).sort({ createdAt: 1 });
 
-    await Message.updateMany(
+    // تحديث الرسائل كمقروءة
+    const updatedDocs = await Message.updateMany(
       { 
         sender: partnerId, 
         senderModel: partnerType,
@@ -57,6 +68,15 @@ exports.getConversation = async (req, res) => {
       },
       { readStatus: true }
     );
+    
+    // إخطار المرسل أن الرسائل قد تمت قراءتها إذا كان متصلاً
+    if (updatedDocs.modifiedCount > 0 && activeUsers.has(partnerId)) {
+      const partnerSocketId = activeUsers.get(partnerId).socketId;
+      exports.io.to(partnerSocketId).emit('messagesRead', {
+        partnerId: userId,
+        partnerType: userType
+      });
+    }
     
     return res.status(200).json({
       success: true,
@@ -82,7 +102,6 @@ exports.sendMessage = async (req, res) => {
       attachments 
     } = req.body;
     
-
     if (!senderId || !senderType || !receiverId || !receiverType || !content) {
       return res.status(400).json({ 
         success: false, 
@@ -90,7 +109,6 @@ exports.sendMessage = async (req, res) => {
       });
     }
     
-
     const senderExists = senderType === 'Radiologist' 
       ? await Radiologist.exists({ _id: senderId })
       : await RadiologyCenter.exists({ _id: senderId });
@@ -106,18 +124,7 @@ exports.sendMessage = async (req, res) => {
       });
     }
     
-    // If radiologist is messaging, verify they belong to the center
-    // if (senderType === 'Radiologist' && receiverType === 'RadiologyCenter') {
-    //   const radiologist = await Radiologist.findById(senderId);
-    //   if (radiologist.center.toString() !== receiverId) {
-    //     return res.status(403).json({
-    //       success: false,
-    //       message: 'Radiologist does not belong to this center'
-    //     });
-    //   }
-    // }
-    
-    // Create new message
+    // إنشاء رسالة جديدة
     const newMessage = new Message({
       sender: senderId,
       senderModel: senderType,
@@ -128,6 +135,16 @@ exports.sendMessage = async (req, res) => {
     });
     
     await newMessage.save();
+    
+    // إرسال حدث socket إذا كان المستلم متصلاً
+    if (activeUsers.has(receiverId)) {
+      const receiverSocketId = activeUsers.get(receiverId).socketId;
+      exports.io.to(receiverSocketId).emit('newMessage11', newMessage);
+      // io.emit('newMessage55', newMessage); 
+      
+
+
+    }
     
     return res.status(201).json({
       success: true,
@@ -141,8 +158,6 @@ exports.sendMessage = async (req, res) => {
     });
   }
 };
-
-
 
 exports.getUnreadCount = async (req, res) => {
   try {
@@ -169,6 +184,51 @@ exports.getUnreadCount = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: 'Error retrieving unread count',
+      error: error.message
+    });
+  }
+};
+
+// طريقة جديدة لتعليم الرسائل كمقروءة باستخدام Socket.IO
+exports.markMessagesAsRead = async (req, res) => {
+  try {
+    const { userId, userType, partnerId, partnerType } = req.body;
+    
+    if (!userId || !userType || !partnerId || !partnerType) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Missing required parameters' 
+      });
+    }
+    
+    const result = await Message.updateMany(
+      { 
+        sender: partnerId, 
+        senderModel: partnerType,
+        receiver: userId,
+        receiverModel: userType,
+        readStatus: false
+      },
+      { readStatus: true }
+    );
+    
+    // إخطار المرسل أن الرسائل قد تمت قراءتها إذا كان متصلاً
+    if (result.modifiedCount > 0 && activeUsers.has(partnerId)) {
+      const partnerSocketId = activeUsers.get(partnerId).socketId;
+      exports.io.to(partnerSocketId).emit('messagesRead', {
+        partnerId: userId,
+        partnerType: userType
+      });
+    }
+    
+    return res.status(200).json({
+      success: true,
+      modifiedCount: result.modifiedCount
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: 'Error marking messages as read',
       error: error.message
     });
   }

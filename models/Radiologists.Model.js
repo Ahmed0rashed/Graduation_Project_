@@ -41,8 +41,8 @@ const radiologistSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['Active', 'Inactive', 'On Leave', 'Suspended'],
-    default: 'Active'
+    enum: ['online', 'offline'],
+    default: 'online'
   },
   email: {
     type: String,

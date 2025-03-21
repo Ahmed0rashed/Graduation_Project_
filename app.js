@@ -11,7 +11,7 @@ const aireports = require("./routes/AIReports.routes");
 const record = require("./routes/radiologyRecords.routes");
 const RadiologyCenter = require("./routes/RadiologyCenter.Routes");
 const massage = require("./routes/Char.routes");
-
+// const socketIO = require('socket.io');
 const CenterRadiologistsRelationRoutes = require("./routes/CenterRadiologistsRelation.Routes");
 
 const app = express();
