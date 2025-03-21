@@ -4,9 +4,9 @@ const RadiologyCenter = require('../models/Radiology_Centers.Model');
 // const activeUsers = require('../server');
 // تخزين المستخدمين النشطين
 // const Message = require("../models/Chat.model");
-// const { io, activeUsers } = require("../socket/socketManager");
+const { io, activeUsers } = require("../middleware/socketManager");
 
-const activeUsers = new Map();
+// const activeUsers = new Map();
 
 // تصدير لاستخدامه في ملفات أخرى
 exports.io = null; // استبدل بمثيل io الخاص بك الفعلي
