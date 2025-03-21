@@ -1,15 +1,10 @@
 const Message = require('../models/Chat.model');
 const Radiologist = require('../models/Radiologists.Model');
 const RadiologyCenter = require('../models/Radiology_Centers.Model');
-// const activeUsers = require('../server');
-// تخزين المستخدمين النشطين
-// const Message = require("../models/Chat.model");
+
 const { io, activeUsers } = require("../middleware/socketManager");
 
-// const activeUsers = new Map();
-
-// تصدير لاستخدامه في ملفات أخرى
-exports.io = null; // استبدل بمثيل io الخاص بك الفعلي
+exports.io = null; 
 
 exports.setSocketIO = (socketIO) => {
   exports.io = socketIO;
@@ -58,7 +53,7 @@ exports.getConversation = async (req, res) => {
       ]
     }).sort({ createdAt: 1 });
 
-    // تحديث الرسائل كمقروءة
+  
     const updatedDocs = await Message.updateMany(
       { 
         sender: partnerId, 
@@ -70,7 +65,7 @@ exports.getConversation = async (req, res) => {
       { readStatus: true }
     );
     
-    // إخطار المرسل أن الرسائل قد تمت قراءتها إذا كان متصلاً
+    
     if (updatedDocs.modifiedCount > 0 && activeUsers.has(partnerId)) {
       const partnerSocketId = activeUsers.get(partnerId).socketId;
       exports.io.to(partnerSocketId).emit('messagesRead', {
@@ -125,7 +120,7 @@ exports.sendMessage = async (req, res) => {
       });
     }
     
-    // إنشاء رسالة جديدة
+  
     const newMessage = new Message({
       sender: senderId,
       senderModel: senderType,
@@ -137,7 +132,7 @@ exports.sendMessage = async (req, res) => {
     
     await newMessage.save();
     
-    // إرسال حدث socket إذا كان المستلم متصلاً
+    
     if (activeUsers.has(receiverId)) {
       const receiverSocketId = activeUsers.get(receiverId).socketId;
       exports.io.to(receiverSocketId).emit('newMessage11', newMessage);
@@ -190,7 +185,7 @@ exports.getUnreadCount = async (req, res) => {
   }
 };
 
-// طريقة جديدة لتعليم الرسائل كمقروءة باستخدام Socket.IO
+
 exports.markMessagesAsRead = async (req, res) => {
   try {
     const { userId, userType, partnerId, partnerType } = req.body;
@@ -213,7 +208,7 @@ exports.markMessagesAsRead = async (req, res) => {
       { readStatus: true }
     );
     
-    // إخطار المرسل أن الرسائل قد تمت قراءتها إذا كان متصلاً
+    
     if (result.modifiedCount > 0 && activeUsers.has(partnerId)) {
       const partnerSocketId = activeUsers.get(partnerId).socketId;
       exports.io.to(partnerSocketId).emit('messagesRead', {
