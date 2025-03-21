@@ -4,7 +4,7 @@ const io = require('socket.io-client');
 const socket = io('http://localhost:8000');
 
 
-socket.emit('registerUser', { userId: '67c360b91d3e0b0f69c3b0a2' });
+socket.emit('registerUser', { userId: '67c72055bae8c7428a7e6e0e' });
 
 
 socket.on('newMessage', (message) => {
