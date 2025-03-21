@@ -1,7 +1,7 @@
 const io = require('socket.io-client');
 
 
-const socket = io('http://localhost:8000');
+const socket = io('http://localhost:3000');
 
 
 socket.emit('registerUser', { userId: '67c72055bae8c7428a7e6e0e' });

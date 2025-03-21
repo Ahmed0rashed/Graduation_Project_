@@ -1,14 +1,15 @@
 const Message = require('../models/Chat.model');
 const Radiologist = require('../models/Radiologists.Model');
 const RadiologyCenter = require('../models/Radiology_Centers.Model');
+// const activeUsers = require('../server');
+// تخزين المستخدمين النشطين
+// const Message = require("../models/Chat.model");
+// const { io, activeUsers } = require("../socket/socketManager");
 
+const activeUsers = new Map();
 
-const { io, activeUsers } = require("../middleware/socketManager");
-
-
-
-
-exports.io = null; 
+// تصدير لاستخدامه في ملفات أخرى
+exports.io = null; // استبدل بمثيل io الخاص بك الفعلي
 
 exports.setSocketIO = (socketIO) => {
   exports.io = socketIO;

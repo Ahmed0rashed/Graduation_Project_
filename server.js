@@ -1,26 +1,84 @@
 const dotenv = require("dotenv");
 const express = require("express");
 const connectDB = require("./config/db.config");
-const http = require("http");
-const app = require("./app");
-const { initializeSocket } = require("./middleware/socketManager");
-
 dotenv.config({ path: "./config.env" });
+const { createServer } = require("http");
+const { Server } = require("socket.io");
+const app = require("./app");
+const Radiologist = require('./models/Radiologists.Model'); 
+const chatController = require('./controllers/Massage.controller');
 
-// التأكد من عدم تشغيل الخادم أكثر من مرة
-if (!global.serverInstance) {
-  const server = http.createServer(app);
-  global.serverInstance = server; // تخزين المرجع لتجنب التشغيل المكرر
+const httpServer = createServer(app);
+const io = new Server(httpServer, {
+  cors: {
+    origin: "*", 
+    methods: ["GET", "POST"]
+  }
+});
 
-  const io = initializeSocket(server);
+chatController.setSocketIO(io);
 
-  connectDB();
+const activeUsers = new Map();
 
-  const port = process.env.PORT || 8000;
+io.on('connection', (socket) => {
+  console.log('Radiologist connected', socket.id);
 
-  server.listen(port, () => console.log(`✅ Server running on port ${port}`));
-} else {
-  console.log("🚨 Server is already running!");
-}
+  socket.on('userOnline', async ({ userId, userType }) => {
+    try {
+      await Radiologist.findByIdAndUpdate(userId, { status: 'online' });
 
-module.exports = global.serverInstance;
+      activeUsers.set(userId, { socketId: socket.id, userType });
+
+      console.log(`${userType} ${userId} connected`);
+
+      io.emit('userStatusChange', {
+        userId,
+        userType,
+        status: 'online'
+      });
+    } catch (error) {
+      console.error('Error updating user status:', error.message);
+    }
+  });
+
+  socket.on('disconnect', async () => {
+    try {
+      let disconnectedUserId = null;
+      for (const [userId, userData] of activeUsers.entries()) {
+        if (userData.socketId === socket.id) {
+          disconnectedUserId = userId;
+          const userType = userData.userType;
+          activeUsers.delete(userId);
+
+          await Radiologist.findByIdAndUpdate(userId, { status: 'offline' });
+
+          console.log(`${userType} ${userId} disconnected`);
+
+          io.emit('userStatusChange', {
+            userId,
+            userType,
+            status: 'offline'
+          });
+          break;
+        }
+      }
+    } catch (error) {
+      console.error('Error handling disconnect:', error.message);
+    }
+  });
+
+  setTimeout(() => {
+    io.emit('newMessage', { sender: socket.id, content: "Test message from server4" });
+    console.log('message sent');
+  }, 5000);
+});
+
+connectDB();
+
+const port = process.env.PORT || 8000;
+
+httpServer.listen(port, () => {
+  console.log(`App is running on port: ${port}`);
+});
+
+module.exports = activeUsers;
