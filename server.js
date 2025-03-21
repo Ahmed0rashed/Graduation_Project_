@@ -1,20 +1,26 @@
-require("dotenv").config({ path: "./config.env" });
+const dotenv = require("dotenv");
 const express = require("express");
 const connectDB = require("./config/db.config");
 const http = require("http");
 const app = require("./app");
 const { initializeSocket } = require("./middleware/socketManager");
 
-const server = http.createServer(app);
-const io = initializeSocket(server);
+dotenv.config({ path: "./config.env" });
 
-// الاتصال بقاعدة البيانات
-connectDB();
+// التأكد من عدم تشغيل الخادم أكثر من مرة
+if (!global.serverInstance) {
+  const server = http.createServer(app);
+  global.serverInstance = server; // تخزين المرجع لتجنب التشغيل المكرر
 
-// ✅ لا تقم بتشغيل `server.listen()` عند تشغيل الكود على Vercel  
-if (process.env.NODE_ENV !== "vercel") {
-  const port =  8000 || process.env.PORT ;
-  server.listen(port, () => console.log(`App running on port ${port}`));
+  const io = initializeSocket(server);
+
+  connectDB();
+
+  const port = process.env.PORT || 8000;
+
+  server.listen(port, () => console.log(`✅ Server running on port ${port}`));
+} else {
+  console.log("🚨 Server is already running!");
 }
 
-module.exports = server;
+module.exports = global.serverInstance;
