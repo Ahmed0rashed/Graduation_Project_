@@ -113,6 +113,45 @@ class CenterRadiologistsRelationController {
       });
     }
   }
+  async getOnlineRadiologistsByCenterId(req, res) {
+    try {
+      const { centerId } = req.params;
+
+      
+      if (!mongoose.Types.ObjectId.isValid(centerId)) {
+        return res.status(400).json({
+          error: 'Invalid ID',
+          message: 'The provided center ID is not valid'
+        });
+      }
+
+      const onlineRadiologists = await CenterRadiologistsRelation.findOne({ center: centerId })
+        .populate({
+          path: 'radiologists',
+          match: { status: 'online' },
+          select: '-passwordHash'
+        })
+        .select('radiologists');
+
+      if (!onlineRadiologists || !onlineRadiologists.radiologists.length) {
+        return res.status(404).json({
+          error: 'Not Found',
+          message: 'No online radiologists found for this center'
+        });
+      }
+
+      res.status(200).json({
+        message: 'Online radiologists retrieved successfully',
+        data: onlineRadiologists.radiologists
+      });
+    } catch (error) {
+      console.error('Error in getOnlineRadiologistsByCenterId:', error);
+      res.status(500).json({
+        error: 'Internal Server Error',
+        message: 'Failed to retrieve online radiologists'
+      });
+    }
+  }
 }
 
 module.exports = new CenterRadiologistsRelationController();
