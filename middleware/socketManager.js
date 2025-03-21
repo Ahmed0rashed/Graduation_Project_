@@ -1,38 +1,41 @@
 const { Server } = require("socket.io");
-const Radiologist = require('../models/Radiologists.Model'); 
+const Radiologist = require("../models/Radiologists.Model");
 
 const activeUsers = new Map();
 
 function initializeSocket(httpServer) {
   const io = new Server(httpServer, {
     cors: {
-      origin: "*", 
-      methods: ["GET", "POST"]
-    }
+      origin: ["http://localhost:3000", "https://graduation-project-mmih.vercel.app"], 
+      methods: ["GET", "POST"],
+      credentials: true
+    },
+    pingTimeout: 60000,
+    pingInterval: 25000  
   });
 
-  io.on('connection', (socket) => {
-    console.log('Radiologist connected', socket.id);
+  io.on("connection", (socket) => {
+    console.log(`✅ Radiologist connected: ${socket.id}`);
 
-    socket.on('userOnline', async ({ userId, userType }) => {
+    socket.on("userOnline", async ({ userId, userType }) => {
       try {
-        await Radiologist.findByIdAndUpdate(userId, { status: 'online' });
+        await Radiologist.findByIdAndUpdate(userId, { status: "online" });
 
         activeUsers.set(userId, { socketId: socket.id, userType });
 
-        console.log(`${userType} ${userId} connected`);
+        console.log(`🟢 ${userType} ${userId} is online`);
 
-        io.emit('userStatusChange', {
+        io.emit("userStatusChange", {
           userId,
           userType,
-          status: 'online'
+          status: "online"
         });
       } catch (error) {
-        console.error('Error updating user status:', error.message);
+        console.error("❌ Error updating user status:", error.message);
       }
     });
 
-    socket.on('disconnect', async () => {
+    socket.on("disconnect", async () => {
       try {
         let disconnectedUserId = null;
         for (const [userId, userData] of activeUsers.entries()) {
@@ -41,26 +44,34 @@ function initializeSocket(httpServer) {
             const userType = userData.userType;
             activeUsers.delete(userId);
 
-            await Radiologist.findByIdAndUpdate(userId, { status: 'offline' });
+            
+            await Radiologist.findByIdAndUpdate(userId, { status: "offline" });
 
-            console.log(`${userType} ${userId} disconnected`);
+            console.log(`🔴 ${userType} ${userId} disconnected`);
 
-            io.emit('userStatusChange', {
+            io.emit("userStatusChange", {
               userId,
               userType,
-              status: 'offline'
+              status: "offline"
             });
+
+            socket.leave(userId); 
+
             break;
           }
         }
       } catch (error) {
-        console.error('Error handling disconnect:', error.message);
+        console.error("❌ Error handling disconnect:", error.message);
       }
     });
 
+    
     setTimeout(() => {
-      io.emit('newMessage', { sender: socket.id, content: "Test message from server" });
-      console.log('Message sent');
+      io.emit("newMessage", {
+        sender: socket.id,
+        content: "📩 Test message from server"
+      });
+      console.log("📨 Message sent");
     }, 5000);
   });
 
