@@ -122,12 +122,12 @@ exports.deleteAIReport = async (req, res) => {
       }, { timeout: 100000 }),
 
       axios.post("https://llama-9xgzsq.fly.dev/Radio/", {
-        text: "Provide only the diagnostic impression based on the image without additional details or steps.",
+        text: "Provide the diagnostic impression based on the image without additional details or steps.",
         image_url: imageUrl
       }, { timeout: 100000 }),
 
       axios.post("https://llama-9xgzsq.fly.dev/Radio/", {
-        text: "Provide medical recommendations based on the findings and diagnostic impression of this image without listing steps.",
+        text: "Provide only medical recommendations only based on the findings and diagnostic impression of this image without listing steps .",
         image_url: imageUrl
       }, { timeout: 100000 })
     ]);
