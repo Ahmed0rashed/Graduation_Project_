@@ -82,31 +82,31 @@ const radiologistSchema = new mongoose.Schema({
   numberOfReports: {
     type: Number,
     default: 0,
-    ChestRadiology :{
+    ChestRadiology: {
       type: Number,
       default: 0
     },
-    AbdominalRadiology :{
-      type: Number,
-      default: 0
-      },
-      Neuroradiology :{
+    AbdominalRadiology: {
       type: Number,
       default: 0
     },
-    HeadandNeckRadiology :{
+    Neuroradiology: {
       type: Number,
       default: 0
     },
-    MusculoskeletalRadiology :{
+    HeadandNeckRadiology: {
       type: Number,
       default: 0
     },
-    ThoracicRadiology :{
+    MusculoskeletalRadiology: {
       type: Number,
       default: 0
     },
-    CardiovascularRadiology :{
+    ThoracicRadiology: {
+      type: Number,
+      default: 0
+    },
+    CardiovascularRadiology: {
       type: Number,
       default: 0
     }
