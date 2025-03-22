@@ -62,7 +62,8 @@ exports.addRecord = async (req, res) => {
       series,
       DicomId,
       Dicom_url,
-      status
+      status,
+      specializationRequest: radiologistSpecialty.data.Specialty,
     });
 
     const savedRecord = await record.save();

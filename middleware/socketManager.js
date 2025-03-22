@@ -15,7 +15,7 @@ function initializeSocket(httpServer) {
   });
 
   io.on("connection", (socket) => {
-    console.log(`✅ Radiologist connected: ${socket.id}`);
+    console.log(`Radiologist connected: ${socket.id}`);
 
     socket.on("userOnline", async ({ userId, userType }) => {
       try {
@@ -23,7 +23,7 @@ function initializeSocket(httpServer) {
 
         activeUsers.set(userId, { socketId: socket.id, userType });
 
-        console.log(`🟢 ${userType} ${userId} is online`);
+        console.log(`${userType} ${userId} is online`);
 
         io.emit("userStatusChange", {
           userId,
@@ -31,7 +31,7 @@ function initializeSocket(httpServer) {
           status: "online"
         });
       } catch (error) {
-        console.error("❌ Error updating user status:", error.message);
+        console.error("Error updating user status:", error.message);
       }
     });
 
@@ -47,7 +47,7 @@ function initializeSocket(httpServer) {
             
             await Radiologist.findByIdAndUpdate(userId, { status: "offline" });
 
-            console.log(`🔴 ${userType} ${userId} disconnected`);
+            console.log(`${userType} ${userId} disconnected`);
 
             io.emit("userStatusChange", {
               userId,
@@ -61,7 +61,7 @@ function initializeSocket(httpServer) {
           }
         }
       } catch (error) {
-        console.error("❌ Error handling disconnect:", error.message);
+        console.error(" Error handling disconnect:", error.message);
       }
     });
 

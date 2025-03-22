@@ -84,7 +84,10 @@ cancledby: [
     type: mongoose.Schema.Types.ObjectId,
     ref: "Radiologist",
   },
-]
+],
+specializationRequest: {
+  type: String,
+},
   },
   { timestamps: true }
 

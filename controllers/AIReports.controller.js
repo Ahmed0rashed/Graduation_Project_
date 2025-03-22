@@ -2,6 +2,7 @@ const express = require("express");
 const mongoose = require("mongoose");
 const AIReport = require("../models/AIReports.Model.js"); 
 const RadiologyRecord = require("../models/RadiologyRecords.Model"); 
+const Radiologist = require("../models/Radiologists.Model");
 const axios = require("axios");
 const router = express.Router();
 
@@ -52,6 +53,7 @@ exports.updateAIReport1 = async (req, res) => {
         runValidators: true,
       }
     );
+    // 
     const foundAIReport = await AIReport.findById(req.params.id);
     await RadiologyRecord.findByIdAndUpdate(
       foundAIReport.record,
@@ -103,8 +105,7 @@ exports.deleteAIReport = async (req, res) => {
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
-};
-exports.analyzeImage = async (req, res) => {
+};exports.analyzeImage = async (req, res) => {
   try {
     const { id } = req.params;
     const { imageUrl } = req.body;
@@ -114,36 +115,43 @@ exports.analyzeImage = async (req, res) => {
       return res.status(404).json({ error: "AI Report not found" });
     }
 
-    // Run all API calls in parallel
-    const [findingResponse, imprationResponse, commentResponse] = await Promise.all([
+    const [findingResponse, impressionResponse, recommendationResponse] = await Promise.all([
       axios.post("https://llama-9xgzsq.fly.dev/Radio/", {
-        text: "Describe the findings of this image in detail.",
+        text: "Provide only the medical findings from this image without explanations, instructions, or steps.",
         image_url: imageUrl
       }, { timeout: 100000 }),
 
       axios.post("https://llama-9xgzsq.fly.dev/Radio/", {
-        text: "Provide the diagnostic impression based on the image.",
+        text: "Provide only the diagnostic impression based on the image without additional details or steps.",
         image_url: imageUrl
       }, { timeout: 100000 }),
 
       axios.post("https://llama-9xgzsq.fly.dev/Radio/", {
-        text: "Write additional comments or observations regarding the diagnosis.",
+        text: "Provide medical recommendations based on the findings and diagnostic impression of this image without listing steps.",
         image_url: imageUrl
       }, { timeout: 100000 })
     ]);
 
-    aiReport.diagnosisReportFinding = findingResponse.data.diagnosis || "";
-    aiReport.diagnosisReportImpration = imprationResponse.data.diagnosis || "";
-    aiReport.diagnosisReportComment = commentResponse.data.diagnosis || "";
+    const cleanText = (text) => text.replace(/\*/g, "").trim();
 
-    // Save without blocking response
-    aiReport.save().catch(err => console.error("Error saving AI report:", err));
+    const finding = cleanText(findingResponse.data.diagnosis || "");
+    const impression = cleanText(impressionResponse.data.diagnosis || "");
+    const recommendation = cleanText(recommendationResponse.data.diagnosis || "");
 
-    res.status(200).json(aiReport);
+    aiReport.diagnosisReportFinding = finding;
+    aiReport.diagnosisReportImpression = impression;
+    aiReport.diagnosisReportRecommendation = recommendation;
+
+    await aiReport.save();
+
+    res.status(200).json({ finding, impression, recommendation });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
+
+
+
 exports.analyzeFindings = async (req, res) => {
   try {
     const { imageUrl } = req.body;
