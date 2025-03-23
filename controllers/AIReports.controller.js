@@ -127,7 +127,7 @@ exports.deleteAIReport = async (req, res) => {
       }, { timeout: 100000 }),
 
       axios.post("https://llama-9xgzsq.fly.dev/Radio/", {
-        text: "Provide only medical recommendations only based on the findings and diagnostic impression of this image without listing steps .",
+        text: "Provide only the necessary medical recommendations in short based on the findings and diagnostic impression of this image without listing without say finding information and impression information.",
         image_url: imageUrl
       }, { timeout: 100000 })
     ]);
@@ -139,12 +139,12 @@ exports.deleteAIReport = async (req, res) => {
     const recommendation = cleanText(recommendationResponse.data.diagnosis || "");
 
     aiReport.diagnosisReportFinding = finding;
-    aiReport.diagnosisReportImpression = impression;
-    aiReport.diagnosisReportRecommendation = recommendation;
+    aiReport.diagnosisReportImpration = impression;
+    aiReport.diagnosisReportComment = recommendation;
 
     await aiReport.save();
 
-    res.status(200).json({ report: aiReport });
+    res.status(200).json({ aiReport });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
