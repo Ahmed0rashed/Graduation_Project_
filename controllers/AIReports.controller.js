@@ -144,7 +144,7 @@ exports.deleteAIReport = async (req, res) => {
 
     await aiReport.save();
 
-    res.status(200).json({ aiReport });
+    res.status(200).json(aiReport);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
