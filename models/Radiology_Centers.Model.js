@@ -223,10 +223,14 @@ const radiologyCenterSchema = new mongoose.Schema(
       type: String,
       required: [true, "Password hash is required"],
     },
-    path: {  
+    path: {
       type: String,
       required: true
-    }
+    },
+    walletId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Wallet",
+    },
   },
   {
     timestamps: true,

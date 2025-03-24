@@ -115,7 +115,7 @@ class RadiologistController {
       radiologist.image = result.secure_url;
       await radiologist.save();
 
-      res.status(200).json({ message: "Image uploaded successfully", url: result.secure_url });
+      res.status(200).json({ message: "Image uploaded successfully", url: result.secure_url, statusCode:200 });
     } catch (error) {
       console.error("Server error:", error);
       res.status(500).json({ message: "Server error", error: error.message });
