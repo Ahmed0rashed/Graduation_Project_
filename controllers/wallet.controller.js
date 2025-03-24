@@ -1,4 +1,4 @@
-const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+const stripe = require('stripe')("sk_test_51QzGtQGgW7daCfmBOEgBz7v9gttS9bM2bX85VqMEuGDAFeZpgrTXMY2NE1UVcxDtdRZ4OEr9BVK4djfYb50v8Rv500gkQfbUkf");
 const Wallet = require("../models/payment/Wallet.Model");
 const Transaction = require("../models/payment/Transaction.Model");
 const WithdrawRequest = require("../models/payment/WithdrawRequest.Model");
