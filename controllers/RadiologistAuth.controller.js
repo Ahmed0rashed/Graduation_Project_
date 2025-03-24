@@ -6,7 +6,7 @@ const { createToken } = require("../utils/createToken");
 const nodemailer = require("nodemailer");
 const otpGenerator = require("otp-generator");
 const Otp = require("../models/OTP");
-
+const Wallet = require('../models/payment/Wallet.Model');
 
 const sendOtpEmail = async (email, otp) => {
   const transporter = nodemailer.createTransport({
@@ -38,35 +38,35 @@ const sendOtpEmail = async (email, otp) => {
       </div>
     `,
   };
-  
+
   return transporter.sendMail(mailOptions);
-  
+
 };
 
 exports.sendOtp = async (req, res) => {
   try {
     const { email } = req.body;
 
-    
+
     if (!email || !validator.isEmail(email)) {
       return res.status(400).json({ message: "A valid email is required" });
     }
 
-    
+
     const otp = otpGenerator.generate(6, { upperCase: false, specialChars: false });
 
-    
+
     const expiry = new Date();
     expiry.setMinutes(expiry.getMinutes() + 5);
 
-    
+
     const otpRecord = await Otp.findOneAndUpdate(
       { email: email.toLowerCase() },
       { otp, expiry },
       { upsert: true, new: true }
     );
 
-    
+
     await sendOtpEmail(email, otp);
 
     return res.status(200).json({ message: "OTP sent to email. Please verify to complete registration." });
@@ -81,7 +81,7 @@ exports.registerRadiologist = async (req, res) => {
   try {
     const { firstName, lastName, specialization, email, password, contactNumber } = req.body;
 
-    
+
     if (!email || !validator.isEmail(email)) {
       return res.status(400).json({ message: "A valid email is required" });
     }
@@ -91,18 +91,18 @@ exports.registerRadiologist = async (req, res) => {
     if (!specialization || !Array.isArray(specialization) || !specialization.every(sp => Radiologist.schema.path("specialization").options.enum.values.includes(sp))) {
       return res.status(400).json({ message: "A valid specialization is required and should be an array with correct values" });
     }
-    
+
     if (!contactNumber || !/^\+?[\d\s-]{10,15}$/.test(contactNumber)) {
       return res.status(400).json({ message: "A valid contact number is required" });
     }
     if (!password) {
       return res.status(400).json({ message: "A valid password is required" });
     }
-    if (await RadiologyCenter.findOne({ email }) ) {
+    if (await RadiologyCenter.findOne({ email })) {
       return res.status(400).json({ message: `This email already exists as a radiology center` });
     }
 
-    if (await Radiologist.findOne({ email }) ) {
+    if (await Radiologist.findOne({ email })) {
       return res.status(400).json({ message: `This email already exists as a radiologist` });
     }
     if (!validator.isLength(password, { min: 8 })) {
@@ -113,10 +113,10 @@ exports.registerRadiologist = async (req, res) => {
       return res.status(400).json({ message: "Password should contain at least one special character" });
     }
 
-    
+
     const otp = otpGenerator.generate(6, { upperCase: false, specialChars: false });
     const expiry = new Date();
-    expiry.setMinutes(expiry.getMinutes() + 5); 
+    expiry.setMinutes(expiry.getMinutes() + 5);
 
     const otpRecord = await Otp.findOneAndUpdate(
       { email: email.toLowerCase() },
@@ -124,7 +124,7 @@ exports.registerRadiologist = async (req, res) => {
       { upsert: true, new: true }
     );
 
-    
+
     await sendOtpEmail(email, otp);
 
     return res.status(200).json({ message: "OTP sent to email. Please verify to complete registration." });
@@ -187,7 +187,14 @@ exports.verifyOtp = async (req, res) => {
       contactNumber,
     });
 
+    // بعد إنشاء المستخدم radiologist أو center:
+    const wallet = await Wallet.create({
+      ownerId: newRadiologist._id,
+      ownerType: 'Radiologist',
+    });
+    newRadiologist.walletId = wallet._id;
     await newRadiologist.save();
+
 
     res.status(201).json({ message: "Registration successful. You can now log in.", Radiologist: newRadiologist });
 
@@ -200,7 +207,7 @@ exports.verifyOtp = async (req, res) => {
 
 
 
-exports.login= async (req, res) => {
+exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
@@ -214,21 +221,21 @@ exports.login= async (req, res) => {
     const radiologyCenter = await RadiologyCenter.findOne({ email: email });
     const radiologist = await Radiologist.findOne({ email: email });
 
-    if (!radiologyCenter && !radiologist) { 
-        return res.status(404).json({ message: "No account found with this email" });
+    if (!radiologyCenter && !radiologist) {
+      return res.status(404).json({ message: "No account found with this email" });
     }
-    
+
     const user = radiologyCenter || radiologist;
-    const role = radiologyCenter ? "RadiologyCenter" : "Radiologist"; 
+    const role = radiologyCenter ? "RadiologyCenter" : "Radiologist";
 
     const isMatch = await bcrypt.compare(password, user.passwordHash);
     if (!isMatch) {
-        return res.status(401).json({ message: "Invalid password" });
+      return res.status(401).json({ message: "Invalid password" });
     }
 
     const token = createToken(user._id);
     res.status(200).json({ token, user, role });
-    
+
   } catch (error) {
     console.error("Error logging in this account: ", error);
     res.status(500).json({ message: "Error logging in this account", error: error.message });
@@ -317,7 +324,7 @@ exports.resetPassword = async (req, res) => {
       return res.status(400).json({ message: "A valid email is required" });
     }
 
-    if (!otp ) {
+    if (!otp) {
       return res.status(400).json({ message: "A valid OTP is required" });
     }
 

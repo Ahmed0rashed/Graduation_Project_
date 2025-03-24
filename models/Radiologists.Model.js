@@ -12,7 +12,7 @@ const radiologistSchema = new mongoose.Schema({
     trim: true,
   },
   specialization: {
-    type: [String], 
+    type: [String],
     required: [true, 'At least one specialization is required'],
     trim: true,
     enum: {
@@ -33,7 +33,7 @@ const radiologistSchema = new mongoose.Schema({
     required: [true, 'Contact number is required'],
     trim: true,
     validate: {
-      validator: function(v) {
+      validator: function (v) {
         return /^\+?[\d\s-]{10,15}$/.test(v);
       },
       message: props => `${props.value} is not a valid phone number`
@@ -47,7 +47,7 @@ const radiologistSchema = new mongoose.Schema({
   email: {
     type: String,
     required: [true, 'Email is required'],
-    unique: true, 
+    unique: true,
     trim: true,
     lowercase: true,
   },
@@ -55,7 +55,7 @@ const radiologistSchema = new mongoose.Schema({
     start: {
       type: String,
       validate: {
-        validator: function(v) {
+        validator: function (v) {
           return /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/.test(v);
         },
         message: props => `${props.value} is not a valid time format (HH:MM)`
@@ -64,7 +64,7 @@ const radiologistSchema = new mongoose.Schema({
     end: {
       type: String,
       validate: {
-        validator: function(v) {
+        validator: function (v) {
           return /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/.test(v);
         },
         message: props => `${props.value} is not a valid time format (HH:MM)`
@@ -76,8 +76,8 @@ const radiologistSchema = new mongoose.Schema({
     required: [true, 'Password hash is required']
   },
   image: {
-    type: String ,
-    default: 'https://www.viverefermo.it/images/user.png',
+    type: String,
+    default: '',
   },
   numberOfReports: {
     type: Number,
@@ -110,6 +110,10 @@ const radiologistSchema = new mongoose.Schema({
       type: Number,
       default: 0
     }
+  },
+  walletId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Wallet",
   },
   experience: {
     type: Number,
