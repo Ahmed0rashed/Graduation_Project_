@@ -223,14 +223,20 @@ const radiologyCenterSchema = new mongoose.Schema(
       type: String,
       required: [true, "Password hash is required"],
     },
-    path: {  
+    path: {
       type: String,
       required: true
     },
+
     image: {
       type: String ,
       default: 'https://images-platform.99static.com//rx1K-opdgJV1T1yMAzjPXRPrUVs=/0x0:1000x1000/fit-in/500x500/99designs-contests-attachments/108/108268/attachment_108268211',
-    }
+    },
+
+    walletId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Wallet",
+    
   },
   {
     timestamps: true,

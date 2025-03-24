@@ -13,7 +13,7 @@ const RadiologyCenter = require("./routes/RadiologyCenter.Routes");
 const massage = require("./routes/Char.routes");
 // const socketIO = require('socket.io');
 const CenterRadiologistsRelationRoutes = require("./routes/CenterRadiologistsRelation.Routes");
-
+// const paymentRoutes = require("./routes/payment.routes");
 const app = express();
 
 app.use(cors());
@@ -36,5 +36,5 @@ app.use("/api/centers", RadiologyCenter);
 app.use("/api/messages", massage);
 
 app.use("/api/relations", CenterRadiologistsRelationRoutes);
-
+// app.use('/api/payments', paymentRoutes);
 module.exports = app;

@@ -2,6 +2,7 @@ const cloudinary = require("cloudinary").v2;
 const RadiologyCenter = require("../models/Radiology_Centers.Model");
 const mongoose = require("mongoose");
 const { validationResult } = require("express-validator");
+const Wallet = require('../models/payment/Wallet.Model');
 
 cloudinary.config({
   cloud_name: "dncawa23w",
@@ -152,6 +153,7 @@ class RadiologyCenterController {
   }
 
   // Create center
+  // Create center
   async createCenter(req, res) {
     try {
       const errors = validationResult(req);
@@ -165,9 +167,7 @@ class RadiologyCenterController {
       const centerData = req.body;
 
       // Check for existing email
-      const existingEmail = await RadiologyCenter.findOne({
-        email: centerData.email,
-      });
+      const existingEmail = await RadiologyCenter.findOne({ email: centerData.email });
       if (existingEmail) {
         return res.status(409).json({
           error: "Conflict",
@@ -178,9 +178,19 @@ class RadiologyCenterController {
       const center = new RadiologyCenter(centerData);
       const newCenter = await center.save();
 
+      const wallet = await Wallet.create({
+        ownerId: newCenter._id,
+        ownerType: 'RadiologyCenter',
+      });
+
+      newCenter.walletId = wallet._id;
+      await newCenter.save();
+
       res.status(201).json({
         message: "Radiology center created successfully",
-        data: newCenter,
+        data: {
+          center: newCenter,
+        },
       });
     } catch (error) {
       console.error("Error in createCenter:", error);
