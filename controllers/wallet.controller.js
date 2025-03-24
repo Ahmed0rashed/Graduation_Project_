@@ -1,6 +1,6 @@
 const Wallet = require("../models/payment/Wallet.Model");
-require('dotenv').config();
 const Transaction = require("../models/payment/Transaction.Model");
+console.log(process.env.STRIPE_SECRET_KEY);
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const WithdrawRequest = require("../models/payment/WithdrawRequest.Model");
 const Subscription = require("../models/payment/Subscription.Model");
@@ -84,7 +84,7 @@ exports.topUpWallet = async (req, res) => {
       fromWallet: null,
       toWallet: wallet._id,
       amount,
-      type: "deposit",
+      type: "top_up",
       description: "Top-up via Stripe"
     });
 
