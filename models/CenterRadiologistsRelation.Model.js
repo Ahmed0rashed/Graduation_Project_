@@ -2,7 +2,6 @@ const mongoose = require("mongoose");
 
 const centerRadiologistsRelationSchema = new mongoose.Schema(
   {  
-    // Center ID 
     center: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "RadiologyCenter",
@@ -15,7 +14,6 @@ const centerRadiologistsRelationSchema = new mongoose.Schema(
         message: "Referenced Radiology Center does not exist",
       },
     },
-    // Array of radiologist IDs
     radiologists: [
       {
         type: mongoose.Schema.Types.ObjectId,
@@ -52,7 +50,7 @@ const centerRadiologistsRelationSchema = new mongoose.Schema(
   }
 );
 
-// Indexes for improved query performance
+// Indexes
 centerRadiologistsRelationSchema.index({ center: 1 }, { unique: true });
 centerRadiologistsRelationSchema.index({ radiologists: 1 });
 centerRadiologistsRelationSchema.index({ status: 1 });
@@ -86,23 +84,32 @@ centerRadiologistsRelationSchema.statics.findByCenterWithRadiologists = async fu
 ) {
   return this.findOne({ center: centerId })
     .populate("radiologists", "-passwordHash")
-    .populate("center", "name address");
+    .populate("center", "centerName address");
 };
 
-// Static method to find centers by radiologist
+// Static method to find centers by radiologist - UPDATED
 centerRadiologistsRelationSchema.statics.findByRadiologist = async function (
   radiologistId
 ) {
   return this.find({
     radiologists: radiologistId,
     status: "active",
-  }).populate("center", "name address");
+  }).populate("center", "centerName address"); // Changed from "name address" to "centerName address"
 };
 
 // Pre-save middleware
 centerRadiologistsRelationSchema.pre("save", function (next) {
-  // Remove duplicates from radiologists array
   this.radiologists = [...new Set(this.radiologists)];
   next();
 });
+// Static method to find centers by radiologist - UPDATED to include image
+centerRadiologistsRelationSchema.statics.findByRadiologist = async function (
+  radiologistId
+) {
+  return this.find({
+    radiologists: radiologistId,
+    status: "active",
+  }).populate("center", "centerName address image"); // Added "image" to the populated fields
+};
+
 module.exports = mongoose.model("CenterRadiologistsRelation", centerRadiologistsRelationSchema);

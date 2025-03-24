@@ -6,4 +6,7 @@ router.get("/radiologists/:centerId", CenterRadiologistsRelationController.getRa
 router.post('/radiologists/:centerId', CenterRadiologistsRelationController.addRadiologistToCenter);
 
 router.get("/onlineRadiologists/:centerId", CenterRadiologistsRelationController.getOnlineRadiologistsByCenterId);
+router.get("/radiologistsList/:centerId", CenterRadiologistsRelationController.getRadiologistsByCenterId1);
+router.get("/centers/:radiologistId", CenterRadiologistsRelationController.getCentersByRadiologistId);
+
 module.exports = router;

@@ -152,6 +152,100 @@ class CenterRadiologistsRelationController {
       });
     }
   }
+
+
+async getRadiologistsByCenterId1(req, res) {
+  try {
+    const { centerId } = req.params;
+    const { page = 1, limit = 10 } = req.query;
+
+    if (!mongoose.Types.ObjectId.isValid(centerId)) {
+      return res.status(400).json({
+        error: "Invalid center ID",
+        message: `Center ID "${centerId}" is not valid`,
+      });
+    }
+
+    const skip = (page - 1) * limit;
+
+    const centerRadiologists = await CenterRadiologistsRelation.findOne({
+      center: centerId,
+    })
+    .populate({
+      path: "radiologists",
+      select: "firstName lastName status image",
+      options: {
+        skip: skip,
+        limit: parseInt(limit),
+        sort: { firstName: 1 }, 
+      },
+    })
+    
+      .populate("center", "name address");
+
+    if (!centerRadiologists) {
+      return res.status(404).json({
+        error: "Not Found",
+        message: "No radiologists found for this center",
+      });
+    }
+
+    const total = centerRadiologists.radiologists.length;
+
+    res.json({
+      data: {
+        radiologists: centerRadiologists.radiologists.map(r => ({
+          id: r._id,
+          firstName: r.firstName,
+          lastName: r.lastName,
+          status: r.status,
+          imageUrl: r.image,
+        })),        
+      },
+    });
+  } catch (error) {
+    console.error("Error in getRadiologistsByCenterId:", error);
+    res.status(500).json({
+      error: "Internal Server Error",
+      message: "Failed to retrieve radiologists",
+    });
+  }
+}
+async getCentersByRadiologistId(req, res) {
+  try {
+    const { radiologistId } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(radiologistId)) {
+      return res.status(400).json({
+        error: "Invalid radiologist ID",
+        message: `Radiologist ID "${radiologistId}" is not valid`,
+      });
+    }
+
+    const centers = await CenterRadiologistsRelation.findByRadiologist(radiologistId);
+    if (!centers.length) {
+      return res.status(404).json({
+        error: "Not Found",
+        message: "No centers found for this radiologist",
+      });
+    }
+
+    res.json({
+      data: centers.map(center => ({
+        id: center.center._id,
+        centerName: center.center.centerName,
+        imageUrl: center.center.image, // Added imageUrl field
+        address: center.center.address // Optional address
+      })),
+    });
+  } catch (error) {
+    console.error("Error in getCentersByRadiologistId:", error);
+    res.status(500).json({
+      error: "Internal Server Error",
+      message: "Failed to retrieve centers",
+    });
+  }
+}
+
 }
 
 module.exports = new CenterRadiologistsRelationController();
