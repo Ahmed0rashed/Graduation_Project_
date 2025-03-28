@@ -5,6 +5,7 @@ const RadiologyCenter = require("../models/Radiology_Centers.Model");
 
 const secretKey = process.env.JWT_SECRET || "123"; 
 
+
 exports.authenticateUser = async (req, res, next) => {
   try {
 

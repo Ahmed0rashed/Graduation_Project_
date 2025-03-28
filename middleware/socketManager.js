@@ -34,6 +34,7 @@ function initializeSocket(httpServer) {
         console.error("Error updating user status:", error.message);
       }
     });
+    
 
     socket.on("disconnect", async () => {
       try {
