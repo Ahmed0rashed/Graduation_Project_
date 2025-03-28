@@ -6,7 +6,7 @@ const activeUsers = new Map();
 function initializeSocket(httpServer) {
   const io = new Server(httpServer, {
     cors: {
-      origin: ["http://localhost:3000", "https://graduation-project-mmih.vercel.app"], 
+      origin: ["http://localhost:8000", "https://graduation-project--xohomg.fly.dev/"], 
       methods: ["GET", "POST"],
       credentials: true
     },

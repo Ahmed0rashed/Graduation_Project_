@@ -4,7 +4,11 @@ const {
   sendMessage, 
   getRadiologistsByCenter,
   getUnreadCount,
-  markMessagesAsRead
+  markMessagesAsRead,
+  getUnreadCountPerSender,
+  getUnreadCountAndRadiologists,
+  getUnreadCountAndCenters,
+  getUnreadCountBetweenRadiologists
 } = require('../controllers/Massage.controller');
 const { authenticateUser } = require('../middleware/Auth.middleware');
 
@@ -16,7 +20,15 @@ router.get('/conversation', getConversation);
 
 router.post('/send', sendMessage);
 
-router.get('/unread', getUnreadCount);
+router.get('/unread', getUnreadCount);  
 
 router.post('/markRead', markMessagesAsRead);
+
+router.get('/unread-count', getUnreadCountPerSender);
+
+router.get('/RadiologistListChat', getUnreadCountAndRadiologists);
+
+router.get('/CenterListChat', getUnreadCountAndCenters);
+
+router.get('/RadiologistChat', getUnreadCountBetweenRadiologists);
 module.exports = router;
