@@ -238,7 +238,7 @@ const radiologyCenterSchema = new mongoose.Schema(
       ref: "Wallet",
     
   },
-  
+
   },
   {
     timestamps: true,
