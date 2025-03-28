@@ -340,16 +340,16 @@ exports.markMessagesAsRead = async (req, res) => {
 };
 exports.getUnreadCountAndRadiologists = async (req, res) => {
   try {
-    const { userId, userType, centerId, page = 1, limit = 10 } = req.query;
+    const { userId, userType, page = 1, limit = 10 } = req.query;
 
-    if (!userId || !userType || !centerId) {
+    if (!userId || !userType || !userId) {
       return res.status(400).json({
         success: false,
         message: "Missing required parameters (userId, userType, centerId)",
       });
     }
 
-    if (!mongoose.Types.ObjectId.isValid(userId) || !mongoose.Types.ObjectId.isValid(centerId)) {
+    if (!mongoose.Types.ObjectId.isValid(userId) || !mongoose.Types.ObjectId.isValid(userId)) {
       return res.status(400).json({
         success: false,
         message: "Invalid userId or centerId format",
@@ -357,9 +357,9 @@ exports.getUnreadCountAndRadiologists = async (req, res) => {
     }
 
     const userObjectId = new mongoose.Types.ObjectId(userId);
-    const centerObjectId = new mongoose.Types.ObjectId(centerId);
+    const centerObjectId = new mongoose.Types.ObjectId(userId);
 
-    // Fetch unread messages received by this user
+
     const unreadMessages = await Message.find({
       receiver: userObjectId,
       receiverModel: userType,
@@ -405,7 +405,7 @@ exports.getUnreadCountAndRadiologists = async (req, res) => {
       lastName: r.lastName,
       status: r.status,
       imageUrl: r.image,
-      unreadCount: unreadCounts[r._id.toString()] || 0, // Default to 0 if no unread messages
+      unreadCount: unreadCounts[r._id.toString()] || 0, 
     }));
 
     return res.status(200).json({
@@ -417,6 +417,176 @@ exports.getUnreadCountAndRadiologists = async (req, res) => {
     });
   } catch (error) {
     console.error("Error in getUnreadCountAndRadiologists:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Error retrieving data",
+      error: error.message,
+    });
+  }
+};
+
+exports.getUnreadCountAndCenters = async (req, res) => {
+  try {
+    const { userId, userType } = req.query;
+
+    if (!userId || !userType) {
+      return res.status(400).json({
+        success: false,
+        message: "Missing required parameters (userId, userType)",
+      });
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid userId format",
+      });
+    }
+
+    const userObjectId = new mongoose.Types.ObjectId(userId);
+
+    // Fetch unread messages
+    const unreadMessages = await Message.find({
+      receiver: userObjectId,
+      receiverModel: userType,
+      readStatus: false,
+    }).lean();
+
+    // Aggregate unread counts per sender (Radiologists and Centers)
+    const manualUnreadCounts = unreadMessages.reduce((acc, message) => {
+      const senderId = message.sender.toString();
+      const senderModel = message.senderModel;
+
+      if (!acc[senderId]) {
+        acc[senderId] = {
+          senderId,
+          senderModel,
+          unreadCount: 0,
+        };
+      }
+      acc[senderId].unreadCount++;
+      return acc;
+    }, {});
+
+    // Convert to array and fetch sender details
+    const unreadCountsArray = await Promise.all(
+      Object.values(manualUnreadCounts).map(async (item) => {
+        try {
+          const senderModel =
+            item.senderModel === "Radiologist" ? Radiologist : RadiologyCenter;
+          const senderDetails = await senderModel.findById(item.senderId).lean();
+
+          return {
+            senderId: item.senderId,
+            senderModel: item.senderModel,
+            senderName: senderDetails?.name || "Unknown Sender",
+            unreadCount: item.unreadCount,
+          };
+        } catch (err) {
+          console.error(`Error fetching sender details for ${item.senderId}:`, err);
+          return {
+            senderId: item.senderId,
+            senderModel: item.senderModel,
+            senderName: "Error Fetching Name",
+            unreadCount: item.unreadCount,
+          };
+        }
+      })
+    );
+
+    // Fetch centers associated with the radiologist
+    const centers = await CenterRadiologistsRelation.findByRadiologist(userId);
+
+    // Add unread message count per center
+    const centersWithUnread = centers.map((center) => {
+      const centerUnreadCount = unreadCountsArray.find(
+        (item) => item.senderId === center.center._id.toString()
+      )?.unreadCount || 0;
+
+      return {
+        id: center.center._id,
+        centerName: center.center.centerName,
+        imageUrl: center.center.image, // Center image
+        address: center.center.address, // Center address
+        unreadCount: centerUnreadCount,
+      };
+    });
+
+    return res.status(200).json({
+      success: true,
+      unreadMessages: {
+        totalUnreadMessageCount: unreadMessages.length,
+      },
+      centers: centersWithUnread,
+    });
+  } catch (error) {
+    console.error("Error in getUnreadCountAndCenters:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Error retrieving data",
+      error: error.message,
+      errorStack: error.stack,
+    });
+  }
+};
+
+exports.getUnreadCountBetweenRadiologists = async (req, res) => {
+  try {
+    const { userId, userType, radiologistId, page = 1, limit = 10 } = req.query;
+
+    if (!userId || !userType || !radiologistId) {
+      return res.status(400).json({
+        success: false,
+        message: "Missing required parameters (userId, userType, radiologistId)",
+      });
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(userId) || !mongoose.Types.ObjectId.isValid(radiologistId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid userId or radiologistId format",
+      });
+    }
+
+    const userObjectId = new mongoose.Types.ObjectId(userId);
+    const targetRadiologistId = new mongoose.Types.ObjectId(radiologistId);
+
+    // Fetch unread messages sent to the user radiologist from another radiologist
+    const unreadMessages = await Message.find({
+      receiver: userObjectId,
+      sender: targetRadiologistId,
+      receiverModel: "Radiologist",
+      readStatus: false,
+    }).lean();
+
+    // Count unread messages
+    const unreadCount = unreadMessages.length;
+
+    // Fetch target radiologist details
+    const targetRadiologist = await Radiologist.findById(targetRadiologistId).select("firstName lastName status image");
+
+    if (!targetRadiologist) {
+      return res.status(404).json({
+        success: false,
+        message: "No radiologists found for this radiologist",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      unreadMessages: {
+        totalUnreadMessageCount: unreadCount,
+      },
+      radiologist: {
+        id: targetRadiologist._id,
+        firstName: targetRadiologist.firstName,
+        lastName: targetRadiologist.lastName,
+        status: targetRadiologist.status,
+        imageUrl: targetRadiologist.image,
+      },
+    });
+  } catch (error) {
+    console.error("Error in getUnreadCountBetweenRadiologists:", error);
     return res.status(500).json({
       success: false,
       message: "Error retrieving data",
