@@ -79,6 +79,12 @@ const radiologyRecordSchema = new mongoose.Schema(
     study_description: {
       type: String,
     },
+    Study_Instance_UID: {
+      type: String,
+    },
+    Series_Instance_UID: {
+      type: String,
+    },
 cancledby: [
   {
     type: mongoose.Schema.Types.ObjectId,

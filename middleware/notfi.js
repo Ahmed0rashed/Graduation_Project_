@@ -1,41 +1,45 @@
-const admin = require("firebase-admin");
+const notifier = require("node-notifier");
+const RadiologyCenter = require("../models/Radiology_Centers.Model");
+const Radiologist = require("../models/Radiologists.Model");
+const mongoose = require("mongoose");
 
-admin.initializeApp({
-  credential: admin.credential.cert({
-    projectId: process.env.FIREBASE_PROJECT_ID,
-    clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-    privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, "\n"),
-  }),
-});
+async function notifyUser(userType, userId) {
+    try {
+        if (!mongoose.Types.ObjectId.isValid(userId)) {
+            return { success: false, message: "معرّف المستخدم غير صالح!" };
+        }
 
-const db = admin.firestore();
+        let user;
+        let userName;
 
+        if (userType === "center") {
+            user = await RadiologyCenter.findOne({ _id: userId });
+            userName = user ? user.centerName : null;
+        } else if (userType === "radiologist") {
+            user = await Radiologist.findOne({ _id: userId });
+            userName = user ? `${user.firstName} ${user.lastName}` : null;
+        } else {
+            return { success: false, message: "نوع المستخدم غير صالح!" };
+        }
 
-const sendNotification = async (userId, message) => {
-  try {
+        if (!user) {
+            return { success: false, message: "المستخدم غير موجود!" };
+        }
 
-    const userDoc = await db.collection("users").doc(userId).get();
+        // إرسال الإشعار
+        notifier.notify({
+            title: `إشعار لـ ${userName}`,
+            message: `مرحبًا ${userName}! لديك إشعار جديد 🎉`,
+            sound: true,
+            wait: false
+        });
 
-    if (!userDoc.exists) {
-      throw new Error("المستخدم غير موجود");
+        console.log(`تم إرسال الإشعار إلى ${userName}`);
+        return { success: true, message: `تم إرسال الإشعار إلى ${userName}` };
+    } catch (error) {
+        console.error("خطأ أثناء إرسال الإشعار:", error);
+        return { success: false, message: "حدث خطأ أثناء إرسال الإشعار", error: error.message };
     }
+}
 
-    const userData = userDoc.data();
-    const userType = userData.userType;
-    const notification = {
-      userId,
-      message,
-      userType,
-      timestamp: new Date(),
-    };
-
-
-    await db.collection("notifications").add(notification);
-
-    console.log(`تم إرسال الإشعار إلى ${userType} بنجاح`);
-  } catch (error) {
-    console.error("فشل في إرسال الإشعار:", error);
-  }
-};
-
-module.exports = { sendNotification };
+module.exports = { notifyUser };

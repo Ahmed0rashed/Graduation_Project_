@@ -14,7 +14,10 @@ const massage = require("./routes/Char.routes");
 // const socketIO = require('socket.io');
 const CenterRadiologistsRelationRoutes = require("./routes/CenterRadiologistsRelation.Routes");
 // const paymentRoutes = require("./routes/payment.routes");
-const notificationRoutes = require("./routes/notificationRoutes");
+const notificationRoutes = require("./routes/not");
+const notificationController = require("./controllers/notificationRoutes2");
+const dicomRoutes = require("./routes/dicomRoutes");
+
 const app = express();
 
 app.use(cors());
@@ -40,4 +43,7 @@ app.use("/api/relations", CenterRadiologistsRelationRoutes);
 // app.use('/api/payments', paymentRoutes);
 
 app.use("/api/notifications", notificationRoutes);
+app.use("/api/sendnotification", notificationController);
+
+app.use("/api/dicom", dicomRoutes);
 module.exports = app;
