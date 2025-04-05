@@ -13,7 +13,7 @@ exports.addRecord = async (req, res) => {
   try {
     const { centerId, patient_name, study_date, patient_id,sex,
             modality, PatientBirthDate, age,study_description,email,
-            DicomId, series, body_part_examined, status, Dicom_url } = req.body;
+            DicomId, series, body_part_examined, status, Dicom_url, Study_Instance_UID, Series_Instance_UID } = req.body;
 
     if (!mongoose.Types.ObjectId.isValid(centerId)) {
       return res.status(400).json({ error: "Invalid centerId format" });
@@ -64,6 +64,8 @@ exports.addRecord = async (req, res) => {
       Dicom_url,
       status,
       specializationRequest: radiologistSpecialty.data.Specialty,
+      Study_Instance_UID,
+      Series_Instance_UID,
     });
 
     const savedRecord = await record.save();

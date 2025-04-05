@@ -85,19 +85,17 @@ const radiologyRecordSchema = new mongoose.Schema(
     Series_Instance_UID: {
       type: String,
     },
-cancledby: [
-  {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Radiologist",
-    
-  },
-],
-specializationRequest: {
-  type: String,
-},
+    cancledby: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Radiologist",
+      },
+    ],
+    specializationRequest: {
+      type: String,
+    },
   },
   { timestamps: true }
-
 );
 
 module.exports = mongoose.model("RadiologyRecord", radiologyRecordSchema);
