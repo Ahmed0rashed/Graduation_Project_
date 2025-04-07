@@ -29,5 +29,10 @@
         "titleBar.activeBackground": "#2D4440",
         "titleBar.activeForeground": "#F9FBFB"
     },
-    "postman.settings.dotenv-detection-notification-visibility": false
+    "postman.settings.dotenv-detection-notification-visibility": false,
+    "files.associations": {
+        "*.ejs": "html",
+        "vector": "cpp",
+        "ostream": "cpp"
+    }
 }

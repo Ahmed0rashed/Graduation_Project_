@@ -1,45 +1,164 @@
-const notifier = require("node-notifier");
-const RadiologyCenter = require("../models/Radiology_Centers.Model");
+const { Server } = require("socket.io");
 const Radiologist = require("../models/Radiologists.Model");
-const mongoose = require("mongoose");
+const Notification = require("../models/not.model");
 
-async function notifyUser(userType, userId) {
-    try {
-        if (!mongoose.Types.ObjectId.isValid(userId)) {
-            return { success: false, message: "معرّف المستخدم غير صالح!" };
+class NotificationManager {
+    constructor() {
+        this.activeUsers = new Map();
+        this.io = null;
+        this.isInitialized = false; 
+    }
+
+    initialize(httpServer) {
+        if (this.isInitialized) {
+            console.warn('Socket.io is already initialized');
+            return this.io;
         }
 
-        let user;
-        let userName;
-
-        if (userType === "center") {
-            user = await RadiologyCenter.findOne({ _id: userId });
-            userName = user ? user.centerName : null;
-        } else if (userType === "radiologist") {
-            user = await Radiologist.findOne({ _id: userId });
-            userName = user ? `${user.firstName} ${user.lastName}` : null;
-        } else {
-            return { success: false, message: "نوع المستخدم غير صالح!" };
-        }
-
-        if (!user) {
-            return { success: false, message: "المستخدم غير موجود!" };
-        }
-
-        // إرسال الإشعار
-        notifier.notify({
-            title: `إشعار لـ ${userName}`,
-            message: `مرحبًا ${userName}! لديك إشعار جديد 🎉`,
-            sound: true,
-            wait: false
+        this.io = new Server(httpServer, {
+            cors: {
+                origin: [
+                    "http://localhost:8000",
+                    "https://graduation-project--xohomg.fly.dev",
+                    "http://127.0.0.1:5500",
+                    "http://127.0.0.1:5500/te5.html"
+                ],
+                methods: ["GET", "POST"],
+                credentials: true
+            },
+            pingTimeout: 60000,
+            pingInterval: 25000
         });
 
-        console.log(`تم إرسال الإشعار إلى ${userName}`);
-        return { success: true, message: `تم إرسال الإشعار إلى ${userName}` };
-    } catch (error) {
-        console.error("خطأ أثناء إرسال الإشعار:", error);
-        return { success: false, message: "حدث خطأ أثناء إرسال الإشعار", error: error.message };
+        this._setupConnectionHandlers();
+        this.isInitialized = true;
+        console.log("Socket.io initialized successfully");
+        return this.io;
+    }
+
+    _setupConnectionHandlers() {
+        this.io.on("connection", (socket) => {
+            console.log(` New connection: ${socket.id}`);
+
+            socket.on("userOnline", async ({ userId, userType }) => {
+                try {
+                    await Radiologist.findByIdAndUpdate(userId, { 
+                        status: "online",
+                        lastSeen: new Date()
+                    });
+
+                    this.activeUsers.set(userId.toString(), {
+                        socketId: socket.id,
+                        userType,
+                        lastActive: new Date()
+                    });
+
+                    console.log(`${userType} ${userId} connected`);
+                    
+                    const notifications = await this.getUnreadNotifications(userId);
+                    
+                    socket.emit("initialNotifications", notifications);
+                    
+                } catch (error) {
+                    console.error("Connection error:", error);
+                    socket.emit("connectionError", { error: "Failed to establish connection" });
+                }
+            });
+
+            socket.on("disconnect", () => {
+                this._handleDisconnection(socket);
+            });
+        });
+    }
+
+    async _handleDisconnection(socket) {
+        try {
+            for (const [userId, userData] of this.activeUsers.entries()) {
+                if (userData.socketId === socket.id) {
+                    await Radiologist.findByIdAndUpdate(userId, {
+                        status: "offline",
+                        lastSeen: new Date()
+                    });
+                    this.activeUsers.delete(userId);
+                    console.log(`User ${userId} disconnected`);
+                    break;
+                }
+            }
+        } catch (error) {
+            console.error("Disconnection error:", error);
+        }
+    }
+
+    async sendNotification(userId, userType, title, message, icon, sound) {
+        if (!this.isInitialized) {
+            throw new Error("Socket.io not initialized. Call initialize() first");
+        }
+
+        try {
+            const notification = await Notification.create({
+                userId,
+                userType,
+                title,
+                message,
+                icon: icon || 'https://cdn-icons-png.flaticon.com/512/1827/1827343.png',
+                sound: sound || 'https://www.myinstants.com/media/sounds/notification-sound.mp3',
+                createdAt: new Date()
+            });
+
+            const isDelivered = this._deliverNotification(userId, notification);
+            
+            return {
+                success: true,
+                notification,
+                isDelivered,
+                isOnline: isDelivered
+            };
+        } catch (error) {
+            console.error("Notification creation failed:", error);
+            throw error;
+        }
+    }
+
+    _deliverNotification(userId, notification) {
+        const user = this.activeUsers.get(userId.toString());
+        if (user) {
+            this.io.to(user.socketId).emit("rich_notification", {
+                ...notification.toObject(),
+                timestamp: new Date()
+            });
+            console.log(`Notification delivered to ${userId}`);
+            return true;
+        }
+        return false;
+    }
+
+    async getUnreadNotifications(userId, limit = 20) {
+        try {
+            return await Notification.find({
+                userId,
+                isRead: false
+            })
+            .sort({ createdAt: -1 })
+            .limit(limit);
+        } catch (error) {
+            console.error("Failed to fetch notifications:", error);
+            throw error;
+        }
+    }
+
+    async markAsRead(notificationId) {
+        try {
+            const result = await Notification.findByIdAndUpdate(
+                notificationId,
+                { isRead: true },
+                { new: true }
+            );
+            return !!result;
+        } catch (error) {
+            console.error("Failed to mark as read:", error);
+            throw error;
+        }
     }
 }
 
-module.exports = { notifyUser };
+module.exports = new NotificationManager();
