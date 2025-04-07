@@ -6,8 +6,33 @@ const RadiologyCenter = require("../models/Radiology_Centers.Model");
 const AIReport = require("../models/AIReports.Model");
 const Radiologist = require("../models/Radiologists.Model");
 const CenterRadiologistsRelation = require("../models/CenterRadiologistsRelation.Model");
+const notificationManager = require('../middleware/notfi');
 
 
+const checkInitialization = (req, res, next) => {
+    if (!notificationManager.isInitialized) {
+        return res.status(503).json({
+            success: false,
+            error: "Notification service is not ready"
+        });
+    }
+    next();
+};
+
+const sendNotification = async (userId, userType, title, message) => {
+  try {
+    const result = await notificationManager.sendNotification(
+      userId,
+      userType,
+      title,
+      message
+    );
+    return result;
+  } catch (error) {
+    console.error("Notification error:", error);
+    throw error;
+  }
+};
 
 exports.addRecord = async (req, res) => {
   try {
@@ -80,7 +105,11 @@ exports.addRecord = async (req, res) => {
       confidenceLevel: 0.0,
       generatedDate: new Date(),
     });
+    const notification = await sendNotification(radiologist._id, "Radiologist", "New Study", "New study assigned to you for review");
 
+    if (notification.save) {
+      await notification.save(); 
+    }
     const savedAIReport = await aiReport.save();
 
     savedRecord.reportId = savedAIReport._id;
@@ -349,7 +378,7 @@ exports.cancel = async (req, res) => {
       return res.status(404).json({ message: "No alternative radiologists found" });
     }console.log("Available Radiologists:", availableRadiologists);
 
-
+    
     
     let newRadiologist = await Radiologist.findOne({
       _id: { $in: availableRadiologists },
@@ -376,6 +405,11 @@ exports.cancel = async (req, res) => {
     
       { new: true }
     );
+    const notification = await sendNotification(newRadiologist._id, "Radiologist", "New Study", "New study assigned to you for review");
+
+    if (notification.save) {
+      await notification.save(); 
+    }
 
     res.status(200).json({ message: "Radiologist updated successfully", newRadiologist });
   } catch (error) {
