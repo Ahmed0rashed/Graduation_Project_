@@ -180,19 +180,60 @@ exports.removeRadiologyCenter = async (req, res) => {
 };
 
 
-exports.getRadiologyCenters = async (req, res) => {
+exports.getApprovedRadiologyCenters = async (req, res) => {
   try {
-    const centers = await RadiologyCenter.find({}).select("-passwordHash");
+    const approvedCenters = await RadiologyCenter.find({ isApproved: true });
 
-    res.status(200).json({
-      message: "Radiology centers fetched successfully",
-      data: centers,
-    });
+    if (!approvedCenters) {
+      return res.status(404).json({ message: "No approved radiology centers found" });
+    }
+
+    res.status(200).json({ message: "Approved radiology centers", data: approvedCenters });
   } catch (error) {
-    console.error("Error in fetching radiology centers:", error);
-    res.status(500).json({ message: "Failed to fetch radiology centers" });
+    console.error("Error in getting approved radiology centers:", error);
+    res.status(500).json({ message: "Failed to get approved radiology centers" });
   }
 };
+
+exports.getNotApprovedRadiologyCenters = async (req, res) => {
+  try {
+    const approvedCenters = await RadiologyCenter.find({ isApproved: false });
+
+    if (!approvedCenters) {
+      return res.status(404).json({ message: "No approved radiology centers found" });
+    }
+
+    res.status(200).json({ message: "Approved radiology centers", data: approvedCenters });
+  } catch (error) {
+    console.error("Error in getting approved radiology centers:", error);
+    res.status(500).json({ message: "Failed to get approved radiology centers" });
+  }
+};
+// change isApproved to true
+exports.approveRadiologyCenter = async (req, res) => {
+  try {
+    const { centerId } = req.params;
+
+    const updatedCenter = await RadiologyCenter.findByIdAndUpdate(
+      centerId,
+      { isApproved: true },
+      { new: true }
+    );
+
+    if (!updatedCenter) {
+      return res.status(404).json({ message: "Radiology center not found" });
+    }
+
+    res.status(200).json({
+      message: "Radiology center approved successfully",
+      data: updatedCenter,
+    });
+  } catch (error) {
+    console.error("Error in approving radiology center:", error);
+    res.status(500).json({ message: "Failed to approve radiology center" });
+  }
+};
+
 
 exports.updateRadiologyCenter = async (req, res) => {
   try {
