@@ -238,7 +238,12 @@ const radiologyCenterSchema = new mongoose.Schema(
       ref: "Wallet",
     
   },
-  
+
+    isApproved: { 
+      type: Boolean, 
+      default : false 
+    }, 
+
   },
   {
     timestamps: true,
