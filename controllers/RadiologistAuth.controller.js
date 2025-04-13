@@ -7,7 +7,7 @@ const nodemailer = require("nodemailer");
 const otpGenerator = require("otp-generator");
 const Otp = require("../models/OTP");
 const Wallet = require('../models/payment/Wallet.Model');
-
+const Admin = require("../models/admin.model");
 const sendOtpEmail = async (email, otp) => {
   const transporter = nodemailer.createTransport({
     service: "gmail",
@@ -220,13 +220,17 @@ exports.login = async (req, res) => {
 
     const radiologyCenter = await RadiologyCenter.findOne({ email: email });
     const radiologist = await Radiologist.findOne({ email: email });
+    const admin = await Admin.findOne({ email: email });
 
-    if (!radiologyCenter && !radiologist) {
+    if (!radiologyCenter && !radiologist && !admin) {
       return res.status(404).json({ message: "No account found with this email" });
     }
 
-    const user = radiologyCenter || radiologist;
-    const role = radiologyCenter ? "RadiologyCenter" : "Radiologist";
+    const user = radiologyCenter || radiologist || admin;
+    const role = radiologyCenter ? "RadiologyCenter" : radiologyCenter ? "Radiologist" : "Admin";
+
+
+    
 
     const isMatch = await bcrypt.compare(password, user.passwordHash);
     if (!isMatch) {
