@@ -277,3 +277,41 @@ exports.getRadiologyCenterById = async (req, res) => {
     res.status(500).json({ message: "Failed to fetch radiology center" });
   }
 };
+
+
+  exports.addAdmin = async (req, res) => {
+    try {
+      const { email, password } = req.body;
+
+      if (!email.endsWith("@admin.com")) {
+        return res.status(400).json({
+          message: "Admin email must end with '@admin.com'",
+        });
+      }
+
+      const existingAdmin = await Admin.findOne({ email });
+
+      if (existingAdmin) {
+        return res
+          .status(409)
+          .json({ message: "Admin with this email already exists" });
+      }
+
+      const hashedPassword = await bcrypt.hash(password, 12);
+
+      const newAdmin = new Admin({
+        email,
+        passwordHash: hashedPassword,
+      });
+
+      const savedAdmin = await newAdmin.save();
+
+      res.status(201).json({
+        message: "Admin added successfully",
+        data: savedAdmin,
+      });
+    } catch (error) {
+      console.error("Error in adding admin:", error);
+      res.status(500).json({ message: "Failed to add admin" ,error});
+    }
+  };

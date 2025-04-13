@@ -29,6 +29,6 @@ router.put("/updateRadiologyCenter/:centerId", Admincontroller.updateRadiologyCe
 
 router.get("/getRadiologyCenter/:centerId", Admincontroller.getRadiologyCenterById);
 
-
+router.post("/addAdmin", Admincontroller.addAdmin);
 
 module.exports = router;
