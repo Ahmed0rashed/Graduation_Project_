@@ -34,9 +34,9 @@ exports.addPatient = async (req, res) => {
       validationErrors.push("First name must be between 2 and 50 characters");
     }
 
-    if (!lastName || lastName.length < 2 || lastName.length > 50) {
-      validationErrors.push("Last name must be between 2 and 50 characters");
-    }
+    // if (!lastName || lastName.length < 2 || lastName.length > 50) {
+    //   validationErrors.push("Last name must be between 2 and 50 characters");
+    // }
 
     if (!email || !validator.isEmail(email)) {
       validationErrors.push("A valid email is required");
