@@ -227,8 +227,11 @@ exports.login = async (req, res) => {
     }
 
     const user = radiologyCenter || radiologist || admin;
-    const role = radiologyCenter ? "RadiologyCenter" : radiologyCenter ? "Radiologist" : "Admin";
-
+const role = radiologyCenter
+  ? "RadiologyCenter"
+  : radiologist
+  ? "Radiologist"
+  : "Admin";
 
     
 
