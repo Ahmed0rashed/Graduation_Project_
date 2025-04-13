@@ -75,6 +75,21 @@ router.put('/read/:id', checkInitialization, async (req, res) => {
         });
     }
 });
+router.get('/:userId', checkInitialization, async (req, res) => {
+    try {
+        const notifications = await Notification.find({ userId: req.params.userId }).sort({ createdAt: -1 });
+        res.json({ 
+            success: true, 
+            count: notifications.length,
+            notifications 
+        });
+    } catch (error) {
+        res.status(500).json({ 
+            success: false, 
+            error: error.message 
+        });
+    }
+});
 
 
 

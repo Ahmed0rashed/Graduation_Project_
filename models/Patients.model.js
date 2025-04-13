@@ -3,22 +3,11 @@ const validator = require("validator");
 
 const patientSchema = new mongoose.Schema(
   {
-    nationalId: {
-      type: String,
-      required: [true, "National ID is required"],
-      unique: true,  // This already creates a unique index
-      trim: true,
-      validate: {
-        validator: function (v) {
-          return /^[A-Z0-9]{10,14}$/.test(v);
-        },
-        message: "Please enter a valid National ID",
-      },
-    },
+
     email: {
       type: String,
       required: [true, "Email is required"],
-      unique: true,  // This already creates a unique index
+      unique: true,  
       trim: true,
       lowercase: true,
       validate: {
@@ -35,41 +24,41 @@ const patientSchema = new mongoose.Schema(
     },
     lastName: {
       type: String,
-      required: [true, "Last name is required"],
+      required: [false, "Last name is required"],
       trim: true,
       minlength: [2, "Last name must be at least 2 characters long"],
       maxlength: [50, "Last name cannot exceed 50 characters"],
     },
-    dateOfBirth: {
-      type: Date,
-      required: [true, "Date of birth is required"],
-      validate: {
-        validator: function (v) {
-          return v && v.getTime() <= new Date().getTime();
-        },
-        message: "Date of birth cannot be in the future",
-      },
-    },
-    gender: {
-      type: String,
-      required: [true, "Gender is required"],
-      enum: ["Male", "Female", "Other"],
-    },
+    // dateOfBirth: {
+    //   type: Date,
+    //   required: [true, "Date of birth is required"],
+    //   validate: {
+    //     validator: function (v) {
+    //       return v && v.getTime() <= new Date().getTime();
+    //     },
+    //     message: "Date of birth cannot be in the future",
+    //   },
+    // },
+    // gender: {
+    //   type: String,
+    //   required: [true, "Gender is required"],
+    //   enum: ["Male", "Female", "Other"],
+    // },
     passwordHash: {
       type: String,
       required: [true, "Password is required"],
     },
-    contactNumber: {
-      type: String,
-      required: [true, "Contact number is required"],
-      trim: true,
-      validate: {
-        validator: function (v) {
-          return /^\+?[\d\s-]+$/.test(v);
-        },
-        message: "Please enter a valid contact number",
-      },
-    },
+    // contactNumber: {
+    //   type: String,
+    //   required: [true, "Contact number is required"],
+    //   trim: true,
+    //   validate: {
+    //     validator: function (v) {
+    //       return /^\+?[\d\s-]+$/.test(v);
+    //     },
+    //     message: "Please enter a valid contact number",
+    //   },
+    // },
     address: {
       street: { type: String, trim: true },
       city: { type: String, trim: true },
