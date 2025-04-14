@@ -15,7 +15,7 @@ const massage = require("./routes/Char.routes");
 const CenterRadiologistsRelationRoutes = require("./routes/CenterRadiologistsRelation.Routes");
 // const paymentRoutes = require("./routes/payment.routes");
 const notificationRoutes = require("./routes/not");
-
+const dashboardRoutes = require("./routes/dashboard.routes");
 // const notificationController = require("./controllers/notificationRoutes2");
 // const dicomRoutes = require("./routes/dicomRoutes");
 
@@ -50,5 +50,6 @@ app.use("/api/notifications", notificationRoutes);
 
 
 app.use("/api/admin", Admin);
+app.use("/api/dashboard", dashboardRoutes);
 
 module.exports = app;

@@ -1,6 +1,8 @@
 const { Server } = require("socket.io");
 const Radiologist = require("../models/Radiologists.Model");
 const Notification = require("../models/not.model");
+const CenterRadiologistsRelation = require("../models/CenterRadiologistsRelation.Model");
+const RadiologyCenter = require("../models/Radiology_Centers.Model");
 
 class NotificationManager {
     constructor() {
@@ -58,6 +60,8 @@ class NotificationManager {
                     const notifications = await this.getUnreadNotifications(userId);
                     
                     socket.emit("initialNotifications", notifications);
+
+
                     
                 } catch (error) {
                     console.error("Connection error:", error);
@@ -69,6 +73,27 @@ class NotificationManager {
                 this._handleDisconnection(socket);
             });
         });
+    }
+
+    async getActiveUsersInCenter(centerId) {
+        const activeRadiologists = [];
+
+        for (const [userId, userData] of this.activeUsers.entries()) {
+            const centerRadiologistRelation = await CenterRadiologistsRelation.findOne({
+                center: centerId,
+                radiologist: userId
+            });
+
+            if (centerRadiologistRelation) {
+                activeRadiologists.push({
+                    userId,
+                    userType: userData.userType,
+                    lastActive: userData.lastActive
+                });
+            }
+        }
+
+        return activeRadiologists;
     }
 
     async _handleDisconnection(socket) {
@@ -161,5 +186,6 @@ class NotificationManager {
         }
     }
 }
+// 
 
 module.exports = new NotificationManager();
