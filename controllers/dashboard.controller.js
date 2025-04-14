@@ -333,3 +333,181 @@ exports.getWeeklyRecordsCountPerDayInCenterPerStatus = async (req, res) => {
     });
   }
 };
+
+exports.getrangeRecordsCount = async (req, res) => {
+  try {
+    const { centerId } = req.params;
+    const { startDate, endDate } = req.body;
+
+    if (!mongoose.Types.ObjectId.isValid(centerId)) {
+      return res.status(400).json({
+        error: "Invalid ID",
+        message: "The provided center ID is not valid",
+      });
+    }
+
+    if (!startDate || !endDate) {
+      return res.status(400).json({
+        error: "Missing Parameters",
+        message: "Both startDate and endDate are required in query params",
+      });
+    }
+
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+
+    if (isNaN(start) || isNaN(end)) {
+      return res.status(400).json({
+        error: "Invalid Date Format",
+        message: "startDate or endDate is not a valid date",
+      });
+    }
+
+    start.setHours(0, 0, 0, 0);
+    end.setHours(23, 59, 59, 999);
+
+    const center = await RadiologyCenter.findById(centerId);
+    if (!center) {
+      return res.status(404).json({
+        error: "Not Found",
+        message: "Center not found",
+      });
+    }
+
+    const records = await RadiologyRecord.aggregate([
+      {
+        $match: {
+          centerId: new mongoose.Types.ObjectId(centerId),
+          createdAt: { $gte: start, $lte: end },
+        },
+      },
+      {
+        $project: {
+          status: 1,
+          createdAt: 1,
+          // نحول اليوم بحيث يكون السبت = 0
+          jsDayOfWeek: { $mod: [{ $add: [{ $dayOfWeek: "$createdAt" }, 7] }, 7] },
+        },
+      },
+      {
+        $group: {
+          _id: { dayOfWeek: "$jsDayOfWeek", status: "$status" },
+          count: { $sum: 1 },
+        },
+      },
+    ]);
+
+    const dayNames = [
+      "Saturday", 
+      "Sunday",
+      "Monday",
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday",
+    ];
+
+    const weekData = {};
+    for (const dayName of dayNames) {
+      weekData[dayName] = {
+        Pending: 0,
+        Reviewed: 0,
+        Available: 0,
+        total: 0,
+      };
+    }
+
+    for (const record of records) {
+      const day = dayNames[record._id.dayOfWeek];
+      const status = record._id.status;
+      const count = record.count;
+
+      weekData[day][status] += count;
+      weekData[day].total += count;
+    }
+
+    res.status(200).json({
+      message: "retrieved successfully",
+      data: weekData,
+    });
+  } catch (error) {
+    console.error("Error in getWeeklyRecordsCountPerDayInCenterPerStatus:", error);
+    res.status(500).json({
+      error: "Internal Server Error",
+      message: "Failed to retrieve data",
+    });
+  }
+};
+
+exports.getTotalRecordsCountInCenter = async (req, res) => {
+  try {
+    const { centerId } = req.params;
+    const { startDate, endDate } = req.body;
+
+    if (!mongoose.Types.ObjectId.isValid(centerId)) {
+      return res.status(400).json({
+        error: "Invalid ID",
+        message: "The provided center ID is not valid",
+      });
+    }
+
+    if (!startDate || !endDate) {
+      return res.status(400).json({
+        error: "Missing Parameters",
+        message: "Both startDate and endDate are required in request body",
+      });
+    }
+
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+
+    if (isNaN(start) || isNaN(end)) {
+      return res.status(400).json({
+        error: "Invalid Date Format",
+        message: "startDate or endDate is not a valid date",
+      });
+    }
+
+    start.setHours(0, 0, 0, 0);
+    end.setHours(23, 59, 59, 999);
+
+    const center = await RadiologyCenter.findById(centerId);
+    if (!center) {
+      return res.status(404).json({
+        error: "Not Found",
+        message: "Center not found",
+      });
+    }
+
+    // Count the total number of records within the date range
+    const totalRecords = await RadiologyRecord.aggregate([
+      {
+        $match: {
+          centerId: new mongoose.Types.ObjectId(centerId),
+          createdAt: { $gte: start, $lte: end },
+        },
+      },
+      {
+        $count: "total", // Count all records
+      },
+    ]);
+
+    if (totalRecords.length === 0) {
+      return res.status(200).json({
+        message: "No records found",
+        total: 0,
+      });
+    }
+
+    res.status(200).json({
+      message: "Total records retrieved successfully",
+      total: totalRecords[0].total,
+    });
+  } catch (error) {
+    console.error("Error in getTotalRecordsCountInCenter:", error);
+    res.status(500).json({
+      error: "Internal Server Error",
+      message: "Failed to retrieve data",
+    });
+  }
+};
