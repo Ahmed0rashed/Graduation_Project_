@@ -89,7 +89,7 @@ class NotificationManager {
         }
     }
 
-    async sendNotification(userId, userType, title, message, icon, sound) {
+    async sendNotification(userId, userType, title, message, icon,name, sound) {
         if (!this.isInitialized) {
             throw new Error("Socket.io not initialized. Call initialize() first");
         }
@@ -100,8 +100,9 @@ class NotificationManager {
                 userType,
                 title,
                 message,
-                icon: icon || 'https://cdn-icons-png.flaticon.com/512/1827/1827343.png',
-                sound: sound || 'https://www.myinstants.com/media/sounds/notification-sound.mp3',
+                icon: icon ,
+                sound: sound ,
+                sendername: name ,
                 createdAt: new Date()
             });
 

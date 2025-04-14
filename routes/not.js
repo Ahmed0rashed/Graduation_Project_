@@ -3,7 +3,7 @@ const express = require('express');
 const router = express.Router();
 const notificationManager = require('../middleware/notfi');
 const Notification = require('../models/not.model');
-
+const RadiologyCenter = require('../models/Radiology_Centers.Model');
 
 const checkInitialization = (req, res, next) => {
     if (!notificationManager.isInitialized) {
@@ -17,7 +17,7 @@ const checkInitialization = (req, res, next) => {
 
 router.post('/send', checkInitialization, async (req, res) => {
     try {
-        const { userId, userType, title, message } = req.body;
+        const { userId, userType, title, message,centerid } = req.body;
 
         if (!userId || !userType || !title || !message) {
             return res.status(400).json({
@@ -25,12 +25,15 @@ router.post('/send', checkInitialization, async (req, res) => {
                 error: 'Missing required fields: userId, userType, title, message'
             });
         }
+          const center = await RadiologyCenter.findById(centerid);
 
         const result = await notificationManager.sendNotification(
             userId,
             userType,
             title,
-            message
+            message,
+            center.image,
+            center.centerName,
         );
         res.json({
             data: result

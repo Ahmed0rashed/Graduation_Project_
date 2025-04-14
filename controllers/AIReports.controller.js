@@ -43,29 +43,52 @@ exports.updateAIReport = async (req, res) => {
 };
 exports.updateAIReport1 = async (req, res) => {
   try {
-    const stutes = req.body;
-    if (!stutes) return res.status(400).json({ message: "Stutes are required" });
-    const updatedReport = await AIReport.findByIdAndUpdate(
-      req.params.id,
-      stutes,
+    const {
+      diagnosisReportFinding,
+      diagnosisReportImpration,
+      diagnosisReportComment
+    } = req.body;
+
+    const foundrecord = await RadiologyRecord.findById(req.params.id);
+    if (!foundrecord) return res.status(404).json({ message: "Record not found" });
+
+    const foundRadiologist = await Radiologist.findById(foundrecord.radiologistId);
+    const spec = foundrecord.specializationRequest;
+
+    if (!foundRadiologist.numberOfReports[spec]) {
+      foundRadiologist.numberOfReports[spec] = [];
+    }
+
+    foundRadiologist.numberOfReports[spec].push(new Date());
+
+    await foundRadiologist.save();
+
+    const foundAIReport = foundrecord.reportId;
+    const updatedAIReport = await AIReport.findByIdAndUpdate(
+      foundAIReport,
+      {
+        diagnosisReportFinding,
+        diagnosisReportImpration,
+        diagnosisReportComment,
+      },
       {
         new: true,
         runValidators: true,
       }
     );
-    // 
-    const foundAIReport = await AIReport.findById(req.params.id);
+
     await RadiologyRecord.findByIdAndUpdate(
-      foundAIReport.record,
+      foundrecord._id,
       { status: "Reviewed" },
       { new: true, runValidators: true }
     );
-    if (!updatedReport) return res.status(404).json({ message: "Report not found" });
-    res.status(200).json(updatedReport);
+
+    res.status(200).json(updatedAIReport);
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
 };
+
 
 // Read AIReport by ID
 exports.getOneAIReport = async (req, res) => {
