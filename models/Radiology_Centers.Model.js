@@ -243,6 +243,11 @@ const radiologyCenterSchema = new mongoose.Schema(
       type: Boolean, 
       default : false 
     }, 
+    recordsCountPerDay: {
+      type: Map,
+      of: Number,
+      default: {},
+    },
 
   },
   {

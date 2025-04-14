@@ -80,14 +80,14 @@ const radiologistSchema = new mongoose.Schema({
     default: 'https://t4.ftcdn.net/jpg/02/29/75/83/360_F_229758328_7x8jwCwjtBMmC6rgFzLFhZoEpLobB6L8.jpg',
   },
   numberOfReports: {
-    ChestRadiology: { type: Number, default: 0 },
-    AbdominalRadiology: { type: Number, default: 0 },
-    Neuroradiology: { type: Number, default: 0 },
-    HeadandNeckRadiology: { type: Number, default: 0 },
-    MusculoskeletalRadiology: { type: Number, default: 0 },
-    ThoracicRadiology: { type: Number, default: 0 },
-    CardiovascularRadiology: { type: Number, default: 0 }
-  },
+    'Chest Radiology': [{ type: Date, default: Date.now }],
+    'Abdominal Radiology': [{ type: Date, default: Date.now }],
+    'Head and Neck Radiology': [{ type: Date, default: Date.now }],
+    'Musculoskeletal Radiology': [{ type: Date, default: Date.now }],
+    'Neuroradiology': [{ type: Date, default: Date.now }],
+    'Thoracic Radiology': [{ type: Date, default: Date.now }],
+    'Cardiovascular Radiology': [{ type: Date, default: Date.now }]
+  }, 
   walletId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Wallet",

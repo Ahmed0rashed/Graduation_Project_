@@ -18,6 +18,7 @@ const notificationSchema = new mongoose.Schema(
         "https://www.epidemicsound.com/sound-effects/tracks/a5ddf44b-231b-406b-a99e-035d1a330863/",
     },
     isRead: { type: Boolean, default: false },
+    sendername: { type: String, default: "" },
     createdAt: { type: Date, default: Date.now },
   },
   { timestamps: true }

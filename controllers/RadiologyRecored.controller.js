@@ -19,20 +19,48 @@ const checkInitialization = (req, res, next) => {
     next();
 };
 
-const sendNotification = async (userId, userType, title, message) => {
+const sendNotification = async (userId, userType, title, message,image,centername) => {
   try {
     const result = await notificationManager.sendNotification(
       userId,
       userType,
       title,
-      message
+      message,
+      image,
+      centername
     );
+
     return result;
   } catch (error) {
     console.error("Notification error:", error);
     throw error;
   }
 };
+
+async function incrementRecordForToday(centerId) {
+  const today = new Date().toISOString().split('T')[0];
+
+  const center = await RadiologyCenter.findById(centerId);
+  if (!center) {
+    throw new Error("Center not found");
+  }
+
+
+  if (!(center.recordsCountPerDay instanceof Map)) {
+    center.recordsCountPerDay = new Map(Object.entries(center.recordsCountPerDay || {}));
+  }
+
+  const prev = center.recordsCountPerDay.get(today) || 0;
+  center.recordsCountPerDay.set(today, prev + 1);
+
+  await center.save();
+
+  return {
+    date: today,
+    count: center.recordsCountPerDay.get(today)
+  };
+}
+
 
 exports.addRecord = async (req, res) => {
   try {
@@ -45,13 +73,15 @@ exports.addRecord = async (req, res) => {
     }
     const validCenterId = new mongoose.Types.ObjectId(centerId);
 
-    const radiologistSpecialty = await axios.post("https://ml-api-7yq4la.fly.dev/predict/", {
-      modality: modality,  
-      body_part_examined: body_part_examined,  
-      description: study_description  
-    }, { timeout: 100000 });
+    // const radiologistSpecialty = await axios.post("https://ml-api-7yq4la.fly.dev/predict/", {
+    //   modality: modality,  
+    //   body_part_examined: body_part_examined,  
+    //   description: study_description  
+    // }, { timeout: 100000 });
+
+   const radiologistSpecialty = 'Chest Radiology';
     
-    console.log("Radiologist API Response:", radiologistSpecialty.data.Specialty);
+    console.log("Radiologist API Response:", radiologistSpecialty);
     
 
     const radiologistsInCenter = await CenterRadiologistsRelation.findOne({ center: validCenterId });
@@ -62,14 +92,15 @@ exports.addRecord = async (req, res) => {
     
     let radiologist = await Radiologist.findOne({
       _id: { $in: radiologistsInCenter.radiologists },
-      specialization: radiologistSpecialty.data.Specialty 
+      specialization: radiologistSpecialty
     });
     
 
     if (!radiologist) {
       radiologist = await Radiologist.findOne({ _id: { $in: radiologistsInCenter.radiologists } });
     }
-
+    
+    incrementRecordForToday(validCenterId);
 
     const record = new RadiologyRecord({
       centerId: validCenterId,
@@ -88,7 +119,7 @@ exports.addRecord = async (req, res) => {
       DicomId,
       Dicom_url,
       status,
-      specializationRequest: radiologistSpecialty.data.Specialty,
+      specializationRequest: radiologistSpecialty,
       Study_Instance_UID,
       Series_Instance_UID,
     });
@@ -105,7 +136,9 @@ exports.addRecord = async (req, res) => {
       confidenceLevel: 0.0,
       generatedDate: new Date(),
     });
-    const notification = await sendNotification(radiologist._id, "Radiologist", "New Study", "New study assigned to you for review");
+
+    const center = await RadiologyCenter.findById(validCenterId);
+    const notification = await sendNotification(radiologist._id, "Radiologist", "New Study", "New study assigned to you for review",center.image,center.centerName);
 
     if (notification.save) {
       await notification.save(); 
@@ -118,7 +151,7 @@ exports.addRecord = async (req, res) => {
     res.status(200).json({ record: savedRecord, savedAIReport });
   } catch (error) {
     console.error("Error in addRecord:", error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: error.message || error.toString() || "Unknown error" });
   }
 };
 
@@ -359,7 +392,7 @@ exports.cancel = async (req, res) => {
       description: Record.study_description  
     }, { timeout: 100000 });
 
-    console.log("Radiologist API Response:", radiologistSpecialty.data.Specialty);
+    // console.log("Radiologist API Response:", radiologistSpecialty.data.Specialty);
 
 
     
@@ -382,7 +415,7 @@ exports.cancel = async (req, res) => {
     
     let newRadiologist = await Radiologist.findOne({
       _id: { $in: availableRadiologists },
-      specialization: radiologistSpecialty.data.Specialty 
+      specialization: radiologistSpecialty
     });
     console.log("Selected Radiologist:", newRadiologist);
     
