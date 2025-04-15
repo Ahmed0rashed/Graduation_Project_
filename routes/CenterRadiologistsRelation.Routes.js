@@ -8,5 +8,6 @@ router.post('/radiologists/:centerId', CenterRadiologistsRelationController.addR
 router.get("/onlineRadiologists/:centerId", CenterRadiologistsRelationController.getOnlineRadiologistsByCenterId);
 router.get("/radiologistsList/:centerId", CenterRadiologistsRelationController.getRadiologistsByCenterId1);
 router.get("/centers/:radiologistId", CenterRadiologistsRelationController.getCentersByRadiologistId);
+router.delete("/removeRadiologistFromCenter/:centerId", CenterRadiologistsRelationController.removeRadiologistFromCenter);
 
 module.exports = router;
