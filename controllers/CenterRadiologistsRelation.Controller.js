@@ -1,4 +1,5 @@
 const CenterRadiologistsRelation = require("../models/CenterRadiologistsRelation.Model");
+const Radiologist = require("../models/Radiologists.Model");
 const mongoose = require("mongoose");
 
 class CenterRadiologistsRelationController {
@@ -66,7 +67,7 @@ class CenterRadiologistsRelationController {
     try {
       const { centerId } = req.params;
       const { radiologistId } = req.body;
-
+  
       // Validate IDs
       if (!mongoose.Types.ObjectId.isValid(centerId) || !mongoose.Types.ObjectId.isValid(radiologistId)) {
         return res.status(400).json({
@@ -74,9 +75,19 @@ class CenterRadiologistsRelationController {
           message: 'The provided center ID or radiologist ID is not valid'
         });
       }
-
+  
+      // Ensure the Radiologist exists
+      const radiologistExists = await Radiologist.findById(radiologistId);
+      if (!radiologistExists) {
+        return res.status(404).json({
+          error: 'Not Found',
+          message: 'Radiologist does not exist'
+        });
+      }
+  
+      // Find the relation record
       let centerRadiologists = await CenterRadiologistsRelation.findOne({ center: centerId });
-
+  
       // If no record exists for this center, create one
       if (!centerRadiologists) {
         centerRadiologists = new CenterRadiologistsRelation({
@@ -91,28 +102,83 @@ class CenterRadiologistsRelationController {
             message: 'Radiologist is already assigned to this center'
           });
         }
-
-        await centerRadiologists.addRadiologist(radiologistId);
+  
+        // Add radiologist to list
+        centerRadiologists.radiologists.push(radiologistId);
       }
-
+  
+      // Save the updated or new record
       await centerRadiologists.save();
-
+  
+      // Get updated data with population
       const updatedCenter = await CenterRadiologistsRelation.findOne({ center: centerId })
         .populate('radiologists', '-passwordHash')
         .populate('center', 'name address');
-
+  
       res.status(201).json({
         message: 'Radiologist added successfully',
         data: updatedCenter
       });
+  
     } catch (error) {
-      console.error('Error in addRadiologistToCenter:', error);
+      console.error('Error in addRadiologistToCenter:', error.message, error.stack);
       res.status(500).json({
         error: 'Internal Server Error',
-        message: 'Failed to add radiologist to center'
+        message: 'Failed to add radiologist to center',
+        detail: error.message // Optional: remove in production
       });
     }
   }
+
+  async removeRadiologistFromCenter(req, res) {
+    try {
+      const { centerId } = req.params;
+      const { radiologistId } = req.body;
+  
+      if (!mongoose.Types.ObjectId.isValid(centerId) || !mongoose.Types.ObjectId.isValid(radiologistId)) {
+        return res.status(400).json({
+          error: 'Invalid ID',
+          message: 'The provided center ID or radiologist ID is not valid'
+        });
+      }
+  
+      const radiologistObjectId = new mongoose.Types.ObjectId(radiologistId);
+  
+      const centerRadiologists = await CenterRadiologistsRelation.findOne({ center: centerId });
+  
+      if (!centerRadiologists) {
+        return res.status(404).json({
+          error: 'Not Found',
+          message: 'No radiologists found for this center'
+        });
+      }
+  
+      const isInCenter = centerRadiologists.radiologists.some(id => id.equals(radiologistObjectId));
+      if (!isInCenter) {
+        return res.status(404).json({
+          error: 'Not Found',
+          message: 'Radiologist not found in this center'
+        });
+      }
+  
+      await centerRadiologists.removeRadiologist(radiologistObjectId);
+  
+      res.status(200).json({
+        message: 'Radiologist removed successfully',
+        data: centerRadiologists
+      });
+  
+    } catch (error) {
+      console.error('Error in removeRadiologistFromCenter:', error);
+      res.status(500).json({
+        error: 'Internal Server Error',
+        message: 'Failed to remove radiologist from center'
+      });
+    }
+  }
+  
+  
+  
   async getOnlineRadiologistsByCenterId(req, res) {
     try {
       const { centerId } = req.params;
