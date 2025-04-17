@@ -95,7 +95,8 @@ const radiologistSchema = new mongoose.Schema({
   experience: {
     type: Number,
     default: 0
-  }
+  }  
+  
 }, { timestamps: true });
 
 module.exports = mongoose.model('Radiologist', radiologistSchema);

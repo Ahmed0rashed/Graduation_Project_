@@ -16,10 +16,12 @@ const CenterRadiologistsRelationRoutes = require("./routes/CenterRadiologistsRel
 // const paymentRoutes = require("./routes/payment.routes");
 const notificationRoutes = require("./routes/not");
 const dashboardRoutes = require("./routes/dashboard.routes");
+const radiologistDashboardRoutes = require("./routes/RadiologistDashboard.routes");
 // const notificationController = require("./controllers/notificationRoutes2");
 // const dicomRoutes = require("./routes/dicomRoutes");
 
 const Admin = require("./routes/admon.routes");
+
 
 const app = express();
 
@@ -51,5 +53,6 @@ app.use("/api/notifications", notificationRoutes);
 
 app.use("/api/admin", Admin);
 app.use("/api/dashboard", dashboardRoutes);
+app.use("/api/radiologistDashboard", radiologistDashboardRoutes);
 
 module.exports = app;

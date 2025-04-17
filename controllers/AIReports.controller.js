@@ -139,17 +139,17 @@ exports.deleteAIReport = async (req, res) => {
     }
 
     const [findingResponse, impressionResponse, recommendationResponse] = await Promise.all([
-      axios.post("https://llama-9xgzsq.fly.dev/Radio/", {
+      axios.post("https://graduation-project-ml-api--mqcc1q.fly.dev/analyze-image/", {
         text: "Provide only the medical findings from this image without explanations, instructions, or steps.",
         image_url: imageUrl
       }, { timeout: 100000 }),
 
-      axios.post("https://llama-9xgzsq.fly.dev/Radio/", {
+      axios.post("https://graduation-project-ml-api--mqcc1q.fly.dev/analyze-image/", {
         text: "Provide the diagnostic impression based on the image without additional details or steps.",
         image_url: imageUrl
       }, { timeout: 100000 }),
 
-      axios.post("https://llama-9xgzsq.fly.dev/Radio/", {
+      axios.post("https://graduation-project-ml-api--mqcc1q.fly.dev/analyze-image/", {
         text: "Provide only the necessary medical recommendations in short based on the findings and diagnostic impression of this image without listing without say finding information and impression information.",
         image_url: imageUrl
       }, { timeout: 100000 })
