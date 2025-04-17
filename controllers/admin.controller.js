@@ -147,6 +147,7 @@ exports.addRadiologyCenter = async (req, res) => {
       email: email,
       passwordHash: hashedPassword,
       path : path,
+      isApproved: true,
     });
 
     const savedCenter = await newRadiologyCenter.save();
