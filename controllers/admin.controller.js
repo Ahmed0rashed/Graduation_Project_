@@ -315,3 +315,21 @@ exports.getRadiologyCenterById = async (req, res) => {
       res.status(500).json({ message: "Failed to add admin" ,error});
     }
   };
+
+  exports.getAllRadiologyCenters = async (req, res) => {
+    try {
+      const centers = await RadiologyCenter.find().select("-passwordHash");
+
+      if (!centers) {
+        return res.status(404).json({ message: "No radiology centers found" });
+      }
+
+      res.status(200).json({
+        message: "Radiology centers fetched successfully",
+        data: centers,
+      });
+    } catch (error) {
+      console.error("Error in fetching radiology centers:", error);
+      res.status(500).json({ message: "Failed to fetch radiology centers" });
+    }
+  };

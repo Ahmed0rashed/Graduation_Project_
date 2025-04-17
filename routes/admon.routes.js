@@ -17,6 +17,8 @@ router.get("/getRadiologist/:id", Admincontroller.getRadiologistbyId);
 // radiology center
 router.post("/addRadiologyCenter", Admincontroller.addRadiologyCenter);
 
+router.get("/getAllRadiologyCenters", Admincontroller.getAllRadiologyCenters);
+
 router.get("/getApprovedRadiologyCenters", Admincontroller.getApprovedRadiologyCenters);
 
 router.get("/getNotApprovedRadiologyCenters", Admincontroller.getNotApprovedRadiologyCenters);
