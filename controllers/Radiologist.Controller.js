@@ -3,6 +3,7 @@ const mongoose = require("mongoose");
 const Radiologist = require("../models/Radiologists.Model"); 
 const cloudinary = require("cloudinary").v2;
 const activeUsers =require("../server");
+const upload = require("../utils/cloudinary");
 cloudinary.config({
   cloud_name: "dncawa23w",
   api_key: "451913596668632",
@@ -138,6 +139,7 @@ class RadiologistController {
   }
 
 } 
+
 
 
 

@@ -8,6 +8,7 @@ const otpGenerator = require("otp-generator");
 const Otp = require("../models/OTP");
 const Wallet = require('../models/payment/Wallet.Model');
 const Admin = require("../models/admin.model");
+const upload = require("../utils/cloudinary");
 const sendOtpEmail = async (email, otp) => {
   const transporter = nodemailer.createTransport({
     service: "gmail",
@@ -76,36 +77,41 @@ exports.sendOtp = async (req, res) => {
   }
 };
 
+// const upload = require("../utils/upload"); // Make sure this is your upload module
 
 exports.registerRadiologist = async (req, res) => {
   try {
-    const { firstName, lastName, specialization, email, password, contactNumber } = req.body;
+    let { firstName, lastName, specialization, email, password, contactNumber } = req.body;
 
+  
+    if (typeof specialization === 'string') {
+      specialization = specialization.split(',').map(s => s.trim());
+    }
 
+    
+    const allowedSpecializations = Radiologist.schema.path("specialization").caster.enumValues;
+    if (
+      !specialization ||
+      !Array.isArray(specialization) ||
+      !specialization.every(sp => allowedSpecializations.includes(sp))
+    ) {
+      return res.status(400).json({
+        message:
+          "A valid specialization is required and should be an array with correct values",
+      });
+    }
+
+   
     if (!email || !validator.isEmail(email)) {
       return res.status(400).json({ message: "A valid email is required" });
     }
     if (!firstName || !lastName) {
       return res.status(400).json({ message: "First name and last name are required" });
     }
-    if (!specialization || !Array.isArray(specialization) || !specialization.every(sp => Radiologist.schema.path("specialization").options.enum.values.includes(sp))) {
-      return res.status(400).json({ message: "A valid specialization is required and should be an array with correct values" });
-    }
-
     if (!contactNumber || !/^\+?[\d\s-]{10,15}$/.test(contactNumber)) {
       return res.status(400).json({ message: "A valid contact number is required" });
     }
-    if (!password) {
-      return res.status(400).json({ message: "A valid password is required" });
-    }
-    if (await RadiologyCenter.findOne({ email })) {
-      return res.status(400).json({ message: `This email already exists as a radiology center` });
-    }
-
-    if (await Radiologist.findOne({ email })) {
-      return res.status(400).json({ message: `This email already exists as a radiologist` });
-    }
-    if (!validator.isLength(password, { min: 8 })) {
+    if (!password || !validator.isLength(password, { min: 8 })) {
       return res.status(400).json({ message: "Password should be at least 8 characters long" });
     }
     const specialCharacters = /[ !@#$%^&*(),.?":{}|<>\-_=+]/;
@@ -113,29 +119,64 @@ exports.registerRadiologist = async (req, res) => {
       return res.status(400).json({ message: "Password should contain at least one special character" });
     }
 
+   
+    if (await RadiologyCenter.findOne({ email })) {
+      return res.status(400).json({ message: `This email already exists as a radiology center` });
+    }
 
-    const otp = otpGenerator.generate(6, { upperCase: false, specialChars: false });
+    if (await Radiologist.findOne({ email })) {
+      return res.status(400).json({ message: `This email already exists as a radiologist` });
+    }
+
+    
+    if (!req.frontId) {
+      return res.status(400).json({ message: "A valid front id is required" });
+    }
+    if (!req.backId) {
+      return res.status(400).json({ message: "A valid back id is required" });
+    }
+
+  
+    const FrontId = await upload(req.frontId.buffer, "image"); 
+    const BackId = await upload(req.backId.buffer, "image"); 
+
+
+    const otp = otpGenerator.generate(6, {
+      digits: true,
+      lowerCaseAlphabets: false,
+      upperCaseAlphabets: false,
+      specialChars: false
+    });
+    
     const expiry = new Date();
-    expiry.setMinutes(expiry.getMinutes() + 5);
+    expiry.setMinutes(expiry.getMinutes() + 10);
 
+    // Save OTP in the database
     const otpRecord = await Otp.findOneAndUpdate(
       { email: email.toLowerCase() },
       { otp, expiry },
       { upsert: true, new: true }
     );
 
-
+   
     await sendOtpEmail(email, otp);
 
-    return res.status(200).json({ message: "OTP sent to email. Please verify to complete registration." });
+    return res.status(200).json({
+      message: "OTP sent to email. Please verify to complete registration.",
+      FrontId,
+      BackId
+    });
+
   } catch (error) {
     console.error("Error registering radiologist: ", error);
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
+
+
 exports.verifyOtp = async (req, res) => {
   try {
-    const { email, otp, password, firstName, lastName, specialization, contactNumber } = req.body;
+    const { email, otp, password, firstName, lastName, specialization, contactNumber ,frontId ,backId} = req.body;
 
     if (!email || !otp || !password || !firstName || !lastName || !specialization || !contactNumber) {
       return res.status(400).json({ message: "All fields are required" });
@@ -185,6 +226,9 @@ exports.verifyOtp = async (req, res) => {
       email: email.toLowerCase(),
       passwordHash: hashedPassword,
       contactNumber,
+      frontId,
+      backId,
+      
     });
 
     // بعد إنشاء المستخدم radiologist أو center:

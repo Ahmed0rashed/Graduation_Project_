@@ -95,7 +95,17 @@ const radiologistSchema = new mongoose.Schema({
   experience: {
     type: Number,
     default: 0
-  }  
+  }  ,
+  frontId: {
+    type: String,
+    // required: [true, 'Front ID is required'],
+    trim: true,
+  },
+  backId: {
+    type: String,
+    // required: [true, 'Back ID is required'],
+    trim: true,
+  }
   
 }, { timestamps: true });
 
