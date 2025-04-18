@@ -113,7 +113,13 @@ exports.registerRadiologyCenter = async (req, res) => {
       return res.status(400).json({ message: "Contact number should be between 10 and 15 digits" });
     }
 
-    const otp = otpGenerator.generate(6, { upperCase: false, specialChars: false });
+    const otp = otpGenerator.generate(6, {
+      digits: true,
+      lowerCaseAlphabets: false,
+      upperCaseAlphabets: false,
+      specialChars: false
+    });
+    
     const expiry = new Date();
     expiry.setMinutes(expiry.getMinutes() + 5);
 
