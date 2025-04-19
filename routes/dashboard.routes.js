@@ -7,6 +7,6 @@ router.get("/getCenterStatistics/:centerId", dashboardController.getCenterStatis
 router.get("/getRecordsCountPerDayInCenter/:centerId", dashboardController.getRecordsCountPerDayInCenter);
 router.get("/getRecordsCountPerDayInCenterPerStatus/:centerId", dashboardController.getRecordsCountPerDayInCenterPerStatus);
 router.get("/getWeeklyRecordsCountPerDayInCenterPerStatus/:centerId", dashboardController.getWeeklyRecordsCountPerDayInCenterPerStatus);
-router.get("/getrangeRecordsCount/:centerId", dashboardController.getrangeRecordsCount);
+router.post("/getrangeRecordsCount/:centerId", dashboardController.getrangeRecordsCount);
 router.get("/getTotalRecordsCountInCenter/:centerId", dashboardController.getTotalRecordsCountInCenter);
 module.exports = router;
