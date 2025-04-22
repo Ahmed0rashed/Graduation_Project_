@@ -215,6 +215,26 @@ exports.analyzeComments = async (req, res) => {
   }
 };
 
+exports.getAIReportByStudyInstanceUID = async (req, res) => {
+  try {
+    const { Study_Instance_UID } = req.params;
+    recored = await RadiologyRecord.findOne({ "Study_Instance_UID": Study_Instance_UID });  
+    // const aiReport = await AIReport.findOne({ "radiologyRecord.Study_Instance_UID": Study_Instance_UID });
+    const aiReport = await AIReport.findOne({ record: recored._id });
+    if (!aiReport) {
+      return res.status(404).json({ error: "AI Report not found" });
+    }
+
+    res.status(200).json(aiReport);
+      if (!recored) {
+      return res.status(404).json({ error: "AI Report not found" });
+    }
+
+    res.status(200).json();
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
 
 
 

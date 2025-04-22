@@ -11,7 +11,7 @@ router.post("/analyzeFindings/:id", userController.analyzeFindings);
 router.post("/analyzeImpression/:id", userController.analyzeImpression);
 router.post("/analyzeComments/:id", userController.analyzeComments);
 router.put("/Reviewed/:id", userController.updateAIReport1);
-
+router.get  ("/getAIReportByStudyInstanceUID/:Study_Instance_UID", userController.getAIReportByStudyInstanceUID);
 
 // routes with options
 router.get(
