@@ -93,7 +93,49 @@ router.get('/all/:userId', checkInitialization, async (req, res) => {
         });
     }
 });
+router.delete('/:id', checkInitialization, async (req, res) => {
+    try {
+        const deleted = await Notification.findByIdAndDelete(req.params.id);
+        res.json({ 
+            success: true, 
+            deleted 
+        });
+    } catch (error) {
+        res.status(500).json({ 
+            success: false, 
+            error: error.message 
+        });
+    }
+});
+router.delete('/all/:userId', checkInitialization, async (req, res) => {
+    try {
+        const deleted = await Notification.deleteMany({ userId: req.params.userId });
+        res.json({ 
+            success: true, 
+            deleted 
+        });
+    } catch (error) {
+        res.status(500).json({ 
+            success: false, 
+            error: error.message 
+        });
+    }
+});
 
+router.put('/all/read/:userId', checkInitialization, async (req, res) => {
+    try {
+        const updated = await Notification.updateMany({ userId: req.params.userId }, { isRead: true });
+        res.json({ 
+            success: true, 
+            updated 
+        });
+    } catch (error) {
+        res.status(500).json({ 
+            success: false, 
+            error: error.message 
+        });
+    }
+});
 
 
 
