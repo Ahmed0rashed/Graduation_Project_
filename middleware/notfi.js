@@ -23,7 +23,9 @@ class NotificationManager {
                     "http://localhost:8000",
                     "https://graduation-project--xohomg.fly.dev",
                     "http://127.0.0.1:5500",
-                    "http://127.0.0.1:5500/te5.html"
+                    "http://127.0.0.1:5500/te5.html",
+                    "https://dicom-file-git-main-ahmed0rasheds-projects.vercel.app/"
+                    
                 ],
                 methods: ["GET", "POST"],
                 credentials: true
