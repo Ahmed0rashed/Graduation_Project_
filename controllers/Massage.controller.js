@@ -3,6 +3,7 @@ const Message = require('../models/Chat.model');
 const Radiologist = require('../models/Radiologists.Model');
 const RadiologyCenter = require('../models/Radiology_Centers.Model');
 const CenterRadiologistsRelation = require("../models/CenterRadiologistsRelation.Model");
+const notificationManager = require('../middleware/notfi');
 
 const { io, activeUsers } = require("../middleware/socketManager");
 
@@ -10,6 +11,24 @@ exports.io = null;
 
 exports.setSocketIO = (socketIO) => {
   exports.io = socketIO;
+};
+
+const sendNotification = async (userId, userType, title, message,image,centername) => {
+  try {
+    const result = await notificationManager.sendNotification(
+      userId,
+      userType,
+      title,
+      message,
+      image,
+      centername
+    );
+
+    return result;
+  } catch (error) {
+    console.error("Notification error:", error);
+    throw error;
+  }
 };
 
 exports.getConversation = async (req, res) => {
@@ -130,7 +149,24 @@ exports.sendMessage = async (req, res) => {
       content,
       attachments: attachments || []
     });
-    
+
+    let notification;
+    let senderName;
+    if (senderType === 'Radiologist') {
+      const radiologist = await Radiologist.findById(senderId).select('firstName lastName image');
+      senderName = `${radiologist.firstName} ${radiologist.lastName}`;
+      notification = await sendNotification(receiverId, "Radiologist", "New Message", "  You have a new message from "+radiologist.firstName + " " + radiologist.lastName,radiologist.image,radiologist.firstName + " " + radiologist.lastName); 
+    } else {
+      const center = await RadiologyCenter.findById(senderId).select('centerName image');
+      senderName = center.centerName;
+      notification = await sendNotification(receiverId, "ٌRadiologyCenter", "New Message", "  You have a new message from "+center.centerName ,center.image,center.centerName);
+
+    }
+
+    if (notification.save) {
+      await notification.save(); 
+    }
+
     await newMessage.save();
     
     if (activeUsers.has(receiverId)) {

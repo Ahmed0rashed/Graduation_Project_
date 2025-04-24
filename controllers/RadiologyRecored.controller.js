@@ -138,7 +138,7 @@ exports.addRecord = async (req, res) => {
     });
 
     const center = await RadiologyCenter.findById(validCenterId);
-    const notification = await sendNotification(radiologist._id, "Radiologist", "New Study", "New study assigned to you for review",center.image,center.centerName);
+    const notification = await sendNotification(radiologist._id, "Radiologist", "New Study", "New study assigned from "+center.centerName ,center.image,center.centerName);
 
     if (notification.save) {
       await notification.save(); 
