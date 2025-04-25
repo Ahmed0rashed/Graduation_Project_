@@ -371,22 +371,24 @@ exports.getRecordsByRadiologistId = async (req, res) => {
 
 exports.cancel = async (req, res) => {
   try {
-    
     const Record = await RadiologyRecord.findById(req.params.id);
 
     if (!Record) {
       return res.status(404).json({ message: "Record not found" });
     }
-    const radiologistSpecialty = await axios.post("https://ml-api-7yq4la.fly.dev/predict/", {
-      modality:Record.modality,  
-      body_part_examined: Record.body_part_examined,  
-      description: Record.study_description  
-    }, { timeout: 100000 });
 
-    // console.log("Radiologist API Response:", radiologistSpecialty.data.Specialty);
+    const specialtyResponse = await axios.post(
+      "https://ml-api-7yq4la.fly.dev/predict/",
+      {
+        modality: Record.modality,
+        body_part_examined: Record.body_part_examined,
+        description: Record.study_description
+      },
+      { timeout: 100000 }
+    );
 
+    const predictedSpecialty = specialtyResponse.data.Specialty;
 
-    
     const radiologistsInCenter = await CenterRadiologistsRelation.findOne({ center: Record.centerId });
 
     if (!radiologistsInCenter || radiologistsInCenter.radiologists.length === 0) {
@@ -394,55 +396,68 @@ exports.cancel = async (req, res) => {
     }
 
     const canceledByList = Record.cancledby.map(id => id.toString());
-    
-    const availableRadiologists = radiologistsInCenter.radiologists.filter(radiologist => !radiologist.equals(Record.radiologistId) &&
-    !canceledByList.includes(radiologist.toString()));
+
+    const availableRadiologists = radiologistsInCenter.radiologists.filter(
+      radiologist =>
+        !radiologist.equals(Record.radiologistId) &&
+        !canceledByList.includes(radiologist.toString())
+    );
 
     if (availableRadiologists.length === 0) {
       return res.status(404).json({ message: "No alternative radiologists found" });
-    }console.log("Available Radiologists:", availableRadiologists);
+    }
 
-    
-    
+    console.log("Available Radiologists:", availableRadiologists);
+
     let newRadiologist = await Radiologist.findOne({
       _id: { $in: availableRadiologists },
-      specialization: radiologistSpecialty
+      specialization: predictedSpecialty // FIXED: using string not object
     });
+
     console.log("Selected Radiologist:", newRadiologist);
-    
+
     if (!newRadiologist) {
       newRadiologist = await Radiologist.findOne({ _id: { $in: availableRadiologists } });
     }
-    console.log("Selected Radiologist2:", newRadiologist);
 
+    console.log("Selected Radiologist2:", newRadiologist);
 
     if (!newRadiologist) {
       return res.status(404).json({ message: "No suitable radiologist found" });
     }
 
-  
-    const record = await RadiologyRecord.findByIdAndUpdate(
-      req.params.id, 
-      { radiologistId: newRadiologist._id ,
+    const updatedRecord = await RadiologyRecord.findByIdAndUpdate(
+      req.params.id,
+      {
+        radiologistId: newRadiologist._id,
         cancledby: [...Record.cancledby, Record.radiologistId]
-      }, 
-    
+      },
       { new: true }
     );
-    const notification = await sendNotification(newRadiologist._id, "Radiologist", "New Study", "New study assigned to you for review");
 
+    const center = await RadiologyCenter.findById(Record.centerId);
+    const RadiologistName = await Radiologist.findById(updatedRecord.cancledby);
+// console.log("RadiologistName:", RadiologistName.firstName,);
+    const notification = await sendNotification(
+      "680395b91828bc54d0b3ca80",
+      "Radiologist",
+      center.centerName,
+      "New study assigned to you  \ncancelled by " + RadiologistName.firstName + " " + RadiologistName.lastName,
+      center.image,
+      center.centerName
+    );
     if (notification.save) {
-      await notification.save(); 
+      await notification.save();
     }
 
-    res.status(200).json({ message: "Radiologist updated successfully", newRadiologist });
+    res.status(200).json({
+      message: "Radiologist updated successfully",
+      newRadiologist
+    });
   } catch (error) {
     console.error("Error in cancel:", error);
     res.status(500).json({ error: error.message });
   }
 };
-
-
-
 
 module.exports = exports;
