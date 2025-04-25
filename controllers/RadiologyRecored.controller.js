@@ -9,15 +9,6 @@ const CenterRadiologistsRelation = require("../models/CenterRadiologistsRelation
 const notificationManager = require('../middleware/notfi');
 
 
-const checkInitialization = (req, res, next) => {
-    if (!notificationManager.isInitialized) {
-        return res.status(503).json({
-            success: false,
-            error: "Notification service is not ready"
-        });
-    }
-    next();
-};
 
 const sendNotification = async (userId, userType, title, message,image,centername) => {
   try {
@@ -138,7 +129,7 @@ exports.addRecord = async (req, res) => {
     });
 
     const center = await RadiologyCenter.findById(validCenterId);
-    const notification = await sendNotification(radiologist._id, "Radiologist", "New Study", "New study assigned from "+center.centerName ,center.image,center.centerName);
+    const notification = await sendNotification(radiologist._id, "Radiologist", center.centerName , "New study assigned to you" ,center.image,center.centerName);
 
     if (notification.save) {
       await notification.save(); 

@@ -150,24 +150,26 @@ exports.sendMessage = async (req, res) => {
       attachments: attachments || []
     });
 
+
+
+    await newMessage.save();
     let notification;
     let senderName;
     if (senderType === 'Radiologist') {
       const radiologist = await Radiologist.findById(senderId).select('firstName lastName image');
       senderName = `${radiologist.firstName} ${radiologist.lastName}`;
-      notification = await sendNotification(receiverId, "Radiologist", "New Message", "  You have a new message from "+radiologist.firstName + " " + radiologist.lastName,radiologist.image,radiologist.firstName + " " + radiologist.lastName); 
+      notification = await sendNotification(receiverId, "Radiologist", radiologist.firstName, content,radiologist.image,radiologist.firstName + " " + radiologist.lastName); 
     } else {
       const center = await RadiologyCenter.findById(senderId).select('centerName image');
       senderName = center.centerName;
-      notification = await sendNotification(receiverId, "ٌRadiologyCenter", "New Message", "  You have a new message from "+center.centerName ,center.image,center.centerName);
+      notification = await sendNotification(receiverId, "ٌRadiologyCenter", center.centerName ,content,center.image,center.centerName);
 
     }
+
 
     if (notification.save) {
       await notification.save(); 
     }
-
-    await newMessage.save();
     
     if (activeUsers.has(receiverId)) {
       const receiverSocketId = activeUsers.get(receiverId).socketId;
