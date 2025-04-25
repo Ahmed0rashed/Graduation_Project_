@@ -20,6 +20,14 @@ const notificationSchema = new mongoose.Schema(
     isRead: { type: Boolean, default: false },
     sendername: { type: String, default: "" },
     createdAt: { type: Date, default: Date.now },
+    // type: {
+    //   type: String,
+    //   enum: [
+    //     "massage",
+    //     "report",
+    //   ],
+    //   default: "general",
+    // },
   },
   { timestamps: true }
 );
