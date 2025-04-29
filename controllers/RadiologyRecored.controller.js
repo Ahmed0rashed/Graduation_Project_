@@ -64,13 +64,16 @@ exports.addRecord = async (req, res) => {
     }
     const validCenterId = new mongoose.Types.ObjectId(centerId);
 
-    // const radiologistSpecialty = await axios.post("https://ml-api-7yq4la.fly.dev/predict/", {
-    //   modality: modality,  
-    //   body_part_examined: body_part_examined,  
-    //   description: study_description  
-    // }, { timeout: 100000 });
-
-   const radiologistSpecialty = 'Chest Radiology';
+    const radiologistSpecialty = await axios.post("https://ml-api-7yq4la.fly.dev/predict/", {
+      modality,
+      body_part_examined,
+      description: study_description
+    }, { timeout: 100000 });
+    
+    console.log("Radiologist API Response:", radiologistSpecialty);
+    
+    // Fix starts here
+    const specialty = radiologistSpecialty.data.Specialty;
     
     console.log("Radiologist API Response:", radiologistSpecialty);
     
@@ -83,7 +86,7 @@ exports.addRecord = async (req, res) => {
     
     let radiologist = await Radiologist.findOne({
       _id: { $in: radiologistsInCenter.radiologists },
-      specialization: radiologistSpecialty
+      specialization: specialty
     });
     
 
@@ -110,7 +113,7 @@ exports.addRecord = async (req, res) => {
       DicomId,
       Dicom_url,
       status,
-      specializationRequest: radiologistSpecialty,
+      specializationRequest: specialty,
       Study_Instance_UID,
       Series_Instance_UID,
     });
