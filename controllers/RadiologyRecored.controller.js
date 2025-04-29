@@ -10,7 +10,7 @@ const notificationManager = require('../middleware/notfi');
 
 
 
-const sendNotification = async (userId, userType, title, message,image,centername) => {
+const sendNotification = async (userId, userType, title, message,image,centername, type) => {
   try {
     const result = await notificationManager.sendNotification(
       userId,
@@ -18,7 +18,8 @@ const sendNotification = async (userId, userType, title, message,image,centernam
       title,
       message,
       image,
-      centername
+      centername,
+      type
     );
 
     return result;
@@ -64,13 +65,16 @@ exports.addRecord = async (req, res) => {
     }
     const validCenterId = new mongoose.Types.ObjectId(centerId);
 
-    // const radiologistSpecialty = await axios.post("https://ml-api-7yq4la.fly.dev/predict/", {
-    //   modality: modality,  
-    //   body_part_examined: body_part_examined,  
-    //   description: study_description  
-    // }, { timeout: 100000 });
-
-   const radiologistSpecialty = 'Chest Radiology';
+    const radiologistSpecialty = await axios.post("https://ml-api-7yq4la.fly.dev/predict/", {
+      modality,
+      body_part_examined,
+      description: study_description
+    }, { timeout: 100000 });
+    
+    console.log("Radiologist API Response:", radiologistSpecialty);
+    
+    // Fix starts here
+    const specialty = radiologistSpecialty.data.Specialty;
     
     console.log("Radiologist API Response:", radiologistSpecialty);
     
@@ -83,7 +87,7 @@ exports.addRecord = async (req, res) => {
     
     let radiologist = await Radiologist.findOne({
       _id: { $in: radiologistsInCenter.radiologists },
-      specialization: radiologistSpecialty
+      specialization: specialty
     });
     
 
@@ -110,7 +114,7 @@ exports.addRecord = async (req, res) => {
       DicomId,
       Dicom_url,
       status,
-      specializationRequest: radiologistSpecialty,
+      specializationRequest: specialty,
       Study_Instance_UID,
       Series_Instance_UID,
     });
@@ -129,7 +133,7 @@ exports.addRecord = async (req, res) => {
     });
 
     const center = await RadiologyCenter.findById(validCenterId);
-    const notification = await sendNotification(radiologist._id, "Radiologist", center.centerName , "New study assigned to you" ,center.image,center.centerName);
+    const notification = await sendNotification(radiologist._id, "Radiologist", center.centerName , "New study assigned to you" ,center.image,center.centerName, "study");
 
     if (notification.save) {
       await notification.save(); 
@@ -149,14 +153,14 @@ exports.addRecord = async (req, res) => {
 
 exports.updateRecordById = async (req, res) => {
   try {
-    const { status } = req.body;
-    if (!status) return res.status(400).json({ error: "Status is missing from request" });
+    // const { status } = req.body;
+    // if (!status) return res.status(400).json({ error: "Status is missing from request" });
 
     if (!req.params.id) return res.status(400).json({ error: "Record ID is missing" });
 
     const updatedRecord = await RadiologyRecord.findByIdAndUpdate(
       req.params.id,
-      { status }, 
+      { ...req.body }, 
       {
         new: true,
         runValidators: true,
@@ -170,6 +174,7 @@ exports.updateRecordById = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
 
 exports.getAllRecords = async (req, res) => {
   try {

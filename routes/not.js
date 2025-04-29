@@ -17,9 +17,9 @@ const checkInitialization = (req, res, next) => {
 
 router.post('/send', checkInitialization, async (req, res) => {
     try {
-        const { userId, userType, title, message,centerid } = req.body;
+        const { userId, userType, title, message,centerid,type } = req.body;
 
-        if (!userId || !userType || !title || !message) {
+        if (!userId || !userType || !title || !message  || !type) {
             return res.status(400).json({
                 success: false,
                 error: 'Missing required fields: userId, userType, title, message'
@@ -34,6 +34,7 @@ router.post('/send', checkInitialization, async (req, res) => {
             message,
             center.image,
             center.centerName,
+            type,
         );
         res.json({
             data: result

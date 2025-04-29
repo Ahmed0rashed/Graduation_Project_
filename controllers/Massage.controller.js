@@ -21,7 +21,8 @@ const sendNotification = async (userId, userType, title, message,image,centernam
       title,
       message,
       image,
-      centername
+      centername,
+      type = "massage"
     );
 
     return result;
