@@ -94,6 +94,13 @@ const radiologyRecordSchema = new mongoose.Schema(
     specializationRequest: {
       type: String,
     },
+    dicom_Comment: {
+      type: String,
+    },
+    flag: {
+      type: Boolean,
+      default: false,
+    }, 
   },
   { timestamps: true }
 );

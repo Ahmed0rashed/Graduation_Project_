@@ -116,7 +116,7 @@ class NotificationManager {
         }
     }
 
-    async sendNotification(userId, userType, title, message, icon,name, sound) {
+    async sendNotification(userId, userType, title, message, icon,name, type) {
         if (!this.isInitialized) {
             throw new Error("Socket.io not initialized. Call initialize() first");
         }
@@ -128,9 +128,10 @@ class NotificationManager {
                 title,
                 message,
                 icon: icon ,
-                sound: sound ,
+                sound: "" ,
                 sendername: name ,
-                createdAt: new Date()
+                type ,
+                createdAt: new Date()   
             });
 
             const isDelivered = this._deliverNotification(userId, notification);
