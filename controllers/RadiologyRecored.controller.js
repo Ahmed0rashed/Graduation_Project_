@@ -56,13 +56,17 @@ async function incrementRecordForToday(centerId) {
 
 exports.addRecord = async (req, res) => {
   try {
-    const { centerId, patient_name, study_date, patient_id,sex,
-            modality, PatientBirthDate, age,study_description,email,
-            DicomId, series, body_part_examined, status, Dicom_url, Study_Instance_UID, Series_Instance_UID } = req.body;
+    const {
+      centerId, patient_name, study_date, patient_id, sex,
+      modality, PatientBirthDate, age, study_description, email,
+      DicomId, series, body_part_examined, status, Dicom_url,
+      Study_Instance_UID, Series_Instance_UID
+    } = req.body;
 
     if (!mongoose.Types.ObjectId.isValid(centerId)) {
       return res.status(400).json({ error: "Invalid centerId format" });
     }
+
     const validCenterId = new mongoose.Types.ObjectId(centerId);
 
     const radiologistSpecialty = await axios.post("https://ml-api-7yq4la.fly.dev/predict/", {
@@ -70,31 +74,62 @@ exports.addRecord = async (req, res) => {
       body_part_examined,
       description: study_description
     }, { timeout: 100000 });
-    
-    console.log("Radiologist API Response:", radiologistSpecialty);
-    
-    // Fix starts here
+
     const specialty = radiologistSpecialty.data.Specialty;
-    
-    console.log("Radiologist API Response:", radiologistSpecialty);
-    
 
     const radiologistsInCenter = await CenterRadiologistsRelation.findOne({ center: validCenterId });
-    
+
     if (!radiologistsInCenter || radiologistsInCenter.radiologists.length === 0) {
       return res.status(404).json({ message: "No radiologists found in center" });
     }
-    
-    let radiologist = await Radiologist.findOne({
+
+    let radiologists1 = await Radiologist.find({
       _id: { $in: radiologistsInCenter.radiologists },
       specialization: specialty
     });
-    
 
-    if (!radiologist) {
+    const recordsPerRadiologist = await RadiologyRecord.aggregate([
+      {
+        $match: {
+          centerId: validCenterId,
+          status: { $in: ["Available", "Pending"] },
+          radiologistId: { $in: radiologists1.map(r => r._id) }
+        }
+      },
+      {
+        $group: {
+          _id: "$radiologistId",
+          count: { $sum: 1 }
+        }
+      }
+    ]);
+
+    const radiologistCountMap = new Map(recordsPerRadiologist.map(item => [item._id.toString(), item.count]));
+
+    let radiologist = radiologists1.reduce((min, r) => {
+      const count = radiologistCountMap.get(r._id.toString()) || 0;
+      if (!min || count < min.count) {
+        return { ...r.toObject(), count };
+      }
+      return min;
+    }, null);
+    radiologists1.forEach(r => {
+      const count = radiologistCountMap.get(r._id.toString()) || 0;
+      console.log(` Radiologist ${r._id} has ${count} pending/available cases`);
+    });
+        
+
+    if (!radiologist || !radiologist._id) {
       radiologist = await Radiologist.findOne({ _id: { $in: radiologistsInCenter.radiologists } });
     }
-    
+
+    if (!radiologist || !radiologist._id) {
+      console.error(" Radiologist not found! Can't send notification.");
+      return res.status(500).json({ error: "Radiologist assignment failed." });
+    }
+
+    console.log("Assigned Radiologist ID:", radiologist._id);
+
     incrementRecordForToday(validCenterId);
 
     const record = new RadiologyRecord({
@@ -124,7 +159,7 @@ exports.addRecord = async (req, res) => {
     const aiReport = new AIReport({
       record: savedRecord._id,
       centerId: validCenterId,
-      radiologistID: radiologist._id, 
+      radiologistID: radiologist._id,
       diagnosisReportFinding: " ",
       diagnosisReportImpration: " ",
       diagnosisReportComment: " ",
@@ -133,11 +168,21 @@ exports.addRecord = async (req, res) => {
     });
 
     const center = await RadiologyCenter.findById(validCenterId);
-    const notification = await sendNotification(radiologist._id, "Radiologist", center.centerName , "New study assigned to you" ,center.image,center.centerName, "study");
 
-    if (notification.save) {
-      await notification.save(); 
+    const notificationResult = await sendNotification(
+      radiologist._id,
+      "Radiologist",
+      center.centerName,
+      "New study assigned to you",
+      center.image,
+      center.centerName,
+      "study"
+    );
+
+    if (notificationResult && notificationResult.notification) {
+      console.log("Notification created successfully");
     }
+
     const savedAIReport = await aiReport.save();
 
     savedRecord.reportId = savedAIReport._id;
@@ -149,6 +194,7 @@ exports.addRecord = async (req, res) => {
     res.status(500).json({ error: error.message || error.toString() || "Unknown error" });
   }
 };
+
 
 
 exports.updateRecordById = async (req, res) => {
