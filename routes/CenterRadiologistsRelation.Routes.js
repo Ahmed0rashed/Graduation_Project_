@@ -4,6 +4,7 @@ const CenterRadiologistsRelationController = require("../controllers/CenterRadio
 
 router.get("/radiologists/:centerId", CenterRadiologistsRelationController.getRadiologistsByCenterId);
 router.post('/radiologists/:centerId', CenterRadiologistsRelationController.addRadiologistToCenter);
+router.post('/radiologist/:centerId', CenterRadiologistsRelationController.addRadiologistToCenter1);
 
 router.get("/onlineRadiologists/:centerId", CenterRadiologistsRelationController.getOnlineRadiologistsByCenterId);
 router.get("/radiologistsList/:centerId", CenterRadiologistsRelationController.getRadiologistsByCenterId1);
