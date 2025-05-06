@@ -1,8 +1,124 @@
 const CenterRadiologistsRelation = require("../models/CenterRadiologistsRelation.Model");
 const Radiologist = require("../models/Radiologists.Model");
+const RadiologyCenter = require("../models/Radiology_Centers.Model"); 
 const mongoose = require("mongoose");
+const nodemailer = require("nodemailer");
+
+
+async function sendInvitationEmail(radiologistEmail, centerName, centerEmail, phone) {
+  const transporter = nodemailer.createTransport({
+    service: "gmail",
+    auth: {
+      user: "ahmedmohamedrashed236@gmail.com",
+      pass: "ncjb nwhz gtcn rqrw", // Consider using environment variables for better security
+    },
+  });
+
+  const radiologistName = radiologistEmail.split('@')[0].split('.')[0];  
+  
+  const mailOptions = {
+    from: centerEmail,
+    to: radiologistEmail,
+    subject: `Invitation to Join Radintal from ${centerName}`,
+    html: `
+      <div style="font-family: Arial, sans-serif; padding: 20px; border: 1px solid #ddd; border-radius: 8px; background-color: #f4f4f4;">
+        <h2 style="color: #2c3e50;">You're Invited to Join Radintal</h2>
+        <p>Dear ${radiologistName},</p>
+        
+        <p>We at <strong>${centerName}</strong> would like to extend an invitation for you to join <strong>Radintal</strong>, our collaborative platform designed for radiologists.</p>
+  
+        <p>By joining Radintal, you'll have the opportunity to connect with our team for image consultations, case reviews, and seamless communication, improving the quality and efficiency of your practice.</p>
+  
+        <p><strong>Contact Information for ${centerName}:</strong></p>
+        <p><strong>Email:</strong> <a href="mailto:${centerEmail}" style="color: #3498db;">${centerEmail}</a></p>
+        <p><strong>Phone:</strong> ${phone}</p>
+  
+        <p>If you're interested in joining us on Radintal, please use the contact information above to reach out to us directly. Please note that this is an automated invitation email and responses to this email address will not be monitored.</p>
+  
+        <p>We would be delighted to have you on board and look forward to collaborating with you!</p>
+  
+        <p>Best regards,</p>
+        <p><strong>${centerName} Team</strong></p>
+        <p style="font-size: 12px; color: #7f8c8d;">This is an automated invitation email. Please do not reply to this email address.</p>
+      </div>
+    `,
+  };
+
+  try {
+    await transporter.sendMail(mailOptions);
+    console.log("Invitation email sent successfully");
+  } catch (error) {
+    console.error("Error sending email:", error);
+  }
+}
+
 
 class CenterRadiologistsRelationController {
+ 
+
+  async addRadiologistToCenter1(req, res) {
+    try {
+      const { centerId } = req.params;
+      const { email } = req.body;
+
+      const center = await RadiologyCenter.findById(centerId);
+      if (!center) {
+        return res.status(404).json({
+          error: "Not Found",
+          message: "Center does not exist",
+        });
+      }
+
+      const radiologist = await Radiologist.findOne({ email });
+      if (!radiologist) {
+        await sendInvitationEmail(email, center.centerName, center.email, center.contactNumber);
+        return res.status(404).json({
+          error: "Not Found",
+          message: "Radiologist does not exist and an invitation email has been sent",
+        });
+      }
+
+      const radiologistId = radiologist._id;
+      let centerRadiologists = await CenterRadiologistsRelation.findOne({ center: centerId });
+
+      if (!centerRadiologists) {
+        centerRadiologists = new CenterRadiologistsRelation({
+          center: centerId,
+          radiologists: [radiologistId],
+        });
+      } else {
+        if (centerRadiologists.radiologists.includes(radiologistId)) {
+          return res.status(409).json({
+            error: "Conflict",
+            message: "Radiologist is already assigned to this center",
+          });
+        }
+
+        centerRadiologists.radiologists.push(radiologistId);
+      }
+
+      await centerRadiologists.save();
+
+      const updatedCenter = await CenterRadiologistsRelation.findOne({ center: centerId })
+        .populate("radiologists", "-passwordHash")
+        .populate("center", "name address");
+
+      res.status(201).json({
+        message: "Radiologist added successfully",
+        data: updatedCenter,
+      });
+    } catch (error) {
+      console.error("Error in addRadiologistToCenter:", error.message, error.stack);
+      res.status(500).json({
+        error: "Internal Server Error",
+        message: "Failed to add radiologist to center",
+        detail: error.message,
+      });
+    }
+  }
+
+
+
   async getRadiologistsByCenterId(req, res) {
     try {
       const { centerId } = req.params;
@@ -125,10 +241,11 @@ class CenterRadiologistsRelationController {
       res.status(500).json({
         error: 'Internal Server Error',
         message: 'Failed to add radiologist to center',
-        detail: error.message // Optional: remove in production
+        detail: error.message 
       });
     }
   }
+ 
 
   async removeRadiologistFromCenter(req, res) {
     try {
