@@ -75,6 +75,7 @@ exports.addRecord = async (req, res) => {
       description: study_description
     }, { timeout: 100000 });
 
+    
     const specialty = radiologistSpecialty.data.Specialty;
 
     const radiologistsInCenter = await CenterRadiologistsRelation.findOne({ center: validCenterId });
@@ -150,7 +151,7 @@ exports.addRecord = async (req, res) => {
       series,
       DicomId,
       Dicom_url,
-      useOuerRadiologist,
+      useOuerRadiologist ,
       status: "Ready",
       specializationRequest: specialty,
       Study_Instance_UID,
