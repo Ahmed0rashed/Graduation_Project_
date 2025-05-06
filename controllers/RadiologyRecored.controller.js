@@ -150,6 +150,7 @@ exports.addRecord = async (req, res) => {
       series,
       DicomId,
       Dicom_url,
+      useOuerRadiologist,
       status: "Ready",
       specializationRequest: specialty,
       Study_Instance_UID,
