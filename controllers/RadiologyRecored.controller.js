@@ -60,7 +60,7 @@ exports.addRecord = async (req, res) => {
       centerId, patient_name, study_date, patient_id, sex,
       modality, PatientBirthDate, age, study_description, email,
       DicomId, series, body_part_examined, status, Dicom_url,
-      Study_Instance_UID, Series_Instance_UID
+      Study_Instance_UID, Series_Instance_UID,useOuerRadiologist
     } = req.body;
 
     if (!mongoose.Types.ObjectId.isValid(centerId)) {
