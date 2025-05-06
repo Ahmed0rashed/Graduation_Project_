@@ -92,7 +92,7 @@ exports.addRecord = async (req, res) => {
       {
         $match: {
           centerId: validCenterId,
-          status: { $in: ["Available", "Pending"] },
+          status: { $in: ["Ready", "Diagnose"] },
           radiologistId: { $in: radiologists1.map(r => r._id) }
         }
       },
@@ -103,6 +103,7 @@ exports.addRecord = async (req, res) => {
         }
       }
     ]);
+
 
     const radiologistCountMap = new Map(recordsPerRadiologist.map(item => [item._id.toString(), item.count]));
 
@@ -115,7 +116,7 @@ exports.addRecord = async (req, res) => {
     }, null);
     radiologists1.forEach(r => {
       const count = radiologistCountMap.get(r._id.toString()) || 0;
-      console.log(` Radiologist ${r._id} has ${count} pending/available cases`);
+      // console.log(` Radiologist ${r._id} has ${count} pending/available cases`);
     });
         
 
@@ -132,6 +133,7 @@ exports.addRecord = async (req, res) => {
 
     incrementRecordForToday(validCenterId);
 
+    
     const record = new RadiologyRecord({
       centerId: validCenterId,
       radiologistId: radiologist._id,
@@ -148,7 +150,7 @@ exports.addRecord = async (req, res) => {
       series,
       DicomId,
       Dicom_url,
-      status,
+      status: "Ready",
       specializationRequest: specialty,
       Study_Instance_UID,
       Series_Instance_UID,
