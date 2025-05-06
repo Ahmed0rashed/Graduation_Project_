@@ -65,7 +65,7 @@ const radiologyRecordSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ["Available", "Pending", "Reviewed"],
+      enum: ["Ready", "Diagnose",  "Completed"],
       default: "Available",
     },
     deleted: {
