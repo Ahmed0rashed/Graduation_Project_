@@ -95,7 +95,7 @@ const radiologyRecordSchema = new mongoose.Schema(
       type: String,
     },
     dicom_Comment: {
-      type: String,
+      type: [String],
     },
     flag: {
       type: Boolean,
