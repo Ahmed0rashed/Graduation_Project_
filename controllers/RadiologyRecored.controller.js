@@ -427,6 +427,7 @@ exports.getRecordsByRadiologistId = async (req, res) => {
 exports.cancel = async (req, res) => {
   try {
     const Record = await RadiologyRecord.findById(req.params.id);
+    
 
     if (!Record) {
       return res.status(404).json({ message: "Record not found" });

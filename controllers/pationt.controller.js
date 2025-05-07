@@ -3,7 +3,6 @@ const bcrypt = require("bcrypt");
 const validator = require("validator");
 const Patient = require("../models/Patients.model");
 
-//  Create a new patient record with the given details
 exports.addPatient = async (req, res) => {
   try {
     const {
@@ -20,10 +19,10 @@ exports.addPatient = async (req, res) => {
       emergencyContact,
     } = req.body;
 
-    // Validation
+
     const validationErrors = [];
 
-    // Required field validations
+
     if (!nationalId || !/^[A-Z0-9]{10,14}$/.test(nationalId)) {
       validationErrors.push(
         "A valid national ID (10-14 alphanumeric characters) is required"
