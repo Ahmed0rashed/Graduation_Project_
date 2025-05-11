@@ -365,6 +365,131 @@ exports.getRecordsByRadiologistId = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+exports.toggleFlag = async (req, res) => {
+  try {
+    const record = await RadiologyRecord.findById(req.params.id);
+    if (!record) {
+      return res.status(404).json({ message: "Record not found" });
+    }
+
+    const center = await RadiologyCenter.findById(record.centerId);
+    const currentRadiologist = await Radiologist.findById(record.radiologistId);
+
+    const { comment, flag } = req.body;
+    if (!flag) {
+      return res.status(400).json({ message: "flag is required" });
+    }
+
+    if (!Array.isArray(record.dicom_Comment)) {
+      record.dicom_Comment = [];
+    }
+
+    record.flagged = flag;
+    record.dicom_Comment.push(comment);
+
+    const isOnline = await Radiologist.findOne({ _id: currentRadiologist._id, status: "online" });
+
+    if (!isOnline) {
+      const validCenterId = new mongoose.Types.ObjectId(center._id);
+
+
+      const specialty = record.specializationRequest;
+
+      const radiologistsInCenter = await CenterRadiologistsRelation.findOne({ center: validCenterId });
+
+      if (!radiologistsInCenter || radiologistsInCenter.radiologists.length === 0) {
+        return res.status(404).json({ message: "No radiologists found in center" });
+      }
+
+   
+      let radiologists1 = await Radiologist.find({
+        _id: { $in: radiologistsInCenter.radiologists },
+        specialization: specialty,
+        status: "online"
+      });
+
+    
+      if (!radiologists1 || radiologists1.length === 0) {
+        radiologists1 = await Radiologist.find({
+          _id: { $in: radiologistsInCenter.radiologists },
+          status: "online"
+        });
+
+        if (!radiologists1 || radiologists1.length === 0) {
+          return res.status(404).json({ message: "No online radiologists available at the moment" });
+        }
+      }
+
+      
+      const recordsPerRadiologist = await RadiologyRecord.aggregate([
+        {
+          $match: {
+            centerId: validCenterId,
+            status: { $in: ["Ready", "Diagnose"] },
+            radiologistId: { $in: radiologists1.map(r => r._id) }
+          }
+        },
+        {
+          $group: {
+            _id: "$radiologistId",
+            count: { $sum: 1 }
+          }
+        }
+      ]);
+
+      const radiologistCountMap = new Map(recordsPerRadiologist.map(item => [item._id.toString(), item.count]));
+
+      
+      let selectedRadiologist = radiologists1.reduce((min, r) => {
+        const count = radiologistCountMap.get(r._id.toString()) || 0;
+        if (!min || count < min.count) {
+          return { ...r.toObject(), count };
+        }
+        return min;
+      }, null);
+
+      if (!selectedRadiologist || !selectedRadiologist._id) {
+        console.error("Radiologist assignment failed");
+        return res.status(500).json({ error: "Radiologist assignment failed." });
+      }
+
+      console.log("Assigned Radiologist ID:", selectedRadiologist._id);
+
+      
+      record.radiologistId = selectedRadiologist._id;
+
+    
+      incrementRecordForToday(validCenterId);
+    }
+    // Calculate a deadline 2 hours from the current time
+    const deadline = new Date(Date.now() + 2 * 60 * 60 * 1000);
+    record.deadline = deadline;
+    record.status = "Ready";
+    await record.save();
+
+    const notification = await sendNotification(
+      currentRadiologist._id,
+      "Radiologist",
+      center.centerName,
+      "you have emergency study \n comment: " + comment,
+      center.image,
+      center.centerName
+    );
+
+    if (notification.save) {
+      await notification.save();
+    }
+
+    res.status(200).json({
+      message: "Flag toggled successfully",
+      flagged: record.flagged,
+    });
+  } catch (error) {
+    console.error("Error in toggleFlag:", error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
 
 
 exports.cancel = async (req, res) => {
