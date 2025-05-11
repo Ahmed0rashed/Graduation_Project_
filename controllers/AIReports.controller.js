@@ -3,8 +3,30 @@ const mongoose = require("mongoose");
 const AIReport = require("../models/AIReports.Model.js"); 
 const RadiologyRecord = require("../models/RadiologyRecords.Model"); 
 const Radiologist = require("../models/Radiologists.Model");
+const notificationManager = require('../middleware/notfi');
+const RadiologyCenter = require("../models/Radiology_Centers.Model.js");
 const axios = require("axios");
 const router = express.Router();
+
+
+const sendNotification = async (userId, userType, title, message,image,centername, type) => {
+  try {
+    const result = await notificationManager.sendNotification(
+      userId,
+      userType,
+      title,
+      message,
+      image,
+      centername,
+      type
+    );
+
+    return result;
+  } catch (error) {
+    console.error("Notification error:", error);
+    throw error;
+  }
+};
 
 // Create AIReport
   exports.createAIReport = async (req, res) => {
@@ -50,17 +72,26 @@ exports.updateAIReport1 = async (req, res) => {
     } = req.body;
 
     const foundrecord = await RadiologyRecord.findById(req.params.id);
-    if (!foundrecord) return res.status(404).json({ message: "Record not found" });
+    if (!foundrecord) {
+      return res.status(404).json({ message: "Record not found" });
+    }
 
     const foundRadiologist = await Radiologist.findById(foundrecord.radiologistId);
-    const spec = foundrecord.specializationRequest;
+    if (!foundRadiologist) {
+      return res.status(404).json({ message: "Radiologist not found" });
+    }
 
+    const center = await RadiologyCenter.findById(foundrecord.centerId);
+    if (!center) {
+      return res.status(404).json({ message: "Center not found" });
+    }
+
+    const spec = foundrecord.specializationRequest;
     if (!foundRadiologist.numberOfReports[spec]) {
       foundRadiologist.numberOfReports[spec] = [];
     }
 
     foundRadiologist.numberOfReports[spec].push(new Date());
-
     await foundRadiologist.save();
 
     const foundAIReport = foundrecord.reportId;
@@ -77,9 +108,23 @@ exports.updateAIReport1 = async (req, res) => {
       }
     );
 
+    const notificationResult = await sendNotification(
+      center._id,
+      "ٌRadiologyCenter",
+      "new study completed",
+      `You have a study completed from ${foundRadiologist.firstName} ${foundRadiologist.lastName}`,
+      foundRadiologist.image,
+      center.centerName,
+      "study"
+    );
+
+    if (notificationResult?.save) {
+      await notificationResult.save();
+    }
+
     await RadiologyRecord.findByIdAndUpdate(
       foundrecord._id,
-      { status: "Reviewed" },
+      { status: "Completed" },
       { new: true, runValidators: true }
     );
 
@@ -90,7 +135,7 @@ exports.updateAIReport1 = async (req, res) => {
 };
 
 
-// Read AIReport by ID
+
 exports.getOneAIReport = async (req, res) => {
   try {
     const report = await AIReport.findById(req.params.id);
