@@ -60,12 +60,12 @@ const radiologyRecordSchema = new mongoose.Schema(
     deadline: {
       type: Date,
       default: function () {
-        return new Date(Date.now() + 60 * 60 * 1000);
+        return new Date(Date.now() + 60 * 60 * 24 * 1000);
       },
     },
     status: {
       type: String,
-      enum: ["Ready", "Diagnose",  "Completed",],
+      enum: ["Ready", "Diagnose",  "Completed","Cancled"],
       default: "Ready",
     },
     deleted: {

@@ -63,11 +63,20 @@ exports.addRecord = async (req, res) => {
       Study_Instance_UID, Series_Instance_UID,useOuerRadiologist
     } = req.body;
 
-    if (!mongoose.Types.ObjectId.isValid(centerId)) {
+    let  ourcenterId;
+    if (useOuerRadiologist === true || useOuerRadiologist === "true") {
+      ourcenterId = "681236dc01aae24ced3d8bac";
+    } else {
+      ourcenterId = centerId;
+    }
+    
+    
+
+    if (!mongoose.Types.ObjectId.isValid(ourcenterId)) {
       return res.status(400).json({ error: "Invalid centerId format" });
     }
 
-    const validCenterId = new mongoose.Types.ObjectId(centerId);
+    const validCenterId = new mongoose.Types.ObjectId(ourcenterId);
 
     const radiologistSpecialty = await axios.post("https://ml-api-7yq4la.fly.dev/predict/", {
       modality,
@@ -83,6 +92,7 @@ exports.addRecord = async (req, res) => {
     if (!radiologistsInCenter || radiologistsInCenter.radiologists.length === 0) {
       return res.status(404).json({ message: "No radiologists found in center" });
     }
+
 
     let radiologists1 = await Radiologist.find({
       _id: { $in: radiologistsInCenter.radiologists },
@@ -271,29 +281,11 @@ exports.getAllRecordsByStatus = async (req, res) => {
 };
 
 
-// exports.getRecordsByRadiologistId = async (req, res) => {
-//   try {
-//     const records = await RadiologyRecord.find({ radiologistId: req.params.id }).sort({ createdAt: -1 });
-//     if (!records) return res.status(404).json({ error: "Records not found" });
-//     res.status(200).json({
-//       numOfRecords: records.length,
-//       records,
-//     });
-//   } catch (error) {
-//     res.status(500).json({ error: error.message });
-//   }
-// };
-
-
 exports.getRecordsByCenterId = async (req, res) => {
   try {
     const records = await RadiologyRecord.find({ centerId: req.params.id }).sort({ createdAt: -1 });
     if (!records) return res.status(404).json({ error: "records not found" });
-    // res.status(200).json({
-    //   numOfRecords: records.length,
-    //   records,
-      
-    // });
+
     const recordsWithRadiologistName = await Promise.all(records.map(async (record) => {
       const radiologist = await Radiologist.findById(record.radiologistId);
       return {
@@ -334,55 +326,6 @@ exports.realDeleteRecordById = async (req, res) => {
   }
 };
 
-
-// exports.getRecordsByRediologyId = async (req, res) => {
-//   const { id } = req.params;
-
-//   try {
-
-//     const records = await RadiologyRecord.find({ radiologistId: id })
-//       .sort({ createdAt: -1 });
-
-
-
-//     if (!records.length) {
-//       return res.status(404).json({ message: "No records found for this radiologist." });
-//     }
-//     const recordsWithAIReports = await Promise.all(
-//       records.map(async (record) => {
-//         const aiReport = await AIReport.findOne({ record: record._id });
-//         return {
-//           ...record._doc,  
-//           aiReportStatus: aiReport ? aiReport.status : "Available",
-//           aiReportResult: aiReport ? aiReport.result : "New",
-//         };
-//       })
-//     );
-//     res.status(200).json(recordsWithAIReports);
-//   } catch (error) {
-//     res.status(500).json({ error: error.message });
-//   }
-// };
-
-
-
-//       const recordsWithAIReports = await Promise.all(
-//         records.map(async (record) => {
-//           const aiReport = await AIReport.findOne({ record: record._id });
-
-//           return {
-//             ...record._doc,  
-//             aiReportStatus: aiReport ? aiReport.status : "Available",
-//             aiReportResult: aiReport ? aiReport.result : "New",
-//           };
-//         })
-//       );
-
-//       res.status(200).json(recordsWithAIReports);
-//     } catch (error) {
-//       res.status(500).json({ error: error.message });
-//     }
-//   };
 
 exports.getRecordsByRadiologistId = async (req, res) => {
   const { id } = req.params;
@@ -446,6 +389,8 @@ exports.cancel = async (req, res) => {
     const predictedSpecialty = specialtyResponse.data.Specialty;
 
     const radiologistsInCenter = await CenterRadiologistsRelation.findOne({ center: Record.centerId });
+    const center = await RadiologyCenter.findById(Record.centerId);
+
 
     if (!radiologistsInCenter || radiologistsInCenter.radiologists.length === 0) {
       return res.status(404).json({ message: "No radiologists found in center" });
@@ -458,17 +403,40 @@ exports.cancel = async (req, res) => {
         !radiologist.equals(Record.radiologistId) &&
         !canceledByList.includes(radiologist.toString())
     );
+    let newRadiologist = await Radiologist.findOne({
+      _id: { $in: availableRadiologists },
+      specialization: predictedSpecialty 
+    });
 
     if (availableRadiologists.length === 0) {
-      return res.status(404).json({ message: "No alternative radiologists found" });
+      const prevRadiologistId = Record.radiologistId;
+    
+      Record.status = "Cancled";
+      Record.cancledby.push(prevRadiologistId); // store safely
+      Record.radiologistId = null;
+      await Record.save();
+      
+      const notificationResult = await sendNotification(
+        center._id,
+        "ٌRadiologyCenter",
+        "you have a study cancelled",
+        "\ncancelled by all radiologists",
+        "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ_J_xJvdD8hmGay4prO6qildXton3MBK8Xi1JYdzifvo2C35Q9SQJBATZKUmIc1CdPzO4&usqp=CAU",
+        center.centerName,
+        "study"
+      );
+    
+      if (notificationResult?.save) {
+        await notificationResult.save();
+      }
+    
+      return res.status(200).json({ message: "the study has been back to center" });
     }
+    
 
     console.log("Available Radiologists:", availableRadiologists);
 
-    let newRadiologist = await Radiologist.findOne({
-      _id: { $in: availableRadiologists },
-      specialization: predictedSpecialty // FIXED: using string not object
-    });
+
 
     console.log("Selected Radiologist:", newRadiologist);
 
@@ -491,20 +459,32 @@ exports.cancel = async (req, res) => {
       { new: true }
     );
 
-    const center = await RadiologyCenter.findById(Record.centerId);
     const RadiologistName = await Radiologist.findById(updatedRecord.cancledby);
 // console.log("RadiologistName:", RadiologistName.firstName,);
     const notification = await sendNotification(
-      "680395b91828bc54d0b3ca80",
+      newRadiologist._id,
       "Radiologist",
       center.centerName,
       "New study assigned to you  \ncancelled by " + RadiologistName.firstName + " " + RadiologistName.lastName,
       center.image,
       center.centerName
     );
+    const notificationResult = await sendNotification(
+      center._id,
+      "ٌRadiologyCenter",
+      "Redirecting study",
+      "New study assigned to "+ newRadiologist.firstName + " " + newRadiologist.lastName +" \ncancelled by " + RadiologistName.firstName + " " + RadiologistName.lastName,
+      newRadiologist.image,
+      center.centerName,
+      "study"
+    );
     if (notification.save) {
       await notification.save();
     }
+    if (notificationResult.save) {
+      await notificationResult.save();
+    }
+
 
     res.status(200).json({
       message: "Radiologist updated successfully",
