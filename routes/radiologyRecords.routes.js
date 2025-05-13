@@ -19,8 +19,4 @@ router.post('/toggleFlag/:id',authController.toggleFlag);
 
 
 
-
-
-
-
 module.exports = router;
