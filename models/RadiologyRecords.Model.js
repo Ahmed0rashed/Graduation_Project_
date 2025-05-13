@@ -94,9 +94,10 @@ const radiologyRecordSchema = new mongoose.Schema(
     specializationRequest: {
       type: String,
     },
-    dicom_Comment: {
-      type: [String],
-    },
+comment_id: {
+  type: mongoose.Schema.Types.ObjectId,
+  default: () => new mongoose.Types.ObjectId(),
+},
     flag: {
       type: Boolean,
       default: false,
