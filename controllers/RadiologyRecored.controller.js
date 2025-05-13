@@ -296,14 +296,14 @@ exports.getAllRecordsByStatus = async (req, res) => {
     if (!status) {
       return res.status(400).json({ error: "Status is required" });
     }
-    // Fetch the record by ID
+    
     const records = await RadiologyRecord.find({
       centerId: req.params.id,
     }).sort({ createdAt: -1 });
     if (!records) {
       return res.status(404).json({ error: "Record not found" });
     }
-    // Check if `records` has an array of sub-records (modify this based on your schema)
+    
     const filteredRecords = records.filter((r) => r.status === status) || [];
     res.status(200).json({
       numOfRadiologyRecords: filteredRecords.length,
@@ -548,6 +548,7 @@ exports.cancel = async (req, res) => {
   try {
     const Record = await RadiologyRecord.findById(req.params.id);
 
+    
 
     if (!Record) {
       return res.status(404).json({ message: "Record not found" });
@@ -595,7 +596,7 @@ exports.cancel = async (req, res) => {
       const prevRadiologistId = Record.radiologistId;
 
       Record.status = "Cancled";
-      Record.cancledby.push(prevRadiologistId); // store safely
+      Record.cancledby.push(prevRadiologistId); 
       Record.radiologistId = null;
       await Record.save();
 
@@ -689,5 +690,105 @@ exports.cancel = async (req, res) => {
   }
 };
 
+exports.redirectToOurRadiologist = async (req, res) => {
+  try {
+    const { recordId } = req.params;
+    const ourCenterId = "681236dc01aae24ced3d8bac";
+
+    if (!recordId) {
+      return res.status(400).json({ error: "recordId is required" });
+    }
+
+    const record = await RadiologyRecord.findById(recordId);
+    if (!record) {
+      return res.status(404).json({ error: "Record not found" });
+    }
+
+   
+    const prediction = await axios.post(
+      "https://ml-api-7yq4la.fly.dev/predict/",
+      {
+        modality: record.modality,
+        body_part_examined: record.body_part_examined,
+        description: record.study_description,
+      },
+      { timeout: 200000 }
+    );
+
+    const specialty = prediction.data.Specialty;
+
+    
+    const relation = await CenterRadiologistsRelation.findOne({
+      center: ourCenterId,
+    });
+
+    if (!relation || relation.radiologists.length === 0) {
+      return res.status(404).json({ error: "No radiologists in our center" });
+    }
+
+    let radiologists = await Radiologist.find({
+      _id: { $in: relation.radiologists },
+      specialization: specialty,
+    });
+
+    
+    const recordsPerRadiologist = await RadiologyRecord.aggregate([
+      {
+        $match: {
+          centerId: new mongoose.Types.ObjectId(ourCenterId),
+          status: { $in: ["Ready", "Diagnose"] },
+          radiologistId: { $in: radiologists.map((r) => r._id) },
+        },
+      },
+      {
+        $group: {
+          _id: "$radiologistId",
+          count: { $sum: 1 },
+        },
+      },
+    ]);
+
+    const countMap = new Map(recordsPerRadiologist.map((r) => [r._id.toString(), r.count]));
+    let selected = radiologists.reduce((min, r) => {
+      const count = countMap.get(r._id.toString()) || 0;
+      if (!min || count < min.count) return { ...r.toObject(), count };
+      return min;
+    }, null);
+
+    if (!selected) {
+      selected = await Radiologist.findOne({ _id: { $in: relation.radiologists } });
+    }
+
+    if (!selected || !selected._id) {
+      return res.status(500).json({ error: "No available radiologist found" });
+    }
+
+   
+    record.centerId = ourCenterId;
+    record.radiologistId = selected._id;
+    record.useOuerRadiologist = true;
+    record.specializationRequest = specialty;
+    record.status = "Ready";
+    await record.save();
+
+  
+    const ourCenter = await RadiologyCenter.findById(ourCenterId);
+    await sendNotification(
+      selected._id,
+      "Radiologist",
+      ourCenter.centerName,
+      "New study redirected to you",
+      ourCenter.image,
+      ourCenter.centerName,
+      "study"
+    );
+
+    res.status(200).json({ message: "Record redirected successfully", record });
+
+  } catch (error) {
+    console.error("Error in redirectToOurRadiologist:", error);
+    res.status(500).json({ error: error.message || "Internal server error" });
+  }
+};
 
 module.exports = exports;

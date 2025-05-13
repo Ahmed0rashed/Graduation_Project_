@@ -16,7 +16,7 @@ router.delete('/deleteRecordById/:id', authController.deleteRecordById);
 router.delete('/realDeleteRecordById/:id', authController.realDeleteRecordById);
 router.post('/cancel/:id',authController.cancel);
 router.post('/toggleFlag/:id',authController.toggleFlag);
-
+router.post('/redirectToOurRadiologist/:recordId', authController.redirectToOurRadiologist);
 
 
 module.exports = router;

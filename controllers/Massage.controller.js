@@ -175,14 +175,14 @@ exports.sendMessage = async (req, res) => {
     if (activeUsers.has(receiverId)) {
       const receiverSocketId = activeUsers.get(receiverId).socketId;
       
-      // Get total unread count for the receiver
+      
       const totalUnreadCount = await Message.countDocuments({
         receiver: receiverId,
         receiverModel: receiverType,
         readStatus: false
       });
       
-      // Get unread count from this specific sender
+      
       const senderUnreadCount = await Message.countDocuments({
         sender: senderId,
         senderModel: senderType,
@@ -256,7 +256,7 @@ exports.getUnreadCountPerSender = async (req, res) => {
       });
     }
     
-    // Validate input
+    
     if (!mongoose.Types.ObjectId.isValid(userId)) {
       return res.status(400).json({
         success: false,
@@ -266,7 +266,7 @@ exports.getUnreadCountPerSender = async (req, res) => {
     
     const userObjectId = new mongoose.Types.ObjectId(userId);
     
-    // Fetch the actual unread messages to inspect
+    
     const unreadMessages = await Message.find({
       receiver: userObjectId,
       receiverModel: userType,
@@ -274,7 +274,7 @@ exports.getUnreadCountPerSender = async (req, res) => {
     }).lean();
     
 
-    // Manual aggregation to debug
+   
     const manualUnreadCounts = unreadMessages.reduce((acc, message) => {
       const senderId = message.sender.toString();
       const senderModel = message.senderModel;
@@ -291,7 +291,7 @@ exports.getUnreadCountPerSender = async (req, res) => {
       return acc;
     }, {});
     
-    // Convert to array and fetch sender details
+    
     const unreadCountsArray = await Promise.all(
       Object.values(manualUnreadCounts).map(async (item) => {
         try {
@@ -405,7 +405,7 @@ exports.getUnreadCountAndRadiologists = async (req, res) => {
       readStatus: false,
     }).lean();
 
-    // Count unread messages for each sender
+   
     const unreadCounts = unreadMessages.reduce((acc, message) => {
       const senderId = message.sender.toString();
       if (!acc[senderId]) {
@@ -415,7 +415,7 @@ exports.getUnreadCountAndRadiologists = async (req, res) => {
       return acc;
     }, {});
 
-    // Fetch radiologists linked to the center
+    
     const skip = (page - 1) * limit;
     const centerRadiologists = await CenterRadiologistsRelation.findOne({
       center: centerObjectId,
@@ -437,7 +437,7 @@ exports.getUnreadCountAndRadiologists = async (req, res) => {
       });
     }
 
-    // Attach unread count to each radiologist
+    
     const radiologistsWithUnreadCount = centerRadiologists.radiologists.map((r) => ({
       id: r._id,
       firstName: r.firstName,
@@ -484,14 +484,14 @@ exports.getUnreadCountAndCenters = async (req, res) => {
 
     const userObjectId = new mongoose.Types.ObjectId(userId);
 
-    // Fetch unread messages
+    
     const unreadMessages = await Message.find({
       receiver: userObjectId,
       receiverModel: userType,
       readStatus: false,
     }).lean();
 
-    // Aggregate unread counts per sender (Radiologists and Centers)
+    
     const manualUnreadCounts = unreadMessages.reduce((acc, message) => {
       const senderId = message.sender.toString();
       const senderModel = message.senderModel;
@@ -507,49 +507,42 @@ exports.getUnreadCountAndCenters = async (req, res) => {
       return acc;
     }, {});
 
-    // Convert to array and fetch sender details
-    const unreadCountsArray = await Promise.all(
-      Object.values(manualUnreadCounts).map(async (item) => {
-        try {
-          const senderModel =
-            item.senderModel === "Radiologist" ? Radiologist : RadiologyCenter;
-          const senderDetails = await senderModel.findById(item.senderId).lean();
-
-          return {
-            senderId: item.senderId,
-            senderModel: item.senderModel,
-            senderName: senderDetails?.name || "Unknown Sender",
-            unreadCount: item.unreadCount,
-          };
-        } catch (err) {
-          console.error(`Error fetching sender details for ${item.senderId}:`, err);
-          return {
-            senderId: item.senderId,
-            senderModel: item.senderModel,
-            senderName: "Error Fetching Name",
-            unreadCount: item.unreadCount,
-          };
-        }
-      })
+    
+    const unreadCountMap = new Map(
+      Object.values(manualUnreadCounts).map((item) => [item.senderId, item.unreadCount])
     );
 
-    // Fetch centers associated with the radiologist
+    
     const centers = await CenterRadiologistsRelation.findByRadiologist(userId);
 
-    // Add unread message count per center
-    const centersWithUnread = centers.map((center) => {
-      const centerUnreadCount = unreadCountsArray.find(
-        (item) => item.senderId === center.center._id.toString()
-      )?.unreadCount || 0;
+    const centersWithUnread = await Promise.all(
+      centers.map(async (centerRelation) => {
+        const center = centerRelation.center;
+        const centerUnreadCount = unreadCountMap.get(center._id.toString()) || 0;
 
-      return {
-        id: center.center._id,
-        centerName: center.center.centerName,
-        imageUrl: center.center.image, // Center image
-        address: center.center.address, // Center address
-        unreadCount: centerUnreadCount,
-      };
-    });
+        const centerRadiologists = await Radiologist.find({
+          _id: { $in: centerRelation.radiologists },
+        }).select("_id firstName lastName email image").lean();
+
+        
+        const radiologistsWithUnread = centerRadiologists.map((r) => ({
+          _id: r._id,
+          name: `${r.firstName} ${r.lastName}`,
+          email: r.email,
+          image: r.image,
+          unreadCount: unreadCountMap.get(r._id.toString()) || 0,
+        }));
+
+        return {
+          id: center._id,
+          centerName: center.centerName,
+          imageUrl: center.image,
+          address: center.address,
+          unreadCount: centerUnreadCount,
+          radiologists: radiologistsWithUnread,
+        };
+      })
+    );
 
     return res.status(200).json({
       success: true,
@@ -568,6 +561,7 @@ exports.getUnreadCountAndCenters = async (req, res) => {
     });
   }
 };
+
 
 exports.getUnreadCountBetweenRadiologists = async (req, res) => {
   try {
@@ -590,7 +584,7 @@ exports.getUnreadCountBetweenRadiologists = async (req, res) => {
     const userObjectId = new mongoose.Types.ObjectId(userId);
     const targetRadiologistId = new mongoose.Types.ObjectId(radiologistId);
 
-    // Fetch unread messages sent to the user radiologist from another radiologist
+    
     const unreadMessages = await Message.find({
       receiver: userObjectId,
       sender: targetRadiologistId,
@@ -598,10 +592,10 @@ exports.getUnreadCountBetweenRadiologists = async (req, res) => {
       readStatus: false,
     }).lean();
 
-    // Count unread messages
+   
     const unreadCount = unreadMessages.length;
 
-    // Fetch target radiologist details
+    
     const targetRadiologist = await Radiologist.findById(targetRadiologistId).select("firstName lastName status image");
 
     if (!targetRadiologist) {
