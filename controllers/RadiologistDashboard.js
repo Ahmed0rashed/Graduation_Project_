@@ -155,11 +155,11 @@ exports.getRecordsCountByStatus = async (req, res) => {
     const count = await RadiologyRecord.countDocuments({
       radiologistId: new mongoose.Types.ObjectId(radiologistId),
       createdAt: { $gte: start, $lte: end },
-      status: { $in: ["ready", "diagnose", "completed"] },
+      status: { $in: ["Ready", "Diagnose",  "Completed",] },
     });
 
     const countByStatus = {};
-    const statuses = ["ready", "diagnose", "completed"];
+    const statuses = ["Ready", "Diagnose",  "Completed",];
 
     for (const status of statuses) {
       countByStatus[status] = await RadiologyRecord.countDocuments({
