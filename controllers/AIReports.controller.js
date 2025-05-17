@@ -217,7 +217,63 @@ exports.deleteAIReport = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+exports.analyzeImage1 = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { imageUrl } = req.body;
 
+    const aiReport = await AIReport.findById(id);
+    if (!aiReport) {
+      return res.status(404).json({ error: "AI Report not found" });
+    }
+
+    const [findingResponse, impressionResponse] = await Promise.all([
+      axios.post("http://localhost:8000/analyze-image-urls/", {
+        text: "Provide only the medical findings from this image dont say Image Analysis or any thing just findings.",
+        image_url: [imageUrl]
+      }, { timeout: 100000 }),
+
+      axios.post("http://localhost:8000/analyze-image-urls/", {
+        text: "Provide the diagnostic impression based on the image dont say Image Analysis or any thing just findings.",
+        image_url: [imageUrl]
+      }, { timeout: 100000 }),
+
+
+    ]);
+
+  
+    const rawFinding = findingResponse.data?.data || '';
+    const rawImpression = impressionResponse.data?.data || '';
+    // const rawRecommendation = recommendationResponse.data?.data || '';
+
+  
+    const cleanText = (text) => {
+      return typeof text === 'string'
+        ? text.replace(/(\*\*.*?\*\*|\n|\*|:)/g, "").trim()
+        : '';
+    };
+
+    const finding = cleanText(rawFinding);
+    const impression = cleanText(rawImpression);
+    // const recommendation = cleanText(rawRecommendation);
+
+    
+    if (!finding || !impression ) {
+      return res.status(400).json({ error: "One or more analysis results are empty. Please check the API response." });
+    }
+
+    aiReport.diagnosisReportFinding = finding;
+    aiReport.diagnosisReportImpration = impression;
+    // aiReport.diagnosisReportComment = recommendation;
+
+    await aiReport.save();
+
+    res.status(200).json(aiReport);
+  } catch (error) {
+    console.error("Analyze Error:", error);
+    res.status(500).json({ error: error.message });
+  }
+};
 
 
 exports.analyzeFindings = async (req, res) => {
