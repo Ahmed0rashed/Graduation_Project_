@@ -222,6 +222,11 @@ exports.analyzeImage1 = async (req, res) => {
     const { id } = req.params;
     const { imageUrl } = req.body;
 
+    // Validate imageUrl as an array
+    if (!Array.isArray(imageUrl) || imageUrl.length === 0) {
+      return res.status(400).json({ error: "imageUrl must be a non-empty array of URLs." });
+    }
+
     const aiReport = await AIReport.findById(id);
     if (!aiReport) {
       return res.status(404).json({ error: "AI Report not found" });
@@ -230,23 +235,18 @@ exports.analyzeImage1 = async (req, res) => {
     const [findingResponse, impressionResponse] = await Promise.all([
       axios.post("http://localhost:8000/analyze-image-urls/", {
         text: "Provide only the medical findings from this image dont say Image Analysis or any thing just findings.",
-        image_url: [imageUrl]
+        image_url: imageUrl
       }, { timeout: 100000 }),
 
       axios.post("http://localhost:8000/analyze-image-urls/", {
         text: "Provide the diagnostic impression based on the image dont say Image Analysis or any thing just findings.",
-        image_url: [imageUrl]
+        image_url: imageUrl
       }, { timeout: 100000 }),
-
-
     ]);
 
-  
     const rawFinding = findingResponse.data?.data || '';
     const rawImpression = impressionResponse.data?.data || '';
-    // const rawRecommendation = recommendationResponse.data?.data || '';
 
-  
     const cleanText = (text) => {
       return typeof text === 'string'
         ? text.replace(/(\*\*.*?\*\*|\n|\*|:)/g, "").trim()
@@ -255,16 +255,13 @@ exports.analyzeImage1 = async (req, res) => {
 
     const finding = cleanText(rawFinding);
     const impression = cleanText(rawImpression);
-    // const recommendation = cleanText(rawRecommendation);
 
-    
-    if (!finding || !impression ) {
+    if (!finding || !impression) {
       return res.status(400).json({ error: "One or more analysis results are empty. Please check the API response." });
     }
 
     aiReport.diagnosisReportFinding = finding;
     aiReport.diagnosisReportImpration = impression;
-    // aiReport.diagnosisReportComment = recommendation;
 
     await aiReport.save();
 

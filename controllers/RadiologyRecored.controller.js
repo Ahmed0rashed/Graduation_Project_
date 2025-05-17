@@ -7,7 +7,7 @@ const AIReport = require("../models/AIReports.Model");
 const Radiologist = require("../models/Radiologists.Model");
 const CenterRadiologistsRelation = require("../models/CenterRadiologistsRelation.Model");
 const notificationManager = require("../middleware/notfi");
-const Comment = require("../models/comment.model");
+const nodemailer = require("nodemailer");
 
 const sendNotification = async (
   userId,
@@ -409,6 +409,7 @@ exports.getRecordsByRadiologistId = async (req, res) => {
   }
 };
 
+
 exports.toggleFlag = async (req, res) => {
   try {
     const record = await RadiologyRecord.findById(req.params.id);
@@ -473,7 +474,6 @@ exports.toggleFlag = async (req, res) => {
           });
         }
       }
-
       const recordsPerRadiologist = await RadiologyRecord.aggregate([
         {
           $match: {
@@ -515,6 +515,7 @@ exports.toggleFlag = async (req, res) => {
 
       incrementRecordForToday(validCenterId);
     }
+
 
     const deadline = new Date(Date.now() + 2 * 60 * 60 * 1000);
     record.deadline = deadline;
@@ -790,5 +791,97 @@ exports.redirectToOurRadiologist = async (req, res) => {
     res.status(500).json({ error: error.message || "Internal server error" });
   }
 };
+const sendEmail = async (email, centerName, centerEmail, recordId, patient_name,RadiologistName) => {
+  const transporter = nodemailer.createTransport({
+    service: "gmail",
+    auth: {
+      user: "ahmedmohamedrashed236@gmail.com",
+      pass: "ncjb nwhz gtcn rqrw", // ⚠️ Use environment variables for better security
+    },
+  });
+
+  const mailOptions = {
+    from: "ahmedmohamedrashed236@gmail.com",
+    to: email,
+    subject: "Warning: Less Than One Hour Left Before Study Ends",
+    html: `
+      <div style="font-family: Arial, sans-serif; padding: 20px; border: 1px solid #ddd; border-radius: 8px; max-width: 600px; margin: auto;">
+        <div style="text-align: center;">
+          <img src="https://cdn.dribbble.com/userupload/15606497/file/original-1d7be0867731a998337730f39268a54a.png?format=webp&resize=400x300&vertical=center" alt="Company Logo" style="max-width: 150px; margin-bottom: 20px;">
+        </div>
+        <h2 style="color: #d9534f; text-align: center;">Urgent Notice</h2>
+        <p style="font-size: 16px; color: #555;">Dear ${RadiologistName},</p>
+        <p style="font-size: 16px; color: #555;">
+          This is a reminder that there is less than <strong>one hour</strong> remaining before the end of the study for patient <strong>${patient_name}</strong> at center <strong>${centerName}</strong>.
+        </p>
+        <p style="font-size: 16px; color: #555;">
+          Please ensure any required procedures or data collection are completed in time. If you need assistance or an extension, contact the center as soon as possible.
+        </p>
+        <p style="font-size: 16px; color: #555;">
+          Center Details:<br>
+          Email: <a href="mailto:${centerEmail}">${centerEmail}</a><br>
+          Study Record ID: <strong>${recordId}</strong>
+        </p>
+        <p style="font-size: 16px; color: #555;">Thank you for your attention.<br><strong>The Monitoring Team</strong></p>
+      </div>
+    `,
+  };
+
+  return transporter.sendMail(mailOptions);
+};
+
+
+exports.sendEmailToRadiologist = async (req, res) => {
+  try {
+    const { recoredId } = req.params;
+
+    if (!recoredId) {
+      return res.status(400).json({ error: "recoredId is required" });
+    }
+    const record = await RadiologyRecord.findById(recoredId);
+    if (!record) {
+      return res.status(404).json({ error: "Record not found" });
+    }
+    const center = await RadiologyCenter.findById(record.centerId);
+    if (!center) {
+      return res.status(404).json({ error: "Center not found" });
+    }
+    const radiologist = await Radiologist.findById(record.radiologistId);
+    if (!radiologist) {
+      return res.status(404).json({ error: "Radiologist not found" });
+    }
+
+    const result = await sendEmail( radiologist.email, center.centerName, center.email, recoredId,record.patient_name, radiologist.firstName + " " + radiologist.lastName);
+    res.status(200).json({ message: "Email sent successfully" });
+  } catch (error) {
+    console.error("Error sending email:", error);
+    res.status(500).json({ error: "Failed to send email" });
+  }
+};
+exports.extendStudyDeadline = async (req, res) => {
+  try {
+    const { recordId } = req.params;
+
+    if (!recordId) {
+      return res.status(400).json({ error: "recordId is required" });
+    }
+    const record = await RadiologyRecord.findById(recordId);
+    if (!record) {
+      return res.status(404).json({ error: "Record not found" });
+    }
+
+    const newDeadline = new Date(record.deadline);
+    newDeadline.setHours(newDeadline.getHours() + 1);
+    record.deadline = newDeadline;
+    await record.save();
+
+    res.status(200).json({ message: "Study deadline extended by 1 hour", record });
+  } catch (error) {
+    console.error("Error extending study deadline:", error);
+    res.status(500).json({ error: "Failed to extend study deadline" });
+  }
+};
+
+
 
 module.exports = exports;
