@@ -11,4 +11,5 @@ router.get("/radiologistsList/:centerId", CenterRadiologistsRelationController.g
 router.get("/centers/:radiologistId", CenterRadiologistsRelationController.getCentersByRadiologistId);
 router.delete("/removeRadiologistFromCenter/:centerId", CenterRadiologistsRelationController.removeRadiologistFromCenter);
 
+
 module.exports = router;

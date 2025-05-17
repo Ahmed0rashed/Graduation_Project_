@@ -176,3 +176,39 @@ exports.getRecordsCountByStatus = async (req, res) => {
   }
 };
 
+exports.getAverageTimeToCompleteReport = async (req, res) => {
+  try {
+    const { radiologistId } = req.params;
+    const { startDate, endDate } = req.body;
+
+    if (!startDate || !endDate) {
+      return res.status(400).json({ message: 'startDate and endDate are required in query' });
+    }
+
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+
+    const completedRecords = await RadiologyRecord.find({
+      radiologistId: new mongoose.Types.ObjectId(radiologistId),
+      createdAt: { $gte: start, $lte: end },
+      status: "Completed",
+    });
+
+    if (completedRecords.length === 0) {
+      return res.status(200).json({ averageTime: 0 });
+    }
+
+    const totalCompletionTime = completedRecords.reduce((acc, record) => {
+      const completionTime = new Date(record.updatedAt) - new Date(record.createdAt);
+      return acc + completionTime;
+    }, 0);
+
+    const averageTime = totalCompletionTime / completedRecords.length/60/60/60;
+
+    return res.status(200).json({ averageTime });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: 'Server error' });
+  }
+};
+
