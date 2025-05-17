@@ -140,4 +140,39 @@ exports.getNumberOfReports = async (req, res) => {
     return res.status(500).json({ message: 'Server error' });
   }
 };
+exports.getRecordsCountByStatus = async (req, res) => {
+  try {
+    const { radiologistId } = req.params;
+    const { startDate, endDate } = req.body;
+
+    if (!startDate || !endDate) {
+      return res.status(400).json({ message: 'startDate and endDate are required in query' });
+    }
+
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+
+    const count = await RadiologyRecord.countDocuments({
+      radiologistId: new mongoose.Types.ObjectId(radiologistId),
+      createdAt: { $gte: start, $lte: end },
+      status: { $in: ["ready", "diagnose", "completed"] },
+    });
+
+    const countByStatus = {};
+    const statuses = ["ready", "diagnose", "completed"];
+
+    for (const status of statuses) {
+      countByStatus[status] = await RadiologyRecord.countDocuments({
+        radiologistId: new mongoose.Types.ObjectId(radiologistId),
+        createdAt: { $gte: start, $lte: end },
+        status,
+      });
+    }
+
+    return res.status(200).json({ count, countByStatus });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: 'Server error' });
+  }
+};
 
