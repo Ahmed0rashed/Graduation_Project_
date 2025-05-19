@@ -770,8 +770,7 @@ exports.redirectToOurRadiologist = async (req, res) => {
       return res.status(500).json({ error: "No available radiologist found" });
     }
 
-   
-    record.centerId = ourCenterId;
+
     record.radiologistId = selected._id;
     record.useOuerRadiologist = true;
     record.specializationRequest = specialty;
