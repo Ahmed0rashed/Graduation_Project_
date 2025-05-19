@@ -26,7 +26,7 @@ const notificationSchema = new mongoose.Schema(
         "massage",
         "study",
       ],
-      default: "massage",
+      default: "study",
     },
   },
   { timestamps: true }

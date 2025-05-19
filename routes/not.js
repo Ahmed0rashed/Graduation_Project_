@@ -139,5 +139,20 @@ router.put('/all/read/:userId', checkInitialization, async (req, res) => {
 });
 
 
+router.put('/make_all_read', checkInitialization, async (req, res) => {
+    try {
+        const updated = await Notification.updateMany({ userId: req.body.userId, type: req.body.type }, { isRead: true });
+        res.json({ 
+            success: true, 
+            updated 
+        });
+    } catch (error) {
+        res.status(500).json({ 
+            success: false, 
+            error: error.message 
+        });
+    }
+});
+
 
 module.exports = router;

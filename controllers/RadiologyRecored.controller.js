@@ -428,8 +428,14 @@ exports.toggleFlag = async (req, res) => {
     if (!Array.isArray(record.dicom_Comment)) {
       record.dicom_Comment = [];
     }
+    if(flag === true || flag === "true") {
+        record.flag = true;
+    }
+        if(flag === false || flag === "false") {
+        record.flag = false;
+    }
 
-    record.flagged = flag;
+    await record.save();
 
     record.dicom_Comment.push(comment);
 
