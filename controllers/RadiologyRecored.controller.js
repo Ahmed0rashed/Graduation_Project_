@@ -639,7 +639,30 @@ exports.cancel = async (req, res) => {
     console.log("Selected Radiologist2:", newRadiologist);
 
     if (!newRadiologist) {
-      return res.status(404).json({ message: "No suitable radiologist found" });
+      const prevRadiologistId = Record.radiologistId;
+
+      Record.status = "Cancled";
+      Record.cancledby.push(prevRadiologistId); 
+      Record.radiologistId = null;
+      await Record.save();
+
+      const notificationResult = await sendNotification(
+        center._id,
+        "ٌRadiologyCenter",
+        "you have a study cancelled",
+        "\ncancelled by all radiologists",
+        "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ_J_xJvdD8hmGay4prO6qildXton3MBK8Xi1JYdzifvo2C35Q9SQJBATZKUmIc1CdPzO4&usqp=CAU",
+        center.centerName,
+        "study"
+      );
+
+      if (notificationResult?.save) {
+        await notificationResult.save();
+      }
+
+      return res
+        .status(200)
+        .json({ message: "the study has been back to center" });
     }
 
     const updatedRecord = await RadiologyRecord.findByIdAndUpdate(
