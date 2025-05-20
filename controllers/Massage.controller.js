@@ -141,6 +141,8 @@ exports.sendMessage = async (req, res) => {
         message: 'One or both conversation participants do not exist'
       });
     }
+
+    const oldNotification = await notificationManager.findNotificationByUserIdAndType(receiverId, "massage");
     
     const newMessage = new Message({
       sender: senderId,
@@ -159,13 +161,16 @@ exports.sendMessage = async (req, res) => {
     if (senderType === 'Radiologist') {
       const radiologist = await Radiologist.findById(senderId).select('firstName lastName image');
       senderName = `${radiologist.firstName} ${radiologist.lastName}`;
-      notification = await sendNotification(receiverId, "Radiologist", radiologist.firstName, content,radiologist.image,radiologist.firstName + " " + radiologist.lastName); 
+      notification = await sendNotification(receiverId, "Radiologist", radiologist.firstName,oldNotification.content +"\n "+content,radiologist.image,radiologist.firstName + " " + radiologist.lastName); 
     } else {
       const center = await RadiologyCenter.findById(senderId).select('centerName image');
       senderName = center.centerName;
-      notification = await sendNotification(receiverId, "ٌRadiologyCenter", center.centerName ,content,center.image,center.centerName);
+      notification = await sendNotification(receiverId, "ٌRadiologyCenter", center.centerName ,oldNotification.content +"\n "+content,center.image,center.centerName);
 
     }
+
+    await Notification.findByIdAndDelete(oldNotification._id);
+
 
 
     if (notification.save) {
