@@ -4,6 +4,7 @@ const Radiologist = require('../models/Radiologists.Model');
 const RadiologyCenter = require('../models/Radiology_Centers.Model');
 const CenterRadiologistsRelation = require("../models/CenterRadiologistsRelation.Model");
 const notificationManager = require('../middleware/notfi');
+const Notification = require('../models/not.model');
 
 const { io, activeUsers } = require("../middleware/socketManager");
 
@@ -142,8 +143,16 @@ exports.sendMessage = async (req, res) => {
       });
     }
 
-    const oldNotification = await notificationManager.findNotificationByUserIdAndType(receiverId, "massage");
-    
+let oldcontact = "";
+    const oldNotification = await Notification.findOne({
+      userId: receiverId,
+      type: "massage",  
+    });
+    if (oldNotification) {
+        oldcontact =  oldNotification.message +"\n ";
+    }
+    // console.log("oldNotification", oldNotification);
+
     const newMessage = new Message({
       sender: senderId,
       senderModel: senderType,
@@ -153,19 +162,17 @@ exports.sendMessage = async (req, res) => {
       attachments: attachments || []
     });
 
-
-
     await newMessage.save();
     let notification;
     let senderName;
     if (senderType === 'Radiologist') {
       const radiologist = await Radiologist.findById(senderId).select('firstName lastName image');
       senderName = `${radiologist.firstName} ${radiologist.lastName}`;
-      notification = await sendNotification(receiverId, "Radiologist", radiologist.firstName,oldNotification.content +"\n "+content,radiologist.image,radiologist.firstName + " " + radiologist.lastName); 
+      notification = await sendNotification(receiverId, "Radiologist", radiologist.firstName,oldcontact+content,radiologist.image,radiologist.firstName + " " + radiologist.lastName); 
     } else {
       const center = await RadiologyCenter.findById(senderId).select('centerName image');
       senderName = center.centerName;
-      notification = await sendNotification(receiverId, "ٌRadiologyCenter", center.centerName ,oldNotification.content +"\n "+content,center.image,center.centerName);
+      notification = await sendNotification(receiverId, "ٌRadiologyCenter", center.centerName ,oldcontact +content,center.image,center.centerName);
 
     }
 
