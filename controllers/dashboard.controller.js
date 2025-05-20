@@ -175,27 +175,27 @@ exports.getRecordsCountPerDayInCenterPerStatus = async (req, res) => {
     };
 
     // Counts per status for today
-    const recordsTodayPending = await countRecords(startOfDay, endOfDay, "Pending");
-    const recordsTodayReviewed = await countRecords(startOfDay, endOfDay, "Reviewed");
-    const recordsTodayAvailable = await countRecords(startOfDay, endOfDay, "Available");
+    const recordsTodayPending = await countRecords(startOfDay, endOfDay, "Diagnose");
+    const recordsTodayReviewed = await countRecords(startOfDay, endOfDay, "Completed");
+    const recordsTodayAvailable = await countRecords(startOfDay, endOfDay, "Ready");
     const recordsTodayTotal = await countRecords(startOfDay, endOfDay);
 
     // Counts per status for this week
-    const recordsWeekPending = await countRecords(startOfWeek, endOfWeek, "Pending");
-    const recordsWeekReviewed = await countRecords(startOfWeek, endOfWeek, "Reviewed");
-    const recordsWeekAvailable = await countRecords(startOfWeek, endOfWeek, "Available");
+    const recordsWeekPending = await countRecords(startOfWeek, endOfWeek, "Diagnose");
+    const recordsWeekReviewed = await countRecords(startOfWeek, endOfWeek, "Completed");
+    const recordsWeekAvailable = await countRecords(startOfWeek, endOfWeek, "Ready");
     const recordsWeekTotal = await countRecords(startOfWeek, endOfWeek);
 
     // Counts per status for this month
-    const recordsMonthPending = await countRecords(startOfMonth, endOfMonth, "Pending");
-    const recordsMonthReviewed = await countRecords(startOfMonth, endOfMonth, "Reviewed");
-    const recordsMonthAvailable = await countRecords(startOfMonth, endOfMonth, "Available");
+    const recordsMonthPending = await countRecords(startOfMonth, endOfMonth, "Diagnose");
+    const recordsMonthReviewed = await countRecords(startOfMonth, endOfMonth, "Completed");
+    const recordsMonthAvailable = await countRecords(startOfMonth, endOfMonth, "Ready");
     const recordsMonthTotal = await countRecords(startOfMonth, endOfMonth);
 
     // Counts per status for this year
-    const recordsYearPending = await countRecords(startOfYear, endOfYear, "Pending");
-    const recordsYearReviewed = await countRecords(startOfYear, endOfYear, "Reviewed");
-    const recordsYearAvailable = await countRecords(startOfYear, endOfYear, "Available");
+    const recordsYearPending = await countRecords(startOfYear, endOfYear, "Diagnose");
+    const recordsYearReviewed = await countRecords(startOfYear, endOfYear, "Completed");
+    const recordsYearAvailable = await countRecords(startOfYear, endOfYear, "Ready");
     const recordsYearTotal = await countRecords(startOfYear, endOfYear);
 
     res.status(200).json({
@@ -203,27 +203,27 @@ exports.getRecordsCountPerDayInCenterPerStatus = async (req, res) => {
       data: {
         today: {
           total: recordsTodayTotal,
-          pending: recordsTodayPending,
-          reviewed: recordsTodayReviewed,
-          available: recordsTodayAvailable,
+          Diagnose: recordsTodayPending,
+          Completed: recordsTodayReviewed,
+          Ready: recordsTodayAvailable,
         },
         week: {
           total: recordsWeekTotal,
-          pending: recordsWeekPending,
-          reviewed: recordsWeekReviewed,
-          available: recordsWeekAvailable,
+          Diagnose: recordsWeekPending,
+          Completed: recordsWeekReviewed,
+          Ready: recordsWeekAvailable,
         },
         month: {
           total: recordsMonthTotal,
-          pending: recordsMonthPending,
+          Diagnose: recordsMonthPending,
           reviewed: recordsMonthReviewed,
-          available: recordsMonthAvailable,
+          Ready: recordsMonthAvailable,
         },
         year: {
           total: recordsYearTotal,
-          pending: recordsYearPending,
-          reviewed: recordsYearReviewed,
-          available: recordsYearAvailable,
+          Diagnose: recordsYearPending,
+          Completed: recordsYearReviewed,
+          Ready: recordsYearAvailable,
         },
       },
     });
@@ -256,8 +256,6 @@ exports.getWeeklyRecordsCountPerDayInCenterPerStatus = async (req, res) => {
 
     const today = new Date();
 
-    // JS getDay(): 0 = Sunday, ..., 6 = Saturday
-    // نحسب الفرق من السبت (اللي هو 6 في JS)
     const jsDay = today.getDay();
     const daysSinceSaturday = (jsDay + 1) % 7;
 
@@ -280,7 +278,7 @@ exports.getWeeklyRecordsCountPerDayInCenterPerStatus = async (req, res) => {
         $project: {
           status: 1,
           createdAt: 1,
-          // تحويل اليوم بحيث يكون السبت = 0، الأحد = 1، ..., الجمعة = 6
+
           jsDayOfWeek: { $mod: [{ $add: [{ $dayOfWeek: "$createdAt" }, 7] }, 7] }
         },
       },
@@ -305,9 +303,9 @@ exports.getWeeklyRecordsCountPerDayInCenterPerStatus = async (req, res) => {
     const weekData = {};
     for (const dayName of dayNames) {
       weekData[dayName] = {
-        Pending: 0,
-        Reviewed: 0,
-        Available: 0,
+        Diagnose: 0,
+        Completed: 0,
+        Ready: 0,
         total: 0,
       };
     }
@@ -410,9 +408,9 @@ exports.getrangeRecordsCount = async (req, res) => {
     const weekData = {};
     for (const dayName of dayNames) {
       weekData[dayName] = {
-        Pending: 0,
-        Reviewed: 0,
-        Available: 0,
+        Diagnose: 0,
+        Completed: 0,
+        Ready: 0,
         total: 0,
       };
     }
