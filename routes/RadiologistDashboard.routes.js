@@ -8,4 +8,5 @@ router.get("/getRecordsCountByStudyType/:radiologistId", dashboardController.get
 router.get("/getNumberOfReports/:radiologistId", dashboardController.getNumberOfReports);
 router.get("/getRecordsCountByStatus/:radiologistId", dashboardController.getRecordsCountByStatus);
 router.get("/getAverageTimeToCompleteReport/:radiologistId", dashboardController.getAverageTimeToCompleteReport);
+router.get("/getWeeklyRecordsCountPerDayPerStatus/:radiologistsId", dashboardController.getWeeklyRecordsCountPerDayPerStatus);
 module.exports = router;
