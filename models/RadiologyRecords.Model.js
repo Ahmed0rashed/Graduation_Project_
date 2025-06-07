@@ -57,6 +57,7 @@ const radiologyRecordSchema = new mongoose.Schema(
     series: {
       type: String,
     },
+
     deadline: {
       type: Date,
       default: function () {
@@ -106,6 +107,7 @@ comment_id: {
       type: Boolean,
       default: false,
     },
+    isApproved: { type: Boolean, default: false }, 
   },
   { timestamps: true }
 );

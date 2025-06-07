@@ -84,6 +84,13 @@ exports.addRecord = async (req, res) => {
       useOuerRadiologist,
     } = req.body;
 
+
+    const Center = await RadiologyCenter.findById(centerId);
+
+    if (!Center) {
+      return res.status(404).json({ error: "Center not found" });
+    }
+
     let ourcenterId;
     if (useOuerRadiologist === true || useOuerRadiologist === "true") {
       ourcenterId = "681236dc01aae24ced3d8bac";
@@ -190,6 +197,7 @@ exports.addRecord = async (req, res) => {
       series,
       DicomId,
       Dicom_url,
+      deadline: new Date(Date.now() + 60 * 60 *  Center.firstdeadlineHours * 1000), 
       useOuerRadiologist,
       status: "Ready",
       specializationRequest: specialty,
@@ -523,8 +531,8 @@ exports.toggleFlag = async (req, res) => {
     }
 
 
-    const deadline = new Date(Date.now() + 2 * 60 * 60 * 1000);
-    record.deadline = deadline;
+    // const deadline = new Date(Date.now() + 2 * 60 * 60 * 1000);
+    record.deadline = new Date(Date.now() + 60 * 60 *  center.emergancydeadlineHours * 1000);
     record.status = "Ready";
     await record.save();
 
@@ -904,6 +912,32 @@ exports.extendStudyDeadline = async (req, res) => {
   } catch (error) {
     console.error("Error extending study deadline:", error);
     res.status(500).json({ error: "Failed to extend study deadline" });
+  }
+};
+
+exports.Approve = async (req, res) => {
+  try {
+    
+    const { recordId } = req.params;
+    if (!recordId) {
+      return res.status(400).json({ error: "recordId is required" });
+    }
+    const record = await RadiologyRecord.findById(recordId);
+    if (!record) {
+      return res.status(404).json({ error: "Record not found" });
+    }
+    if (record.isApproved === true) {
+      return res.status(400).json({ error: "the study is already approved" });
+    }
+    const center = await RadiologyCenter.findById(record.centerId);
+    record.isApproved = true;
+
+    record.deadline =  new Date( record.createdAt.getTime()+ 60 * 60 *  center.deadlineHours * 1000);
+    await record.save();
+    res.status(200).json({ message: "Study deadline changed to 1 hour", record });
+  } catch (error) {
+    console.error("Error changing study deadline:", error);
+    res.status(500).json({ error: "Failed to change study deadline" });
   }
 };
 module.exports = exports;

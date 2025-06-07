@@ -151,7 +151,8 @@ const radiologyCenterSchema = new mongoose.Schema(
           },
         },
       },
-      // Public holidays and special days
+
+
       holidays: [
         {
           date: Date,
@@ -163,6 +164,18 @@ const radiologyCenterSchema = new mongoose.Schema(
         },
       ],
     },
+          firstdeadlineHours: {
+        type: Number,  
+        default: 12, 
+      },
+      deadlineHours: {
+        type: Number,  
+        default: 12,  
+      },
+      emergancydeadlineHours: {
+        type: Number,  
+        default: 2, 
+      },
     // Certifications and licenses of the radiology center
     certifications: [
       {

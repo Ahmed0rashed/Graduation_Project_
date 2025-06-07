@@ -19,4 +19,5 @@ router.post('/toggleFlag/:id',authController.toggleFlag);
 router.post('/redirectToOurRadiologist/:recordId', authController.redirectToOurRadiologist);
 router.post('/sendEmailToRadiologist/:recoredId', authController.sendEmailToRadiologist);
 router.post('/extendStudyDeadline/:recordId', authController.extendStudyDeadline);
+router.post('/approve/:recordId', authController.Approve);
 module.exports = router;

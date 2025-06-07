@@ -207,6 +207,35 @@ class RadiologyCenterController {
       });
     }
   }
+  // update both deadline and firstDeadline
+  async updateDeadlines(req, res) {
+    try {
+      const { id } = req.params;
+      const { deadlineHours, firstdeadlineHours ,emergancydeadline } = req.body;
+
+      if (!id || !deadlineHours || !firstdeadlineHours || !emergancydeadline) {
+        return res.status(400).json({ error: "centerId, newDeadline, and newFirstDeadline are required" });
+      }
+
+      const center = await RadiologyCenter.findById(id);
+      if (!center) {
+        return res.status(404).json({ error: "Center not found" });
+      }
+
+      center.deadlineHours = deadlineHours;
+      center.firstdeadlineHours = firstdeadlineHours;
+      center.emergancydeadline = emergancydeadline;
+      await center.save();
+
+      res.status(200).json({ message: "Deadlines updated successfully", center });
+    } catch (error) {
+      console.error("Error updating deadlines:", error);
+      res.status(500).json({ error: "Failed to update deadlines" });
+    }
+  }
+  
 }
+
+
 
 module.exports = new RadiologyCenterController();

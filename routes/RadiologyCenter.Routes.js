@@ -14,5 +14,6 @@ router.get("/getImage/:id", uploadImag.getImage);
 router.get("/getAllCenters", RadiologyCenterController.getAllCenters);
 router.get("/getCenterById/:id", RadiologyCenterController.getCenterById);
 router.post("/createCenter", RadiologyCenterController.createCenter);
+router.put("/updateDeadlines/:id", RadiologyCenterController.updateDeadlines);
 
 module.exports = router;
