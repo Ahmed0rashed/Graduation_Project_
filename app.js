@@ -11,7 +11,7 @@ const aireports = require("./routes/AIReports.routes");
 const record = require("./routes/radiologyRecords.routes");
 const RadiologyCenter = require("./routes/RadiologyCenter.Routes");
 const massage = require("./routes/Char.routes");
-const whatsappRoutes = require("./routes/whatsapp.routes");
+
 
 const CenterRadiologistsRelationRoutes = require("./routes/CenterRadiologistsRelation.Routes");
 
@@ -54,6 +54,5 @@ app.use("/api/admin", Admin);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/radiologistDashboard", radiologistDashboardRoutes);
 app.use("/api/comments", comment);
-app.use("/api/whatsapp", whatsappRoutes);
 
 module.exports = app;
