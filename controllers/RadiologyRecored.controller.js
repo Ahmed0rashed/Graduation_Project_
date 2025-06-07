@@ -889,7 +889,6 @@ exports.sendEmailToRadiologist = async (req, res) => {
 exports.extendStudyDeadline = async (req, res) => {
   try {
     const { recordId } = req.params;
-
     if (!recordId) {
       return res.status(400).json({ error: "recordId is required" });
     }
@@ -897,19 +896,14 @@ exports.extendStudyDeadline = async (req, res) => {
     if (!record) {
       return res.status(404).json({ error: "Record not found" });
     }
-
     const newDeadline = new Date(record.deadline);
     newDeadline.setHours(newDeadline.getHours() + 1);
     record.deadline = newDeadline;
     await record.save();
-
     res.status(200).json({ message: "Study deadline extended by 1 hour", record });
   } catch (error) {
     console.error("Error extending study deadline:", error);
     res.status(500).json({ error: "Failed to extend study deadline" });
   }
 };
-
-
-
 module.exports = exports;
