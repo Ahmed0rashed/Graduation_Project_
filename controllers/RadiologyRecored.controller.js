@@ -179,6 +179,7 @@ exports.addRecord = async (req, res) => {
 
     console.log("Assigned Radiologist ID:", radiologist._id);
 
+
     incrementRecordForToday(validCenterId);
 
     const record = new RadiologyRecord({
@@ -206,7 +207,9 @@ exports.addRecord = async (req, res) => {
     });
 
     const savedRecord = await record.save();
-
+    if ( radiologist.status !== "online") {
+      await sendEmail2( radiologist.email, Center.centerName, Center.email, savedRecord._id,savedRecord.patient_name, radiologist.firstName + " " + radiologist.lastName, savedRecord.deadline);
+    }
     const aiReport = new AIReport({
       record: savedRecord._id,
       centerId: validCenterId,
@@ -531,7 +534,7 @@ exports.toggleFlag = async (req, res) => {
     }
 
 
-    // const deadline = new Date(Date.now() + 2 * 60 * 60 * 1000);
+
     record.deadline = new Date(Date.now() + 60 * 60 *  center.emergancydeadlineHours * 1000);
     record.status = "Ready";
     await record.save();
@@ -827,6 +830,87 @@ exports.redirectToOurRadiologist = async (req, res) => {
     res.status(500).json({ error: error.message || "Internal server error" });
   }
 };
+const formatDeadlineToEgyptTime = (deadline) => {
+  const date = new Date(deadline);
+  const options = {
+    timeZone: 'Africa/Cairo',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  };
+  return new Intl.DateTimeFormat('en-GB', options).format(date);
+};
+const sendEmail2 = async (email, centerName, centerEmail, recordId, patient_name, RadiologistName, deadline) => {
+  const transporter = nodemailer.createTransport({
+    service: "gmail",
+    auth: {
+      user: "ahmedmohamedrashed236@gmail.com",
+      pass: "ncjb nwhz gtcn rqrw", 
+    },
+  });
+
+  // تحويل الـ deadline لتوقيت مصر بصيغة جميلة
+  const formattedDeadline = formatDeadlineToEgyptTime(deadline);
+
+  // روابط الأزرار مع استبدال recordId
+  const approveUrl = `https://graduation-project-mmih.vercel.app/api/Record/approve/${recordId}`;
+  const cancelUrl = `https://graduation-project-mmih.vercel.app/api/Record/cancel/${recordId}`;
+
+  const mailOptions = {
+    from: "ahmedmohamedrashed236@gmail.com",
+    to: email,
+    subject: "New Study Assigned - Action Required (Doctor Offline)",
+    html: `
+      <div style="font-family: Arial, sans-serif; padding: 25px; border: 1px solid #ddd; border-radius: 10px; max-width: 650px; margin: auto; background-color: #f9f9f9;">
+        <div style="text-align: center; margin-bottom: 25px;">
+          <img src="https://cdn.dribbble.com/userupload/15606497/file/original-1d7be0867731a998337730f39268a54a.png?format=webp&resize=400x300&vertical=center" alt="Company Logo" style="max-width: 160px;">
+        </div>
+        <h2 style="color: #c9302c; text-align: center; margin-bottom: 20px;">Urgent: New Study Assigned</h2>
+        <p style="font-size: 16px; color: #333;">Dear Dr. <strong>${RadiologistName}</strong>,</p>
+        <p style="font-size: 16px; color: #333;">
+          You have been assigned a new study for patient <strong>${patient_name}</strong> at <strong>${centerName}</strong>.
+        </p>
+        <p style="font-size: 16px; color: #333;">
+          Our system detected that you are currently offline. It is important to review this study and complete any necessary procedures before the deadline.
+        </p>
+        <div style="background-color: #ffe6e6; padding: 15px; border-radius: 8px; margin: 20px 0; border: 1px solid #ff9999; text-align: center;">
+          <strong style="font-size: 18px; color: #d9534f;">Deadline to complete study: ${formattedDeadline} (Egypt Time)</strong>
+        </div>
+        <p style="font-size: 16px; color: #333;">
+          <strong>Center Details:</strong><br>
+          Name: ${centerName}<br>
+          Email: <a href="mailto:${centerEmail}" style="color: #337ab7;">${centerEmail}</a><br>
+          Study Record ID: <strong>${recordId}</strong>
+        </p>
+
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="${approveUrl}" style="background-color: #28a745; color: white; padding: 12px 25px; text-decoration: none; font-weight: bold; border-radius: 5px; margin-right: 15px; display: inline-block;">
+            Approve
+          </a>
+          <a href="${cancelUrl}" style="background-color: #dc3545; color: white; padding: 12px 25px; text-decoration: none; font-weight: bold; border-radius: 5px; display: inline-block;">
+            Cancel
+          </a>
+        </div>
+
+        <p style="font-size: 16px; color: #333;">
+          Please take prompt action to avoid any delays. If you require assistance or an extension, contact the center immediately.
+        </p>
+        <p style="font-size: 16px; color: #333; margin-top: 30px;">
+          Thank you for your attention.<br><br>
+          <strong>The Monitoring Team</strong>
+        </p>
+      </div>
+    `,
+  };
+
+  return transporter.sendMail(mailOptions);
+};
+
+
+
 const sendEmail = async (email, centerName, centerEmail, recordId, patient_name,RadiologistName) => {
   const transporter = nodemailer.createTransport({
     service: "gmail",
