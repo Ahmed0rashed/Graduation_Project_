@@ -50,10 +50,10 @@ const radiologyRecordSchema = new mongoose.Schema(
     email: {
       type: String,
     },
-    DicomId: {
+    DicomId:[ {
       type: String,
       required: false,
-    },
+    }],
     series: {
       type: String,
     },
@@ -73,10 +73,11 @@ const radiologyRecordSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
-    Dicom_url: {
+    Dicom_url: [{
       type: String,
       required: true,
-    },
+      
+    }],
     study_description: {
       type: String,
     },

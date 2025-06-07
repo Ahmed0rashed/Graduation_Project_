@@ -946,7 +946,6 @@ const sendEmail = async (email, centerName, centerEmail, recordId, patient_name,
       </div>
     `,
   };
-
   return transporter.sendMail(mailOptions);
 };
 
