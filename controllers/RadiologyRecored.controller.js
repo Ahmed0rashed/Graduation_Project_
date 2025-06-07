@@ -934,10 +934,10 @@ exports.Approve = async (req, res) => {
 
     record.deadline =  new Date( record.createdAt.getTime()+ 60 * 60 *  center.deadlineHours * 1000);
     await record.save();
-    res.status(200).json({ message: "Study deadline changed to 1 hour", record });
+    res.status(200).json({ message: "the study is approved", record });
   } catch (error) {
     console.error("Error changing study deadline:", error);
-    res.status(500).json({ error: "Failed to change study deadline" });
+    res.status(500).json({ error: "failed to approve study" });
   }
 };
 module.exports = exports;
