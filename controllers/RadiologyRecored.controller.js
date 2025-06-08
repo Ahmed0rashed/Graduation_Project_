@@ -93,7 +93,7 @@ exports.addRecord = async (req, res) => {
 
     let ourcenterId;
     if (useOuerRadiologist === true || useOuerRadiologist === "true") {
-      ourcenterId = "681236dc01aae24ced3d8bac";
+      ourcenterId = "6844d679124fb12bbfd7e43d";
     } else {
       ourcenterId = centerId;
     }
