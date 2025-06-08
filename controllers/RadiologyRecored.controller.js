@@ -847,20 +847,20 @@ const sendEmail2 = async (email, centerName, centerEmail, recordId, patient_name
   const transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
-      user: "ahmedmohamedrashed236@gmail.com",
-      pass: "ncjb nwhz gtcn rqrw", 
+      user: "radintelio@gmail.com",
+      pass: "iond hchz zpzm bssn", 
     },
   });
 
-  // تحويل الـ deadline لتوقيت مصر بصيغة جميلة
+  
   const formattedDeadline = formatDeadlineToEgyptTime(deadline);
 
-  // روابط الأزرار مع استبدال recordId
+  
   const approveUrl = `https://graduation-project-mmih.vercel.app/api/Record/approve/${recordId}`;
   const cancelUrl = `https://graduation-project-mmih.vercel.app/api/Record/cancel/${recordId}`;
 
   const mailOptions = {
-    from: "ahmedmohamedrashed236@gmail.com",
+    from: "radintelio@gmail.com",
     to: email,
     subject: "New Study Assigned - Action Required (Doctor Offline)",
     html: `
@@ -915,13 +915,13 @@ const sendEmail = async (email, centerName, centerEmail, recordId, patient_name,
   const transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
-      user: "ahmedmohamedrashed236@gmail.com",
-      pass: "ncjb nwhz gtcn rqrw", // ⚠️ Use environment variables for better security
+      user: "radintelio@gmail.com",
+      pass: "iond hchz zpzm bssn", 
     },
   });
 
   const mailOptions = {
-    from: "ahmedmohamedrashed236@gmail.com",
+    from: "radintelio@gmail.com",
     to: email,
     subject: "Warning: Less Than One Hour Left Before Study Ends",
     html: `
