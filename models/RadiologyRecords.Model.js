@@ -5,7 +5,12 @@ const radiologyRecordSchema = new mongoose.Schema(
     centerId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "RadiologyCenter",
-      required: false,
+      required: true,
+    },
+    centerId_Work_on_Dicom: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "RadiologyCenter",
+      required: true,
     },
     radiologistId: {
       type: mongoose.Schema.Types.ObjectId,
@@ -50,10 +55,10 @@ const radiologyRecordSchema = new mongoose.Schema(
     email: {
       type: String,
     },
-    DicomId: {
+    DicomId: [{
       type: String,
       required: false,
-    },
+    }],
     series: {
       type: String,
     },
@@ -72,10 +77,10 @@ const radiologyRecordSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
-    Dicom_url: {
+    Dicom_url:[ {
       type: String,
       required: true,
-    },
+    }],
     study_description: {
       type: String,
     },
@@ -105,6 +110,9 @@ comment_id: {
     useOuerRadiologist: {
       type: Boolean,
       default: false,
+    },
+    phoneNumber: {
+      type: String,
     },
   },
   { timestamps: true }

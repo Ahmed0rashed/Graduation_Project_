@@ -175,7 +175,8 @@ exports.addRecord = async (req, res) => {
     incrementRecordForToday(validCenterId);
 
     const record = new RadiologyRecord({
-      centerId: validCenterId,
+      centerId: centerId,
+      centerId_Work_on_Dicom: validCenterId,
       radiologistId: radiologist._id,
       patient_name,
       study_date,
@@ -201,7 +202,7 @@ exports.addRecord = async (req, res) => {
 
     const aiReport = new AIReport({
       record: savedRecord._id,
-      centerId: validCenterId,
+      centerId: centerId,
       radiologistID: radiologist._id,
       diagnosisReportFinding: " ",
       diagnosisReportImpration: " ",
@@ -317,10 +318,14 @@ exports.getAllRecordsByStatus = async (req, res) => {
 exports.getRecordsByCenterId = async (req, res) => {
   try {
     const records = await RadiologyRecord.find({
-      centerId: req.params.id,
+      $or: [
+        { centerId: req.params.id },
+        { centerId_Work_on_Dicom: req.params.id },
+      ],
+      
     }).sort({ createdAt: -1 });
     if (!records) return res.status(404).json({ error: "records not found" });
-
+    
     const recordsWithRadiologistName = await Promise.all(
       records.map(async (record) => {
         const radiologist = await Radiologist.findById(record.radiologistId);
@@ -904,6 +909,25 @@ exports.extendStudyDeadline = async (req, res) => {
   } catch (error) {
     console.error("Error extending study deadline:", error);
     res.status(500).json({ error: "Failed to extend study deadline" });
+  }
+};
+exports.addPhoneNumberToRecord = async (req, res) => {
+  try {
+    const { recordId } = req.params;
+    const {  phoneNumber } = req.body;
+    if (!recordId || !phoneNumber) {
+      return res.status(400).json({ error: "recordId and phoneNumber are required" });
+    }
+    const record = await RadiologyRecord.findById(recordId);
+    if (!record) {
+      return res.status(404).json({ error: "Record not found" });
+    }
+    record.phoneNumber = phoneNumber;
+    await record.save();
+    res.status(200).json({ message: "Phone number added to record", record });
+  } catch (error) {
+    console.error("Error adding phone number to record:", error);
+    res.status(500).json({ error: "Failed to add phone number to record" });
   }
 };
 module.exports = exports;

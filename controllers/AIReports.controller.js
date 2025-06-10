@@ -222,7 +222,7 @@ exports.analyzeImage1 = async (req, res) => {
     const { id } = req.params;
     const { imageUrl } = req.body;
 
-    // Validate imageUrl as an array
+    
     if (!Array.isArray(imageUrl) || imageUrl.length === 0) {
       return res.status(400).json({ error: "imageUrl must be a non-empty array of URLs." });
     }
@@ -232,20 +232,22 @@ exports.analyzeImage1 = async (req, res) => {
       return res.status(404).json({ error: "AI Report not found" });
     }
 
+
     const [findingResponse, impressionResponse] = await Promise.all([
-      axios.post("http://localhost:8000/analyze-image-urls/", {
-        text: "Provide only the medical findings from this image dont say Image Analysis or any thing just findings.",
-        image_url: imageUrl
+      axios.post("https://c215-41-68-113-246.ngrok-free.app/analyze-image-urls/", {
+        prompt: "Provide only the medical findings from this image dont say Image Analysis or any thing just findings.",
+        image_urls: imageUrl  
       }, { timeout: 100000 }),
 
-      axios.post("http://localhost:8000/analyze-image-urls/", {
-        text: "Provide the diagnostic impression based on the image dont say Image Analysis or any thing just findings.",
-        image_url: imageUrl
+      axios.post("https://c215-41-68-113-246.ngrok-free.app/analyze-image-urls/", {
+        prompt: "Provide the diagnostic impression based on the image dont say Image Analysis or any thing just findings.",
+        image_urls: imageUrl  
       }, { timeout: 100000 }),
     ]);
 
-    const rawFinding = findingResponse.data?.data || '';
-    const rawImpression = impressionResponse.data?.data || '';
+
+    const rawFinding = findingResponse.data?.result || '';
+    const rawImpression = impressionResponse.data?.result || '';
 
     const cleanText = (text) => {
       return typeof text === 'string'
@@ -257,7 +259,15 @@ exports.analyzeImage1 = async (req, res) => {
     const impression = cleanText(rawImpression);
 
     if (!finding || !impression) {
-      return res.status(400).json({ error: "One or more analysis results are empty. Please check the API response." });
+      return res.status(400).json({ 
+        error: "One or more analysis results are empty. Please check the API response.",
+        debug: {
+          findingStatus: findingResponse.data?.status,
+          impressionStatus: impressionResponse.data?.status,
+          rawFinding: rawFinding,
+          rawImpression: rawImpression
+        }
+      });
     }
 
     aiReport.diagnosisReportFinding = finding;
@@ -265,13 +275,38 @@ exports.analyzeImage1 = async (req, res) => {
 
     await aiReport.save();
 
-    res.status(200).json(aiReport);
+    res.status(200).json({
+      ...aiReport.toObject(),
+      analysisStatus: {
+        findingStatus: findingResponse.data?.status,
+        impressionStatus: impressionResponse.data?.status
+      }
+    });
+
   } catch (error) {
     console.error("Analyze Error:", error);
-    res.status(500).json({ error: error.message });
+    
+    
+    if (error.response) {
+      // خطأ من الـ API
+      console.error("API Error Response:", error.response.data);
+      res.status(500).json({ 
+        error: "API Analysis failed", 
+        details: error.response.data,
+        status: error.response.status
+      });
+    } else if (error.request) {
+  
+      res.status(500).json({ 
+        error: "Network error - Could not reach analysis API",
+        details: "Check if FastAPI server is running on port 8000"
+      });
+    } else {
+      
+      res.status(500).json({ error: error.message });
+    }
   }
 };
-
 
 exports.analyzeFindings = async (req, res) => {
   try {
