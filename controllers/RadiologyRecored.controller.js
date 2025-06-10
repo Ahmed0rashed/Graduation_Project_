@@ -337,7 +337,6 @@ exports.getRecordsByCenterId = async (req, res) => {
         };
       })
     );
-
     res.status(200).json({
       numOfRecords: recordsWithRadiologistName.length,
       records: recordsWithRadiologistName,
