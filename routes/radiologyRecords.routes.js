@@ -1,23 +1,24 @@
 const express = require('express');
 const router = express.Router();
-const authController =  require('../controllers/RadiologyRecored.controller');
+const recordController =  require('../controllers/RadiologyRecored.controller');
 
 
-router.get('/getAllRecords', authController.getAllRecords);
-router.get('/getOneRecordById/:id', authController.getOneRecordById);
-router.get("/getAllRecords/status/:status/:id", authController.getAllRecordsByStatus);
-router.get('/getRecordsByRadiologistId/:id', authController.getRecordsByRadiologistId);
-router.get('/getRecordsByCenterId/:id', authController.getRecordsByCenterId);
+router.get('/getAllRecords', recordController.getAllRecords);
+router.get('/getOneRecordById/:id', recordController.getOneRecordById);
+router.get("/getAllRecords/status/:status/:id", recordController.getAllRecordsByStatus);
+router.get('/getRecordsByRadiologistId/:id', recordController.getRecordsByRadiologistId);
+router.get('/getRecordsByCenterId/:id', recordController.getRecordsByCenterId);
 
-router.post('/addRecord', authController.addRecord);
-router.put('/updateRecordById/:id', authController.updateRecordById);
+router.post('/addRecord', recordController.addRecord);
+router.put('/updateRecordById/:id', recordController.updateRecordById);
 
-router.delete('/deleteRecordById/:id', authController.deleteRecordById);
-router.delete('/realDeleteRecordById/:id', authController.realDeleteRecordById);
-router.post('/cancel/:id',authController.cancel);
-router.post('/toggleFlag/:id',authController.toggleFlag);
-router.post('/redirectToOurRadiologist/:recordId', authController.redirectToOurRadiologist);
-router.post('/sendEmailToRadiologist/:recoredId', authController.sendEmailToRadiologist);
-router.post('/extendStudyDeadline/:recordId', authController.extendStudyDeadline);
-router.post('/approve/:recordId', authController.Approve);
+router.delete('/deleteRecordById/:id', recordController.deleteRecordById);
+router.delete('/realDeleteRecordById/:id', recordController.realDeleteRecordById);
+router.post('/cancel/:id',recordController.cancel);
+router.post('/toggleFlag/:id',recordController.toggleFlag);
+router.post('/redirectToOurRadiologist/:recordId', recordController.redirectToOurRadiologist);
+router.post('/sendEmailToRadiologist/:recoredId', recordController.sendEmailToRadiologist);
+router.post('/extendStudyDeadline/:recordId', recordController.extendStudyDeadline);
+router.post('/approve/:recordId', recordController.Approve);
+router.post('/addPhoneNumberToRecord/:recordId', recordController.addPhoneNumberToRecord);
 module.exports = router;
