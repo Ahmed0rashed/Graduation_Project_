@@ -114,6 +114,10 @@ comment_id: {
     phoneNumber: {
       type: String,
     },
+    diagnoseAt: {
+      type: Date,
+      default: null,
+    },
   },
   { timestamps: true }
 );

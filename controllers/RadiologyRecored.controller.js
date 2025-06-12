@@ -1018,11 +1018,12 @@ exports.Approve = async (req, res) => {
     }
     const center = await RadiologyCenter.findById(record.centerId);
     record.isApproved = true;
+    record.diagnoseAt = new Date();
 
     record.deadline =  new Date( record.createdAt.getTime()+ 60 * 60 *  center.deadlineHours * 1000);
     await record.save();
     res.status(200).json({ message: "the study is approved", record });
-  } catch (error) {
+  } catch (error) { 
     console.error("Error changing study deadline:", error);
     res.status(500).json({ error: "failed to approve study" });
   }
