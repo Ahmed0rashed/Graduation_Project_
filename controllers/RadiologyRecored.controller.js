@@ -615,6 +615,7 @@ exports.cancel = async (req, res) => {
       Record.status = "Cancled";
       Record.cancledby.push(prevRadiologistId); 
       Record.radiologistId = null;
+      
       await Record.save();
 
       const notificationResult = await sendNotification(
@@ -636,9 +637,9 @@ exports.cancel = async (req, res) => {
         .json({ message: "the study has been back to center" });
     }
 
-    console.log("Available Radiologists:", availableRadiologists);
+    // console.log("Available Radiologists:", availableRadiologists);
 
-    console.log("Selected Radiologist:", newRadiologist);
+    // console.log("Selected Radiologist:", newRadiologist);
 
     if (!newRadiologist) {
       newRadiologist = await Radiologist.findOne({
@@ -646,7 +647,7 @@ exports.cancel = async (req, res) => {
       });
     }
 
-    console.log("Selected Radiologist2:", newRadiologist);
+    // console.log("Selected Radiologist2:", newRadiologist);
 
     if (!newRadiologist) {
       const prevRadiologistId = Record.radiologistId;
@@ -654,7 +655,7 @@ exports.cancel = async (req, res) => {
       Record.status = "Cancled";
       Record.cancledby.push(prevRadiologistId); 
       Record.radiologistId = null;
-      Record.deadline= new Date(Record.createdAt.getTime() + 60 * 60 *  center.firstdeadlineHours * 1000);
+
       
       await Record.save();
 
@@ -1016,6 +1017,7 @@ exports.Approve = async (req, res) => {
     }
     const center = await RadiologyCenter.findById(record.centerId);
     record.isApproved = true;
+    record.status = "Diagnose";
     record.diagnoseAt = new Date();
 
     record.deadline =  new Date( record.createdAt.getTime()+ 60 * 60 *  center.deadlineHours * 1000);

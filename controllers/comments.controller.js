@@ -129,7 +129,6 @@ exports.getAllCommentsByRecordId = async (req, res) => {
         .status(404)
         .json({ message: "No comments found for this record" });
     }
-
     res.status(200).json(comments);
   } catch (error) {
     res.status(500).json({ error: error.message });

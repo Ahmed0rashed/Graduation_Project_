@@ -318,5 +318,74 @@ exports.getWeeklyRecordsCountPerDayPerStatus = async (req, res) => {
   }
 };
 
+exports.getRecordsCountByCenterForRadiologistInPeriod = async (req, res) => {
+  try {
+    const { radiologistsId } = req.params;
+    const { startDate, endDate } = req.body;
+
+    if (!mongoose.Types.ObjectId.isValid(radiologistsId)) {
+      return res.status(400).json({
+        error: "Invalid ID",
+        message: "The provided radiologist ID is not valid",
+      });
+    }
+
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+
+    const records = await RadiologyRecord.aggregate([
+      {
+        $match: {
+          radiologistId: new mongoose.Types.ObjectId(radiologistsId),
+          createdAt: { $gte: start, $lt: end },
+          status: "Completed", 
+        },
+      },
+      {
+        $group: {
+          _id: "$centerId",
+          count: { $sum: 1 },
+        },
+      },
+    ]);
+
+        const records1 = await RadiologyRecord.aggregate([
+      {
+        $match: {
+          radiologistId: new mongoose.Types.ObjectId(radiologistsId),
+          createdAt: { $gte: start, $lt: end },
+          status: { $in: ["Diagnose", "Ready"] },
+        },
+      },
+      {
+        $group: {
+          _id: "$centerId",
+          count: { $sum: 1 },
+        },
+      },
+    ]);
+
+    const centers = await RadiologyCenter.find({ _id: { $in: records.map((record) => record._id) } });
+
+    const centersWithCounts = centers.map((center) => {
+      const record = records.find((record) => record._id.toString() === center._id.toString());
+      const record1 = records1.find((record) => record._id.toString() === center._id.toString());
+
+      return {
+        centerName: center.centerName,
+        record_is_completed: record ? record.count : 0,
+        record_is_Not_completed: record1 ? record1.count : 0,
+      };
+    });
+
+    res.status(200).json({ centersWithCounts });
+  } catch (error) {
+    console.error("Error in getRecordsCountByCenterForRadiologistInPeriod:", error);
+    res.status(500).json({
+      error: "Internal Server Error",
+      message: "Failed to retrieve data",
+    });
+  }
+};
 
 
