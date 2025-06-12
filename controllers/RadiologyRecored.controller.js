@@ -84,6 +84,12 @@ exports.addRecord = async (req, res) => {
       useOuerRadiologist,
     } = req.body;
 
+    const Center = await RadiologyCenter.findById(centerId);
+
+    if (!Center) {
+      return res.status(404).json({ error: "Center not found" });
+    }
+
     let ourcenterId;
     if (useOuerRadiologist === true || useOuerRadiologist === "true") {
       ourcenterId = "6844d679124fb12bbfd7e43d";
@@ -191,12 +197,13 @@ exports.addRecord = async (req, res) => {
       series,
       DicomId,
       Dicom_url,
+      deadline: new Date(Date.now() + 60 * 60 *  Center.firstdeadlineHours * 1000), 
       useOuerRadiologist,
       status: "Ready",
       specializationRequest: specialty,
       Study_Instance_UID,
       Series_Instance_UID,
-    });
+    }); 
 
     const savedRecord = await record.save();
 
@@ -649,6 +656,8 @@ exports.cancel = async (req, res) => {
       Record.status = "Cancled";
       Record.cancledby.push(prevRadiologistId); 
       Record.radiologistId = null;
+      Record.deadline= new Date(Record.createdAt.getTime() + 60 * 60 *  center.firstdeadlineHours * 1000);
+      
       await Record.save();
 
       const notificationResult = await sendNotification(
@@ -728,7 +737,7 @@ exports.cancel = async (req, res) => {
 exports.redirectToOurRadiologist = async (req, res) => {
   try {
     const { recordId } = req.params;
-    const ourCenterId = "681236dc01aae24ced3d8bac";
+    const ourCenterId = "6844d679124fb12bbfd7e43d";
 
     if (!recordId) {
       return res.status(400).json({ error: "recordId is required" });
@@ -803,6 +812,7 @@ exports.redirectToOurRadiologist = async (req, res) => {
     record.useOuerRadiologist = true;
     record.specializationRequest = specialty;
     record.status = "Ready";
+    record.centerId_Work_on_Dicom = ourCenterId;
     await record.save();
 
   
