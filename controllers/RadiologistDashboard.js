@@ -184,6 +184,7 @@ exports.getAverageTimeToCompleteReport = async (req, res) => {
     if (!startDate || !endDate) {
       return res.status(400).json({ message: 'startDate and endDate are required in query' });
     }
+    
 
     const start = new Date(startDate);
     const end = new Date(endDate);
@@ -192,25 +193,35 @@ exports.getAverageTimeToCompleteReport = async (req, res) => {
       radiologistId: new mongoose.Types.ObjectId(radiologistId),
       createdAt: { $gte: start, $lte: end },
       status: "Completed",
+      diagnoseAt: { $exists: true }  
     });
+    
 
     if (completedRecords.length === 0) {
-      return res.status(200).json({ averageTime: 0 });
+      return res.status(200).json({ averageTimeInMinutes: 0 });
     }
+   
 
     const totalCompletionTime = completedRecords.reduce((acc, record) => {
-      const completionTime = new Date(record.updatedAt) - new Date(record.createdAt);
-      return acc + completionTime;
+      const diagnoseTime = new Date(record.diagnoseAt);
+      console.log("Diagnose Time:", diagnoseTime);
+      const completedTime = new Date(record.updatedAt);
+      console.log("Completed Time:", completedTime);
+      const duration = completedTime - diagnoseTime;
+      return acc + duration;
     }, 0);
+   
 
-    const averageTime = totalCompletionTime / completedRecords.length/60/60/60;
+    const averageTimeInMinutes = totalCompletionTime / completedRecords.length / 1000 / 60;
 
-    return res.status(200).json({ averageTime });
+    return res.status(200).json({ averageTimeInMinutes });
   } catch (err) {
     console.error(err);
     return res.status(500).json({ message: 'Server error' });
   }
 };
+
+
 exports.getWeeklyRecordsCountPerDayPerStatus = async (req, res) => {
   try {
     const { radiologistsId } = req.params;
