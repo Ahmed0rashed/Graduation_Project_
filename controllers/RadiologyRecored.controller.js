@@ -656,6 +656,8 @@ exports.cancel = async (req, res) => {
       Record.status = "Cancled";
       Record.cancledby.push(prevRadiologistId); 
       Record.radiologistId = null;
+      Record.deadline= new Date(Record.createdAt.getTime() + 60 * 60 *  center.firstdeadlineHours * 1000);
+      
       await Record.save();
 
       const notificationResult = await sendNotification(
