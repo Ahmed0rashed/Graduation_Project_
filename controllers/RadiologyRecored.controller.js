@@ -534,8 +534,6 @@ exports.toggleFlag = async (req, res) => {
       incrementRecordForToday(validCenterId);
     }
 
-
-
     record.deadline = new Date(Date.now() + 60 * 60 *  center.emergancydeadlineHours * 1000);
     record.status = "Ready";
     await record.save();
