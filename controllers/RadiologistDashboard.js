@@ -222,14 +222,33 @@ exports.getAverageTimeToCompleteReport = async (req, res) => {
   }
 };
 
-
 exports.getWeeklyRecordsCountPerDayPerStatus = async (req, res) => {
   try {
     const { radiologistsId } = req.params;
+    const { startDate, endDate } = req.body;
+
     if (!mongoose.Types.ObjectId.isValid(radiologistsId)) {
       return res.status(400).json({
         error: "Invalid ID",
         message: "The provided radiologists ID is not valid",
+      });
+    }
+
+    if (!startDate || !endDate) {
+      return res.status(400).json({
+        error: "Missing Dates",
+        message: "Start date and end date are required",
+      });
+    }
+
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    end.setHours(23, 59, 59, 999); // Include full end day
+
+    if (isNaN(start) || isNaN(end)) {
+      return res.status(400).json({
+        error: "Invalid Date Format",
+        message: "Please provide valid ISO date strings for startDate and endDate",
       });
     }
 
@@ -241,32 +260,23 @@ exports.getWeeklyRecordsCountPerDayPerStatus = async (req, res) => {
       });
     }
 
-    const today = new Date();
-
-    const jsDay = today.getDay();
-    const daysSinceSaturday = (jsDay + 1) % 7;
-
-    const startOfWeek = new Date(today);
-    startOfWeek.setDate(today.getDate() - daysSinceSaturday);
-    startOfWeek.setHours(0, 0, 0, 0);
-
-    const endOfWeek = new Date(startOfWeek);
-    endOfWeek.setDate(startOfWeek.getDate() + 7);
-    endOfWeek.setHours(0, 0, 0, 0);
-
     const records = await RadiologyRecord.aggregate([
       {
         $match: {
           radiologistId: new mongoose.Types.ObjectId(radiologistsId),
-          createdAt: { $gte: startOfWeek, $lt: endOfWeek },
+          createdAt: { $gte: start, $lte: end },
         },
       },
       {
         $project: {
           status: 1,
           createdAt: 1,
-
-          jsDayOfWeek: { $mod: [{ $add: [{ $dayOfWeek: "$createdAt" }, 7] }, 7] }
+          jsDayOfWeek: {
+            $mod: [
+              { $add: [{ $dayOfWeek: "$createdAt" }, 7] },
+              7
+            ]
+          },
         },
       },
       {
@@ -278,7 +288,7 @@ exports.getWeeklyRecordsCountPerDayPerStatus = async (req, res) => {
     ]);
 
     const dayNames = [
-      "Saturday", 
+      "Saturday",
       "Sunday",
       "Monday",
       "Tuesday",
@@ -302,7 +312,12 @@ exports.getWeeklyRecordsCountPerDayPerStatus = async (req, res) => {
       const status = record._id.status;
       const count = record.count;
 
-      weekData[day][status] += count;
+      if (weekData[day][status] !== undefined) {
+        weekData[day][status] += count;
+      } else {
+        weekData[day][status] = count;
+      }
+
       weekData[day].total += count;
     }
 
@@ -311,13 +326,14 @@ exports.getWeeklyRecordsCountPerDayPerStatus = async (req, res) => {
       data: weekData,
     });
   } catch (error) {
-    console.error("Error in getWeeklyRecordsCountPerDayInCenterPerStatus:", error);
+    console.error("Error in getWeeklyRecordsCountPerDayPerStatus:", error);
     res.status(500).json({
       error: "Internal Server Error",
       message: "Failed to retrieve data",
     });
   }
 };
+
 
 exports.getRecordsCountByCenterForRadiologistInPeriod = async (req, res) => {
   try {
