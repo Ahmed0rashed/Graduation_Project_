@@ -60,44 +60,60 @@ async function sendInvitationEmail1(radiologistId, radiologistEmail, centerName,
     },
   });
 
-  const radiologistName = radiologistEmail.split('@')[0].split('.')[0];  
+  const radiologistName = radiologistEmail.split('@')[0].split('.')[0];
 
-  const acceptUrl = `https://graduation-project-mmih.vercel.app/api/relations/radiologist/${radiologistId}`;
+  const acceptUrl = radiologistId
+    ? `https://graduation-project-mmih.vercel.app/api/relations/radiologist/${radiologistId}`
+    : `https://graduation-project-mmih.vercel.app/signup`;
 
   const mailOptions = {
     from: centerEmail,
     to: radiologistEmail,
-    subject: `Invitation to Join Radintal from ${centerName}`,
+    subject: `✨ Exclusive Invitation to Join Radintal – From ${centerName}`,
     html: `
-      <div style="font-family: Arial, sans-serif; padding: 20px; border: 1px solid #ddd; border-radius: 8px; background-color: #f4f4f4;">
-        <h2 style="color: #2c3e50;">You're Invited to Join Radintal</h2>
-        <p>Dear ${radiologistName},</p>
-        
-        <p>We at <strong>${centerName}</strong> would like to extend an invitation for you to join <strong>Radintal</strong>, our collaborative platform designed for radiologists.</p>
+      <div style="font-family: 'Segoe UI', sans-serif; background: linear-gradient(145deg, #f0f4f8, #ffffff); padding: 40px 0;">
+        <table align="center" cellpadding="0" cellspacing="0" style="width: 100%; max-width: 650px; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 12px 30px rgba(0,0,0,0.1);">
+          <tr>
+            <td>
+              <img src="https://cdn.dribbble.com/userupload/15606497/file/original-1d7be0867731a998337730f39268a54a.png?format=webp&resize=600x220&vertical=center" alt="Radintal Invitation Banner" style="width: 100%; display: block;">
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 40px 30px;">
+              <h1 style="color: #2c3e50; font-size: 28px; margin-bottom: 15px;">You're Invited to Radintal 🎉</h1>
+              <p style="font-size: 16px; color: #555;">Hi <strong>${radiologistName}</strong>,</p>
 
-        <p>By joining Radintal, you'll have the opportunity to connect with our team for image consultations, case reviews, and seamless communication, improving the quality and efficiency of your practice.</p>
+              <p style="font-size: 16px; color: #555; line-height: 1.6;">
+                <strong>${centerName}</strong> is excited to welcome you to <strong>Radintal</strong> — our innovative platform built for radiologists to connect, collaborate, and deliver smarter, faster diagnostics.
+              </p>
 
-        <p><strong>Contact Information for ${centerName}:</strong></p>
-        <p><strong>Email:</strong> <a href="mailto:${centerEmail}" style="color: #3498db;">${centerEmail}</a></p>
-        <p><strong>Phone:</strong> ${phone}</p>
+              <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 25px 0;">
+                <p style="margin: 0; font-size: 15px;"><strong>📧 Center Email:</strong> <a href="mailto:${centerEmail}" style="color: #007BFF;">${centerEmail}</a></p>
+                <p style="margin: 5px 0 0;"><strong>📞 Phone:</strong>${phone}</p>
+              </div>
 
-        <p>If you'd like to join us, just click the button below:</p>
+              <div style="text-align: center; margin: 35px 0;">
+                <a href="${acceptUrl}" style="background: linear-gradient(to right, #1abc9c, #16a085); color: #fff; padding: 16px 32px; border-radius: 50px; text-decoration: none; font-size: 16px; font-weight: bold; box-shadow: 0 4px 12px rgba(13, 255, 0, 0.57);">Accept Invitation</a>
+              </div>
 
-        <div style="text-align: center; margin: 20px 0;">
-          <a href="${acceptUrl}" style="background-color: #27ae60; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: bold;">Accept Invitation</a>
-        </div>
-
-        <p>We would be delighted to have you on board and look forward to collaborating with you!</p>
-
-        <p>Best regards,</p>
-        <p><strong>${centerName} Team</strong></p>
-        <p style="font-size: 12px; color: #7f8c8d;">This is an automated invitation email. Please do not reply to this email address.</p>
+              <p style="font-size: 15px; color: #888; line-height: 1.5;">If you're ready to elevate your radiology workflow, this is your chance. Click above to join us!</p>
+              <p style="margin-top: 40px; font-size: 14px; color: #999;">With appreciation,<br><strong>${centerName} Team</strong></p>
+            </td>
+          </tr>
+          <tr>
+            <td style="background: #f1f1f1; text-align: center; padding: 20px; font-size: 12px; color: #999;">
+              This is an automated email from Radintal. Please do not reply directly to this message.
+            </td>
+          </tr>
+        </table>
       </div>
     `,
   };
 
   await transporter.sendMail(mailOptions);
 }
+
+
 
 
 class CenterRadiologistsRelationController {
