@@ -9,8 +9,8 @@ async function sendInvitationEmail(radiologistEmail, centerName, centerEmail, ph
   const transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
-      user: "ahmedmohamedrashed236@gmail.com",
-      pass: "ncjb nwhz gtcn rqrw", // Consider using environment variables for better security
+      user: "radintelio@gmail.com",
+      pass: "iond hchz zpzm bssn", 
     },
   });
 
@@ -51,10 +51,96 @@ async function sendInvitationEmail(radiologistEmail, centerName, centerEmail, ph
     console.error("Error sending email:", error);
   }
 }
+async function sendInvitationEmail1(radiologistId, radiologistEmail, centerName, centerEmail, phone) {
+  const transporter = nodemailer.createTransport({
+    service: "gmail",
+    auth: {
+      user: "radintelio@gmail.com",
+      pass: "iond hchz zpzm bssn", 
+    },
+  });
+
+  const radiologistName = radiologistEmail.split('@')[0].split('.')[0];  
+
+  const acceptUrl = `https://graduation-project-mmih.vercel.app/api/relations/radiologist/${radiologistId}`;
+
+  const mailOptions = {
+    from: centerEmail,
+    to: radiologistEmail,
+    subject: `Invitation to Join Radintal from ${centerName}`,
+    html: `
+      <div style="font-family: Arial, sans-serif; padding: 20px; border: 1px solid #ddd; border-radius: 8px; background-color: #f4f4f4;">
+        <h2 style="color: #2c3e50;">You're Invited to Join Radintal</h2>
+        <p>Dear ${radiologistName},</p>
+        
+        <p>We at <strong>${centerName}</strong> would like to extend an invitation for you to join <strong>Radintal</strong>, our collaborative platform designed for radiologists.</p>
+
+        <p>By joining Radintal, you'll have the opportunity to connect with our team for image consultations, case reviews, and seamless communication, improving the quality and efficiency of your practice.</p>
+
+        <p><strong>Contact Information for ${centerName}:</strong></p>
+        <p><strong>Email:</strong> <a href="mailto:${centerEmail}" style="color: #3498db;">${centerEmail}</a></p>
+        <p><strong>Phone:</strong> ${phone}</p>
+
+        <p>If you'd like to join us, just click the button below:</p>
+
+        <div style="text-align: center; margin: 20px 0;">
+          <a href="${acceptUrl}" style="background-color: #27ae60; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: bold;">Accept Invitation</a>
+        </div>
+
+        <p>We would be delighted to have you on board and look forward to collaborating with you!</p>
+
+        <p>Best regards,</p>
+        <p><strong>${centerName} Team</strong></p>
+        <p style="font-size: 12px; color: #7f8c8d;">This is an automated invitation email. Please do not reply to this email address.</p>
+      </div>
+    `,
+  };
+
+  await transporter.sendMail(mailOptions);
+}
 
 
 class CenterRadiologistsRelationController {
  
+  async sendEmailToRadiologist(req, res) {
+    try {
+      const { centerId } = req.params;
+      const { radiologistEmail } = req.body;
+
+      const center = await RadiologyCenter.findById(centerId);
+      if (!center) {
+        return res.status(404).json({ error: "Radiology Center not found" });
+      }
+
+      const radiologist = await Radiologist.findOne({ email: radiologistEmail });
+
+      if (!radiologist) {
+        
+        await sendInvitationEmail1(
+          null,
+          radiologistEmail,
+          center.centerName,
+          center.email,
+          center.contactNumber
+        );
+      } else {
+        
+        await sendInvitationEmail1(
+          radiologist._id.toString(),
+          radiologistEmail,
+          center.centerName,
+          center.email,
+          center.contactNumber
+        );
+      }
+
+      return res.status(200).json({ message: "Invitation email sent successfully" });
+    } catch (error) {
+      console.error("Error sending email:", error);
+      return res.status(500).json({ error: "Failed to send email" });
+    }
+  }
+
 
   async addRadiologistToCenter1(req, res) {
     try {

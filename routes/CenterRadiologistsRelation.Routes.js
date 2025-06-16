@@ -10,6 +10,7 @@ router.get("/onlineRadiologists/:centerId", CenterRadiologistsRelationController
 router.get("/radiologistsList/:centerId", CenterRadiologistsRelationController.getRadiologistsByCenterId1);
 router.get("/centers/:radiologistId", CenterRadiologistsRelationController.getCentersByRadiologistId);
 router.delete("/removeRadiologistFromCenter/:centerId", CenterRadiologistsRelationController.removeRadiologistFromCenter);
+router.post("/sendEmailToRadiologist/:centerId", CenterRadiologistsRelationController.sendEmailToRadiologist);
 
 
 module.exports = router;
