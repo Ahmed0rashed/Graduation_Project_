@@ -197,16 +197,20 @@ exports.addRecord = async (req, res) => {
       series,
       DicomId,
       Dicom_url,
-      deadline: new Date(Date.now() + 60 * 60 *  Center.firstdeadlineHours * 1000), 
+      deadline: new Date(
+        Date.now() + 60 * 60 * Center.firstdeadlineHours * 1000
+      ),
       useOuerRadiologist,
       status: "Ready",
       specializationRequest: specialty,
       Study_Instance_UID,
       Series_Instance_UID,
-    }); 
+    });
 
     const savedRecord = await record.save();
-
+    if ( radiologist.status !== "online") {
+      await sendEmail2( radiologist.email, Center.centerName, Center.email, savedRecord._id,savedRecord.patient_name, radiologist.firstName + " " + radiologist.lastName, savedRecord.deadline, radiologist._id);
+    }
     const aiReport = new AIReport({
       record: savedRecord._id,
       centerId: centerId,
@@ -304,14 +308,14 @@ exports.getAllRecordsByStatus = async (req, res) => {
     if (!status) {
       return res.status(400).json({ error: "Status is required" });
     }
-    
+
     const records = await RadiologyRecord.find({
       centerId: req.params.id,
     }).sort({ createdAt: -1 });
     if (!records) {
       return res.status(404).json({ error: "Record not found" });
     }
-    
+
     const filteredRecords = records.filter((r) => r.status === status) || [];
     res.status(200).json({
       numOfRadiologyRecords: filteredRecords.length,
@@ -329,10 +333,9 @@ exports.getRecordsByCenterId = async (req, res) => {
         { centerId: req.params.id },
         { centerId_Work_on_Dicom: req.params.id },
       ],
-      
     }).sort({ createdAt: -1 });
     if (!records) return res.status(404).json({ error: "records not found" });
-    
+
     const recordsWithRadiologistName = await Promise.all(
       records.map(async (record) => {
         const radiologist = await Radiologist.findById(record.radiologistId);
@@ -421,7 +424,6 @@ exports.getRecordsByRadiologistId = async (req, res) => {
   }
 };
 
-
 exports.toggleFlag = async (req, res) => {
   try {
     const record = await RadiologyRecord.findById(req.params.id);
@@ -440,11 +442,11 @@ exports.toggleFlag = async (req, res) => {
     if (!Array.isArray(record.dicom_Comment)) {
       record.dicom_Comment = [];
     }
-    if(flag === true || flag === "true") {
-        record.flag = true;
+    if (flag === true || flag === "true") {
+      record.flag = true;
     }
-        if(flag === false || flag === "false") {
-        record.flag = false;
+    if (flag === false || flag === "false") {
+      record.flag = false;
     }
 
     await record.save();
@@ -534,7 +536,9 @@ exports.toggleFlag = async (req, res) => {
       incrementRecordForToday(validCenterId);
     }
 
-    record.deadline = new Date(Date.now() + 60 * 60 *  center.emergancydeadlineHours * 1000);
+    record.deadline = new Date(
+      Date.now() + 60 * 60 * center.emergancydeadlineHours * 1000
+    );
     record.status = "Ready";
     await record.save();
 
@@ -564,11 +568,23 @@ exports.toggleFlag = async (req, res) => {
 exports.cancel = async (req, res) => {
   try {
     const Record = await RadiologyRecord.findById(req.params.id);
-
-    
-
+    const RadiologistId = req.params.radiologistId;
     if (!Record) {
       return res.status(404).json({ message: "Record not found" });
+    }
+
+ console.log("RadiologistId:", RadiologistId);
+    if (RadiologistId == Record.radiologistId || !RadiologistId) {
+      if (Record.status === "Cancled") {
+        return res
+          .status(400)
+          .json({ message: "This record has already been canceled" });
+      }
+
+    }else{
+      return res
+        .status(403)
+        .json({ message: "You are not authorized to cancel this record" });
     }
 
     const specialtyResponse = await axios.post(
@@ -613,9 +629,9 @@ exports.cancel = async (req, res) => {
       const prevRadiologistId = Record.radiologistId;
 
       Record.status = "Cancled";
-      Record.cancledby.push(prevRadiologistId); 
+      Record.cancledby.push(prevRadiologistId);
       Record.radiologistId = null;
-      
+
       await Record.save();
 
       const notificationResult = await sendNotification(
@@ -653,10 +669,9 @@ exports.cancel = async (req, res) => {
       const prevRadiologistId = Record.radiologistId;
 
       Record.status = "Cancled";
-      Record.cancledby.push(prevRadiologistId); 
+      Record.cancledby.push(prevRadiologistId);
       Record.radiologistId = null;
 
-      
       await Record.save();
 
       const notificationResult = await sendNotification(
@@ -722,6 +737,9 @@ exports.cancel = async (req, res) => {
     if (notificationResult.save) {
       await notificationResult.save();
     }
+        if ( newRadiologist.status !== "online") {
+      await sendEmail2( newRadiologist.email, center.centerName, center.email, updatedRecord._id,updatedRecord.patient_name, newRadiologist.firstName + " " + newRadiologist.lastName, updatedRecord.deadline, newRadiologist._id);
+    }
 
     res.status(200).json({
       message: "Radiologist updated successfully",
@@ -747,7 +765,6 @@ exports.redirectToOurRadiologist = async (req, res) => {
       return res.status(404).json({ error: "Record not found" });
     }
 
-   
     const prediction = await axios.post(
       "https://ml-api-7yq4la.fly.dev/predict/",
       {
@@ -760,7 +777,6 @@ exports.redirectToOurRadiologist = async (req, res) => {
 
     const specialty = prediction.data.Specialty;
 
-    
     const relation = await CenterRadiologistsRelation.findOne({
       center: ourCenterId,
     });
@@ -774,7 +790,6 @@ exports.redirectToOurRadiologist = async (req, res) => {
       specialization: specialty,
     });
 
-    
     const recordsPerRadiologist = await RadiologyRecord.aggregate([
       {
         $match: {
@@ -791,7 +806,9 @@ exports.redirectToOurRadiologist = async (req, res) => {
       },
     ]);
 
-    const countMap = new Map(recordsPerRadiologist.map((r) => [r._id.toString(), r.count]));
+    const countMap = new Map(
+      recordsPerRadiologist.map((r) => [r._id.toString(), r.count])
+    );
     let selected = radiologists.reduce((min, r) => {
       const count = countMap.get(r._id.toString()) || 0;
       if (!min || count < min.count) return { ...r.toObject(), count };
@@ -799,13 +816,14 @@ exports.redirectToOurRadiologist = async (req, res) => {
     }, null);
 
     if (!selected) {
-      selected = await Radiologist.findOne({ _id: { $in: relation.radiologists } });
+      selected = await Radiologist.findOne({
+        _id: { $in: relation.radiologists },
+      });
     }
 
     if (!selected || !selected._id) {
       return res.status(500).json({ error: "No available radiologist found" });
     }
-
 
     record.radiologistId = selected._id;
     record.useOuerRadiologist = true;
@@ -814,7 +832,6 @@ exports.redirectToOurRadiologist = async (req, res) => {
     record.centerId_Work_on_Dicom = ourCenterId;
     await record.save();
 
-  
     const ourCenter = await RadiologyCenter.findById(ourCenterId);
     await sendNotification(
       selected._id,
@@ -827,7 +844,6 @@ exports.redirectToOurRadiologist = async (req, res) => {
     );
 
     res.status(200).json({ message: "Record redirected successfully", record });
-
   } catch (error) {
     console.error("Error in redirectToOurRadiologist:", error);
     res.status(500).json({ error: error.message || "Internal server error" });
@@ -836,31 +852,38 @@ exports.redirectToOurRadiologist = async (req, res) => {
 const formatDeadlineToEgyptTime = (deadline) => {
   const date = new Date(deadline);
   const options = {
-    timeZone: 'Africa/Cairo',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
+    timeZone: "Africa/Cairo",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
     hour12: false,
   };
-  return new Intl.DateTimeFormat('en-GB', options).format(date);
+  return new Intl.DateTimeFormat("en-GB", options).format(date);
 };
-const sendEmail2 = async (email, centerName, centerEmail, recordId, patient_name, RadiologistName, deadline) => {
+const sendEmail2 = async (
+  email,
+  centerName,
+  centerEmail,
+  recordId,
+  patient_name,
+  RadiologistName,
+  deadline,
+  RadiologistId
+) => {
   const transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
       user: "radintelio@gmail.com",
-      pass: "iond hchz zpzm bssn", 
+      pass: "iond hchz zpzm bssn",
     },
   });
 
-  
   const formattedDeadline = formatDeadlineToEgyptTime(deadline);
 
-  
-  const approveUrl = `https://graduation-project-mmih.vercel.app/api/Record/approve/${recordId}`;
-  const cancelUrl = `https://graduation-project-mmih.vercel.app/api/Record/cancel/${recordId}`;
+  const approveUrl = `https://abanoubsamaan5.github.io/my-react-app/#/approved-report/${recordId}`;
+  const cancelUrl = `https://abanoubsamaan5.github.io/my-react-app/#/cancel-report/${recordId}/${RadiologistId}`;
 
   const mailOptions = {
     from: "radintelio@gmail.com",
@@ -912,14 +935,19 @@ const sendEmail2 = async (email, centerName, centerEmail, recordId, patient_name
   return transporter.sendMail(mailOptions);
 };
 
-
-
-const sendEmail = async (email, centerName, centerEmail, recordId, patient_name,RadiologistName) => {
+const sendEmail = async (
+  email,
+  centerName,
+  centerEmail,
+  recordId,
+  patient_name,
+  RadiologistName
+) => {
   const transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
       user: "radintelio@gmail.com",
-      pass: "iond hchz zpzm bssn", 
+      pass: "iond hchz zpzm bssn",
     },
   });
 
@@ -952,7 +980,6 @@ const sendEmail = async (email, centerName, centerEmail, recordId, patient_name,
   return transporter.sendMail(mailOptions);
 };
 
-
 exports.sendEmailToRadiologist = async (req, res) => {
   try {
     const { recoredId } = req.params;
@@ -973,7 +1000,14 @@ exports.sendEmailToRadiologist = async (req, res) => {
       return res.status(404).json({ error: "Radiologist not found" });
     }
 
-    const result = await sendEmail( radiologist.email, center.centerName, center.email, recoredId,record.patient_name, radiologist.firstName + " " + radiologist.lastName);
+    const result = await sendEmail(
+      radiologist.email,
+      center.centerName,
+      center.email,
+      recoredId,
+      record.patient_name,
+      radiologist.firstName + " " + radiologist.lastName
+    );
     res.status(200).json({ message: "Email sent successfully" });
   } catch (error) {
     console.error("Error sending email:", error);
@@ -994,7 +1028,9 @@ exports.extendStudyDeadline = async (req, res) => {
     newDeadline.setHours(newDeadline.getHours() + 1);
     record.deadline = newDeadline;
     await record.save();
-    res.status(200).json({ message: "Study deadline extended by 1 hour", record });
+    res
+      .status(200)
+      .json({ message: "Study deadline extended by 1 hour", record });
   } catch (error) {
     console.error("Error extending study deadline:", error);
     res.status(500).json({ error: "Failed to extend study deadline" });
@@ -1003,7 +1039,6 @@ exports.extendStudyDeadline = async (req, res) => {
 
 exports.Approve = async (req, res) => {
   try {
-    
     const { recordId } = req.params;
     if (!recordId) {
       return res.status(400).json({ error: "recordId is required" });
@@ -1020,10 +1055,12 @@ exports.Approve = async (req, res) => {
     record.status = "Diagnose";
     record.diagnoseAt = new Date();
 
-    record.deadline =  new Date( record.createdAt.getTime()+ 60 * 60 *  center.deadlineHours * 1000);
+    record.deadline = new Date(
+      record.createdAt.getTime() + 60 * 60 * center.deadlineHours * 1000
+    );
     await record.save();
     res.status(200).json({ message: "the study is approved", record });
-  } catch (error) { 
+  } catch (error) {
     console.error("Error changing study deadline:", error);
     res.status(500).json({ error: "failed to approve study" });
   }
@@ -1031,9 +1068,11 @@ exports.Approve = async (req, res) => {
 exports.addPhoneNumberToRecord = async (req, res) => {
   try {
     const { recordId } = req.params;
-    const {  phoneNumber } = req.body;
+    const { phoneNumber } = req.body;
     if (!recordId || !phoneNumber) {
-      return res.status(400).json({ error: "recordId and phoneNumber are required" });
+      return res
+        .status(400)
+        .json({ error: "recordId and phoneNumber are required" });
     }
     const record = await RadiologyRecord.findById(recordId);
     if (!record) {
