@@ -9,6 +9,36 @@ const Otp = require("../models/OTP");
 const Wallet = require('../models/payment/Wallet.Model');
 const Admin = require("../models/admin.model");
 const upload = require("../utils/cloudinary");
+const axios = require('axios');
+
+
+
+
+
+
+
+async function verifyIdCard(front_url, back_url) {
+  if (!front_url || !back_url) {
+    throw new Error('Both front_url and back_url are required');
+  }
+
+  try {
+    const response = await axios.post('https://1788-41-68-32-80.ngrok-free.app/extract-text', {
+      front_url,
+      back_url
+    });
+
+    return response.data;
+  } catch (error) {
+    throw {
+      message: error.message,
+      details: error.response?.data || null
+    };
+  }
+}
+
+
+
 const sendOtpEmail = async (email, otp) => {
   const transporter = nodemailer.createTransport({
     service: "gmail",
@@ -139,7 +169,15 @@ exports.registerRadiologist = async (req, res) => {
   
     const FrontId = await upload(req.frontId.buffer, "image"); 
     const BackId = await upload(req.backId.buffer, "image"); 
+    const result = await verifyIdCard(FrontId, BackId);
 
+    if(!result.isDoctor && !result.isRadiologist ){
+
+      return res.status(400).json({ message: "your Card is not Valid as radiologist" }); 
+    }
+    if(!result.isValidCard){
+      return res.status(400).json({ message: "your Card is not Valid" }); 
+    }
 
     const otp = otpGenerator.generate(6, {
       digits: true,
