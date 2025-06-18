@@ -161,7 +161,7 @@ class CenterRadiologistsRelationController {
   async addRadiologistToCenter1(req, res) {
     try {
       const { centerId } = req.params;
-      const { email } = req.body;
+      const { email } = req.params;
 
       const center = await RadiologyCenter.findById(centerId);
       if (!center) {

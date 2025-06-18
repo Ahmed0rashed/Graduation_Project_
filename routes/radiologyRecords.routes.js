@@ -14,7 +14,7 @@ router.put('/updateRecordById/:id', recordController.updateRecordById);
 
 router.delete('/deleteRecordById/:id', recordController.deleteRecordById);
 router.delete('/realDeleteRecordById/:id', recordController.realDeleteRecordById);
-router.post('/cancel/:id',recordController.cancel);
+router.post('/cancel/:id/:radiologistId?',recordController.cancel);
 router.post('/toggleFlag/:id',recordController.toggleFlag);
 router.post('/redirectToOurRadiologist/:recordId', recordController.redirectToOurRadiologist);
 router.post('/sendEmailToRadiologist/:recoredId', recordController.sendEmailToRadiologist);
