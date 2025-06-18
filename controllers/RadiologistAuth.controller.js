@@ -27,6 +27,7 @@ async function verifyIdCard(front_url, back_url) {
       front_url,
       back_url
     });
+    
 
     return response.data;
   } catch (error) {
