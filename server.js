@@ -4,6 +4,7 @@ const connectDB = require("./config/db.config");
 const { createServer } = require("http");
 const app = require("./app");
 const notificationManager = require("./middleware/notfi");
+const startDeadlineChecker = require("./middleware/checkDeadlines"); 
 
 dotenv.config({ path: "./config.env" });
 
@@ -11,14 +12,17 @@ const httpServer = createServer(app);
 
 connectDB();
 
+
 notificationManager.initialize(httpServer);
 
-const port =3000|| process.env.PORT ;
-httpServer.listen(port, () => {
-  console.log(`Server running on port ${port}`);
-  console.log(`Socket.io status: ${notificationManager.isInitialized ? "READY" : "NOT READY"}`);
-});
 
+startDeadlineChecker();
+
+const port = 3000 || process.env.PORT;
+httpServer.listen(port, () => {
+  console.log(`🚀 Server running on port ${port}`);
+  console.log(`🔌 Socket.io status: ${notificationManager.isInitialized ? "READY" : "NOT READY"}`);
+});
 
 process.on("unhandledRejection", (err) => {
   console.error("Unhandled Rejection:", err);
