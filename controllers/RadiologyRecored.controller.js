@@ -751,6 +751,131 @@ exports.cancel = async (req, res) => {
   }
 };
 
+exports.cancelRecordByCron = async (recordId) => {
+  try {
+    const Record = await RadiologyRecord.findById(recordId);
+    if (!Record || Record.status === "Cancled") return;
+
+    const specialtyResponse = await axios.post(
+      "https://ml-api-7yq4la.fly.dev/predict/",
+      {
+        modality: Record.modality,
+        body_part_examined: Record.body_part_examined,
+        description: Record.study_description,
+      },
+      { timeout: 100000 }
+    );
+
+    const predictedSpecialty = specialtyResponse.data.Specialty;
+
+    const radiologistsInCenter = await CenterRadiologistsRelation.findOne({
+      center: Record.centerId,
+    });
+
+    const center = await RadiologyCenter.findById(Record.centerId);
+    if (!radiologistsInCenter || radiologistsInCenter.radiologists.length === 0)
+      return;
+
+    const canceledByList = Record.cancledby.map((id) => id.toString());
+
+    const availableRadiologists = radiologistsInCenter.radiologists.filter(
+      (radiologist) =>
+        !radiologist.equals(Record.radiologistId) &&
+        !canceledByList.includes(radiologist.toString())
+    );
+
+    let newRadiologist = await Radiologist.findOne({
+      _id: { $in: availableRadiologists },
+      specialization: predictedSpecialty,
+    });
+
+    if (!newRadiologist) {
+      newRadiologist = await Radiologist.findOne({
+        _id: { $in: availableRadiologists },
+      });
+    }
+
+    if (!newRadiologist) {
+      const prevRadiologistId = Record.radiologistId;
+      Record.status = "Cancled";
+      Record.cancledby.push(prevRadiologistId);
+      Record.radiologistId = null;
+      await Record.save();
+
+      const notificationResult = await sendNotification(
+        center._id,
+        "ٌRadiologyCenter",
+        "you have a study cancelled",
+        "\ncancelled by all radiologists",
+        "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ_J_xJvdD8hmGay4prO6qildXton3MBK8Xi1JYdzifvo2C35Q9SQJBATZKUmIc1CdPzO4&usqp=CAU",
+        center.centerName,
+        "study"
+      );
+
+      if (notificationResult?.save) await notificationResult.save();
+      return;
+    }
+
+    const updatedRecord = await RadiologyRecord.findByIdAndUpdate(
+      recordId,
+      {
+        radiologistId: newRadiologist._id,
+        cancledby: [...Record.cancledby, Record.radiologistId],
+      },
+      { new: true }
+    );
+
+    const prevRadiologist = await Radiologist.findById(updatedRecord.cancledby);
+    const notification = await sendNotification(
+      newRadiologist._id,
+      "Radiologist",
+      center.centerName,
+      "New study assigned to you  \ncancelled by " +
+        prevRadiologist.firstName +
+        " " +
+        prevRadiologist.lastName,
+      center.image,
+      center.centerName
+    );
+
+    const notificationResult = await sendNotification(
+      center._id,
+      "ٌRadiologyCenter",
+      "Redirecting study",
+      "New study assigned to " +
+        newRadiologist.firstName +
+        " " +
+        newRadiologist.lastName +
+        " \ncancelled by " +
+        prevRadiologist.firstName +
+        " " +
+        prevRadiologist.lastName,
+      newRadiologist.image,
+      center.centerName,
+      "study"
+    );
+
+    if (notification?.save) await notification.save();
+    if (notificationResult?.save) await notificationResult.save();
+
+    if (newRadiologist.status !== "online") {
+      await sendEmail2(
+        newRadiologist.email,
+        center.centerName,
+        center.email,
+        updatedRecord._id,
+        updatedRecord.patient_name,
+        newRadiologist.firstName + " " + newRadiologist.lastName,
+        updatedRecord.deadline,
+        newRadiologist._id
+      );
+    }
+  } catch (error) {
+    console.error("Error in cancelRecordByCron:", error.message);
+  }
+};
+
+
 exports.redirectToOurRadiologist = async (req, res) => {
   try {
     const { recordId } = req.params;
@@ -1054,7 +1179,8 @@ exports.Approve = async (req, res) => {
     record.isApproved = true;
     record.status = "Diagnose";
     record.diagnoseAt = new Date();
-
+    record.emailDeadlinePassedSent = false;
+    record.emailDeadlineSent = false;
     record.deadline = new Date(
       record.createdAt.getTime() + 60 * 60 * center.deadlineHours * 1000
     );

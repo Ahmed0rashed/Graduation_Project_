@@ -118,6 +118,15 @@ comment_id: {
       type: Date,
       default: null,
     },
+    emailWarningSent: {
+      type: Boolean,
+      default: false,
+    },
+    emailDeadlinePassedSent: {
+      type: Boolean,
+      default: false,
+    },
+
   },
   { timestamps: true }
 );
