@@ -4,6 +4,34 @@ const Radiologist = require('../models/Radiologists.Model');
 const Center = require('../models/Radiology_Centers.Model');
 const nodemailer = require("nodemailer");
 const { cancelRecordByCron } = require("../controllers/RadiologyRecored.controller");
+const notificationManager = require("../middleware/notfi");
+
+const sendNotification = async (
+  userId,
+  userType,
+  title,
+  message,
+  image,
+  centername,
+  type
+) => {
+  try {
+    const result = await notificationManager.sendNotification(
+      userId,
+      userType,
+      title,
+      message,
+      image,
+      centername,
+      type
+    );
+
+    return result;
+  } catch (error) {
+    console.error("Notification error:", error);
+    throw error;
+  }
+};
 
 const sendEmail = async (to, centerName, centerEmail, recordId, patient_name, RadiologistName, type = "warning") => {
   let subject, contentText, alertColor;
@@ -73,7 +101,7 @@ function startDeadlineChecker() {
 
       for (const record of records) {
         const deadlineTime = new Date(record.deadline);
-        const timeDiff = deadlineTime - now; // milliseconds
+        const timeDiff = deadlineTime - now; 
         const oneHour = 60 * 60 * 1000;
 
         const radiologist = await Radiologist.findById(record.radiologistId);
@@ -81,7 +109,7 @@ function startDeadlineChecker() {
 
         if (!radiologist || !center) continue;
 
-        // ⏰ Fewer than 1 hour left
+        
         if (timeDiff > 0 && timeDiff <= oneHour && !record.emailWarningSent) {
           await sendEmail(
             radiologist.email,
@@ -92,12 +120,21 @@ function startDeadlineChecker() {
             `${radiologist.firstName} ${radiologist.lastName}`,
             "warning"
           );
+            const notificationResult = await sendNotification(
+            radiologist._id,
+            "Radiologist",
+            center.centerName,
+            "Less than one hour left for study \n\nPatient: " + record.patient_name + " \nStudy ID: " + record._id + " \nCenter: " + center.centerName,
+            center.image,
+            center.centerName,
+            "study"
+            );
           record.emailWarningSent = true;
           await record.save();
           console.log(`📧 Warning email sent for record: ${record._id}`);
         }
 
-        // ❌ Deadline passed
+        
         if (timeDiff <= 0 && !record.emailDeadlinePassedSent) {
           await sendEmail(
             radiologist.email,
@@ -107,7 +144,16 @@ function startDeadlineChecker() {
             record.patient_name,
             `${radiologist.firstName} ${radiologist.lastName}`,
             "expired"
-          );
+            );
+            const notificationResult = await sendNotification(
+            radiologist._id,
+            "Radiologist",
+            center.centerName,
+            "Study deadline passed \n\n Patient: " + record.patient_name + " \n Study ID: " + record._id + " \nCenter: " + center.centerName,
+            center.image,
+            center.centerName,
+            "study"
+            );
           await cancelRecordByCron(record._id);
           record.emailDeadlinePassedSent = true;
           await record.save();
