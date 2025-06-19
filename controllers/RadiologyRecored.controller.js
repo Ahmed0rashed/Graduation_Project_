@@ -677,7 +677,8 @@ exports.cancel = async (req, res) => {
       Record.status = "Cancled";
       Record.cancledby.push(prevRadiologistId);
       Record.radiologistId = null;
-
+      Record.emailDeadlinePassedSent = false;
+      Record.emailDeadlineSent = false;
       await Record.save();
 
       const notificationResult = await sendNotification(
@@ -806,6 +807,8 @@ exports.cancelRecordByCron = async (recordId) => {
       Record.status = "Cancled";
       Record.cancledby.push(prevRadiologistId);
       Record.radiologistId = null;
+      Record.emailDeadlinePassedSent = false;
+      Record.emailDeadlineSent = false;
       await Record.save();
 
       const notificationResult = await sendNotification(
