@@ -550,7 +550,7 @@ exports.toggleFlag = async (req, res) => {
         newRadiologist.firstName + " " + newRadiologist.lastName,
         record.deadline,
         newRadiologist._id,
-        center.emergancydeadlineHours
+        center.firstEmergancyDeadlineHours
       );
     record.status = "Ready";
     await record.save();
@@ -732,7 +732,7 @@ exports.cancel = async (req, res) => {
         newRadiologist.firstName + " " + newRadiologist.lastName,
         updatedRecord.deadline,
         newRadiologist._id,
-        center.emergancydeadlineHours
+        center.firstEmergancyDeadlineHours
       );
     }
     
@@ -880,7 +880,7 @@ exports.cancelRecordByCron = async (recordId) => {
         newRadiologist.firstName + " " + newRadiologist.lastName,
         updatedRecord.deadline,
         newRadiologist._id,
-        center.emergancydeadlineHours
+        center.firstEmergancyDeadlineHours
       );
     }
     const lastCanceledBy = updatedRecord.cancledby[updatedRecord.cancledby.length - 1];
