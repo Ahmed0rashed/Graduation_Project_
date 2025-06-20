@@ -174,9 +174,12 @@ const radiologyCenterSchema = new mongoose.Schema(
       },
       emergancydeadlineHours: {
         type: Number,  
-        default: 2, 
+        default: 1, 
       },
-    // Certifications and licenses of the radiology center
+      firstEmergancyDeadlineHours: {
+        type: Number,  
+        default: 0.5, 
+      },
     certifications: [
       {
         name: {

@@ -448,9 +448,11 @@ exports.toggleFlag = async (req, res) => {
     if (!Array.isArray(record.dicom_Comment)) {
       record.dicom_Comment = [];
     }
+
     if (flag === true || flag === "true") {
       record.flag = true;
     }
+
     if (flag === false || flag === "false") {
       record.flag = false;
     }
@@ -459,14 +461,8 @@ exports.toggleFlag = async (req, res) => {
 
     record.dicom_Comment.push(comment);
 
-    const isOnline = await Radiologist.findOne({
-      _id: currentRadiologist._id,
-      status: "online",
-    });
-
-    if (!isOnline & (flag === true || flag === "true")) {
+    if (flag === true || flag === "true") {
       const validCenterId = new mongoose.Types.ObjectId(center._id);
-
       const specialty = record.specializationRequest;
 
       const radiologistsInCenter = await CenterRadiologistsRelation.findOne({
@@ -485,21 +481,20 @@ exports.toggleFlag = async (req, res) => {
       let radiologists1 = await Radiologist.find({
         _id: { $in: radiologistsInCenter.radiologists },
         specialization: specialty,
-        status: "online",
       });
 
       if (!radiologists1 || radiologists1.length === 0) {
         radiologists1 = await Radiologist.find({
           _id: { $in: radiologistsInCenter.radiologists },
-          status: "online",
         });
 
         if (!radiologists1 || radiologists1.length === 0) {
           return res.status(404).json({
-            message: "No online radiologists available at the moment",
+            message: "No radiologists available in the center",
           });
         }
       }
+
       const recordsPerRadiologist = await RadiologyRecord.aggregate([
         {
           $match: {
@@ -543,8 +538,20 @@ exports.toggleFlag = async (req, res) => {
     }
 
     record.deadline = new Date(
-      Date.now() + 60 * 60 * center.emergancydeadlineHours * 1000
+      Date.now() + 60 * 60 * center.firstEmergancyDeadlineHours * 1000
     );
+    const newRadiologist = await Radiologist.findById(record.radiologistId);
+                await sendEmergencyEmailToDoctor(
+        newRadiologist.email,
+        center.centerName,
+        center.email,
+        record._id,
+        record.patient_name,
+        newRadiologist.firstName + " " + newRadiologist.lastName,
+        record.deadline,
+        newRadiologist._id,
+        center.firstEmergancyDeadlineHours
+      );
     record.status = "Ready";
     await record.save();
 
@@ -552,24 +559,24 @@ exports.toggleFlag = async (req, res) => {
       currentRadiologist._id,
       "Radiologist",
       center.centerName,
-      "you have emergency study \n comment: " + comment,
+      "emergency study assigned to you",
       center.image,
       center.centerName
     );
 
-    if (notification.save) {
-      await notification.save();
-    }
+
+   
 
     res.status(200).json({
       message: "Flag toggled successfully",
-      flagged: record.flagged,
+      flagged: record.flag,
     });
   } catch (error) {
     console.error("Error in toggleFlag:", error);
     res.status(500).json({ error: error.message });
   }
 };
+
 
 exports.cancel = async (req, res) => {
   try {
@@ -708,8 +715,31 @@ exports.cancel = async (req, res) => {
       },
       { new: true }
     );
+        if (!Record.flag) {
+    Record.deadline = new Date(
+      Record.createdAt.getTime() + 60 * 60 * center.deadlineHours * 1000
+    );}
+    else {
+      Record.deadline = new Date(
+        Record.createdAt.getTime() + 60 * 60 * center.emergancydeadlineHours * 1000
+      );
+                  await sendEmergencyEmailToDoctor(
+        newRadiologist.email,
+        center.centerName,
+        center.email,
+        updatedRecord._id,
+        updatedRecord.patient_name,
+        newRadiologist.firstName + " " + newRadiologist.lastName,
+        updatedRecord.deadline,
+        newRadiologist._id,
+        center.firstEmergancyDeadlineHours
+      );
+    }
+    
 
-    const RadiologistName = await Radiologist.findById(updatedRecord.cancledby);
+const lastCanceledBy = updatedRecord.cancledby[updatedRecord.cancledby.length - 1];
+const RadiologistName = await Radiologist.findById(lastCanceledBy);
+
     // console.log("RadiologistName:", RadiologistName.firstName,);
     const notification = await sendNotification(
       newRadiologist._id,
@@ -724,7 +754,7 @@ exports.cancel = async (req, res) => {
     );
     const notificationResult = await sendNotification(
       center._id,
-      "ٌRadiologyCenter",
+      "RadiologyCenter",
       "Redirecting study",
       "New study assigned to " +
         newRadiologist.firstName +
@@ -813,7 +843,7 @@ exports.cancelRecordByCron = async (recordId) => {
 
       const notificationResult = await sendNotification(
         center._id,
-        "ٌRadiologyCenter",
+        "RadiologyCenter",
         "you have a study cancelled",
         "\ncancelled by all radiologists",
         "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ_J_xJvdD8hmGay4prO6qildXton3MBK8Xi1JYdzifvo2C35Q9SQJBATZKUmIc1CdPzO4&usqp=CAU",
@@ -833,8 +863,29 @@ exports.cancelRecordByCron = async (recordId) => {
       },
       { new: true }
     );
+        if (Record.flag) {
+    Record.deadline = new Date(
+      Record.createdAt.getTime() + 60 * 60 * center.deadlineHours * 1000
+    );}
+    else {
+      Record.deadline = new Date(
+        Record.createdAt.getTime() + 60 * 60 * center.emergancydeadlineHours * 1000
+      );
+            await sendEmergencyEmailToDoctor(
+        newRadiologist.email,
+        center.centerName,
+        center.email,
+        updatedRecord._id,
+        updatedRecord.patient_name,
+        newRadiologist.firstName + " " + newRadiologist.lastName,
+        updatedRecord.deadline,
+        newRadiologist._id,
+        center.firstEmergancyDeadlineHours
+      );
+    }
+    const lastCanceledBy = updatedRecord.cancledby[updatedRecord.cancledby.length - 1];
+    const prevRadiologist = await Radiologist.findById(lastCanceledBy);
 
-    const prevRadiologist = await Radiologist.findById(updatedRecord.cancledby);
     const notification = await sendNotification(
       newRadiologist._id,
       "Radiologist",
@@ -996,6 +1047,81 @@ const formatDeadlineToEgyptTime = (deadline) => {
   };
   return new Intl.DateTimeFormat("en-GB", options).format(date);
 };
+const sendEmergencyEmailToDoctor = async (
+  email,
+  centerName,
+  centerEmail,
+  recordId,
+  patient_name,
+  RadiologistName,
+  deadline,
+  RadiologistId,
+  emergencyDeadlineHours
+) => {
+  const transporter = nodemailer.createTransport({
+    service: "gmail",
+    auth: {
+      user: "radintelio@gmail.com",
+      pass: "iond hchz zpzm bssn", // تأكد من أن ده App Password
+    },
+  });
+
+  const formattedDeadline = formatDeadlineToEgyptTime(deadline);
+
+  const approveUrl = `https://abanoubsamaan5.github.io/my-react-app/#/approved-report/${recordId}`;
+  const cancelUrl = `https://abanoubsamaan5.github.io/my-react-app/#/cancel-report/${recordId}/${RadiologistId}`;
+
+  const mailOptions = {
+    from: "radintelio@gmail.com",
+    to: email,
+    subject: "🚨 Emergency Case Assigned - Immediate Action Required",
+    html: `
+      <div style="font-family: Arial, sans-serif; padding: 25px; border: 1px solid #ddd; border-radius: 10px; max-width: 650px; margin: auto; background-color: #fffbe6;">
+        <div style="text-align: center; margin-bottom: 25px;">
+          <img src="https://cdn.dribbble.com/userupload/15606497/file/original-1d7be0867731a998337730f39268a54a.png?format=webp&resize=400x300&vertical=center" alt="Company Logo" style="max-width: 160px;">
+        </div>
+        <h2 style="color: #d9534f; text-align: center; margin-bottom: 20px;">🚨 Emergency Case Assigned</h2>
+        <p style="font-size: 16px; color: #333;">Dear Dr. <strong>${RadiologistName}</strong>,</p>
+        <p style="font-size: 16px; color: #333;">
+          A new <strong>emergency case</strong> has been assigned to you for patient <strong>${patient_name}</strong> from <strong>${centerName}</strong>.
+        </p>
+        <p style="font-size: 16px; color: #333;">
+          Please prioritize this case and take action <strong>within ${emergencyDeadlineHours} hours</strong> from assignment.
+        </p>
+        <div style="background-color: #fff3cd; padding: 15px; border-radius: 8px; margin: 20px 0; border: 1px solid #ffeeba; text-align: center;">
+          <strong style="font-size: 18px; color: #856404;">Emergency Deadline: ${formattedDeadline} (Egypt Time)</strong>
+        </div>
+        <p style="font-size: 16px; color: #333;">
+          <strong>Center Details:</strong><br>
+          Name: ${centerName}<br>
+          Email: <a href="mailto:${centerEmail}" style="color: #337ab7;">${centerEmail}</a><br>
+          Study Record ID: <strong>${recordId}</strong>
+        </p>
+
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="${approveUrl}" style="background-color: #28a745; color: white; padding: 12px 25px; text-decoration: none; font-weight: bold; border-radius: 5px; margin-right: 15px; display: inline-block;">
+            Approve
+          </a>
+          <a href="${cancelUrl}" style="background-color: #dc3545; color: white; padding: 12px 25px; text-decoration: none; font-weight: bold; border-radius: 5px; display: inline-block;">
+            Cancel
+          </a>
+        </div>
+
+        <p style="font-size: 16px; color: #333;">
+          Your immediate attention to this emergency case is highly appreciated.
+        </p>
+        <p style="font-size: 16px; color: #333; margin-top: 30px;">
+          Regards,<br><br>
+          <strong>Radintel Emergency Team</strong>
+        </p>
+      </div>
+    `,
+  };
+
+  return transporter.sendMail(mailOptions);
+};
+
+
 const sendEmail2 = async (
   email,
   centerName,
@@ -1190,9 +1316,15 @@ exports.Approve = async (req, res) => {
     record.diagnoseAt = new Date();
     record.emailDeadlinePassedSent = false;
     record.emailDeadlineSent = false;
+    if (!record.flag) {
     record.deadline = new Date(
       record.createdAt.getTime() + 60 * 60 * center.deadlineHours * 1000
-    );
+    );}
+    else {
+      record.deadline = new Date(
+        record.createdAt.getTime() + 60 * 60 * center.emergancydeadlineHours * 1000
+      );
+    }
     await record.save();
     res.status(200).json({ message: "the study is approved", record });
   } catch (error) {
