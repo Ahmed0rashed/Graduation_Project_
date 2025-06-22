@@ -134,8 +134,8 @@ function startDeadlineChecker() {
           console.log(`📧 Warning email sent for record: ${record._id}`);
         }
 
-        
-        if (timeDiff <= 0 && !record.emailDeadlinePassedSent) {
+
+        if (timeDiff <= 0) {
           await sendEmail(
             radiologist.email,
             center.centerName,
