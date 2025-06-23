@@ -126,8 +126,8 @@ exports.getAllCommentsByRecordId = async (req, res) => {
     const comments = await Comment.find({ recordId }).sort({ createdAt: -1 });
     if (!comments.length) {
       return res
-        .status(404)
-        .json({ message: "No comments found for this record" });
+        .status(200)
+        .json({ message: "No comments found for this DicOM" });
     }
     res.status(200).json(comments);
   } catch (error) {
