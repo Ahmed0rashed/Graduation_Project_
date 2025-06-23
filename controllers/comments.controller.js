@@ -127,7 +127,7 @@ exports.getAllCommentsByRecordId = async (req, res) => {
     if (!comments.length) {
       return res
         .status(200)
-        .json({ message: "No comments found for this DicOM" });
+        .json({ message: "No comments found for this Dicom" });
     }
     res.status(200).json(comments);
   } catch (error) {
