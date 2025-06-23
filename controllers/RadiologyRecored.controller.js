@@ -390,15 +390,11 @@ exports.getRecordsByRadiologistId = async (req, res) => {
 
     if (!records) {
       return res
-        .status(404)
+        .status(200)
         .json({ message: "No records found " });
     }
 
-    if (!records.length) {
-      return res
-        .status(200)
-        .json({ message: "No records found for you" });
-    }
+
 
     const recordIds = records.map((record) => record._id);
     const centerIds = [
