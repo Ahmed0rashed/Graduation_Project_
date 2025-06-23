@@ -35,7 +35,6 @@ const sendNotification = async (
     throw error;
   }
 };
-
 async function incrementRecordForToday(centerId) {
   const today = new Date().toISOString().split("T")[0];
 
@@ -292,6 +291,7 @@ exports.getAllRecords = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
 exports.getOneRecordById = async (req, res) => {
   try {
     const record = await RadiologyRecord.findById(req.params.id);
@@ -391,7 +391,7 @@ exports.getRecordsByRadiologistId = async (req, res) => {
     if (!records) {
       return res
         .status(200)
-        .json({ message: "No records found " });
+        .json({ message: "No records found" });
     }
 
 
@@ -557,8 +557,11 @@ exports.toggleFlag = async (req, res) => {
       center.centerName,
       "emergency study assigned to you",
       center.image,
-      center.centerName
+      center.centerName,
+      "study"
     );
+
+
 
 
    
