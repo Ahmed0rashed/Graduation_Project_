@@ -51,7 +51,7 @@ async function sendInvitationEmail(radiologistEmail, centerName, centerEmail, ph
     console.error("Error sending email:", error);
   }
 }
-async function sendInvitationEmail1(radiologistId, radiologistEmail, centerName, centerEmail, phone) {
+async function sendInvitationEmail1(radiologistId, radiologistEmail, centerName, centerEmail, phone, centerId) {
   const transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
@@ -62,9 +62,8 @@ async function sendInvitationEmail1(radiologistId, radiologistEmail, centerName,
 
   const radiologistName = radiologistEmail.split('@')[0].split('.')[0];
 
-  const acceptUrl = radiologistId
-    ? `https://graduation-project-mmih.vercel.app/api/relations/radiologist/${radiologistId}`
-    : `https://graduation-project-mmih.vercel.app/signup`;
+  const encodedEmail = encodeURIComponent(radiologistEmail);
+  const acceptUrl = `https://abanoubsamaan5.github.io/my-react-app/#/accept-invite/${centerId}/${radiologistId}`;
 
   const mailOptions = {
     from: centerEmail,
@@ -89,7 +88,7 @@ async function sendInvitationEmail1(radiologistId, radiologistEmail, centerName,
 
               <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 25px 0;">
                 <p style="margin: 0; font-size: 15px;"><strong>📧 Center Email:</strong> <a href="mailto:${centerEmail}" style="color: #007BFF;">${centerEmail}</a></p>
-                <p style="margin: 5px 0 0;"><strong>📞 Phone:</strong>${phone}</p>
+                <p style="margin: 5px 0 0;"><strong>📞 Phone:</strong> ${phone}</p>
               </div>
 
               <div style="text-align: center; margin: 35px 0;">
@@ -133,11 +132,12 @@ class CenterRadiologistsRelationController {
       if (!radiologist) {
         
         await sendInvitationEmail1(
-          null,
+          radiologist._id.toString(),
           radiologistEmail,
           center.centerName,
           center.email,
-          center.contactNumber
+          center.contactNumber,
+          centerId
         );
       } else {
         
@@ -146,7 +146,8 @@ class CenterRadiologistsRelationController {
           radiologistEmail,
           center.centerName,
           center.email,
-          center.contactNumber
+          center.contactNumber,
+          centerId
         );
       }
 
@@ -161,7 +162,10 @@ class CenterRadiologistsRelationController {
   async addRadiologistToCenter1(req, res) {
     try {
       const { centerId } = req.params;
-      const { email } = req.params;
+      const { id } = req.params;
+
+    
+
 
       const center = await RadiologyCenter.findById(centerId);
       if (!center) {
@@ -170,8 +174,9 @@ class CenterRadiologistsRelationController {
           message: "Center does not exist",
         });
       }
+      
 
-      const radiologist = await Radiologist.findOne({ email });
+      const radiologist = await Radiologist.findById(id);
       if (!radiologist) {
         await sendInvitationEmail(email, center.centerName, center.email, center.contactNumber);
         return res.status(404).json({
