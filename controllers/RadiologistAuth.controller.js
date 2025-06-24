@@ -23,7 +23,7 @@ async function verifyIdCard(front_url, back_url) {
   }
 
   try {
-    const response = await axios.post('https://ccf3-41-68-32-80.ngrok-free.app/extract-text', {
+    const response = await axios.post('https://b7d5-41-33-141-180.ngrok-free.app/extract-text', {
       front_url,
       back_url
     });
