@@ -1010,14 +1010,16 @@ exports.redirectToOurRadiologist = async (req, res) => {
     }
 
     // find the center by ID
-    const center = await RadiologyCenter.findById(centerId_Work_on_Dicom);
+    const center = await RadiologyCenter.findById(record.centerId);
 
     record.radiologistId = selected._id;
     record.useOuerRadiologist = true;
     record.specializationRequest = specialty;
     record.status = "Ready";
     record.centerId_Work_on_Dicom = ourCenterId;
-    record.deadline =center.firstdeadlineHours;
+    record.deadline = new Date(
+        Date.now() + 60 * 60 * center.firstdeadlineHours * 1000
+      );  
 
     await record.save();
 
