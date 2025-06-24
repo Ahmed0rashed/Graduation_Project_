@@ -1009,11 +1009,16 @@ exports.redirectToOurRadiologist = async (req, res) => {
       return res.status(500).json({ error: "No available radiologist found" });
     }
 
+    // find the center by ID
+    const center = await RadiologyCenter.findById(centerId_Work_on_Dicom);
+
     record.radiologistId = selected._id;
     record.useOuerRadiologist = true;
     record.specializationRequest = specialty;
     record.status = "Ready";
     record.centerId_Work_on_Dicom = ourCenterId;
+    record.deadline =center.firstdeadlineHours;
+
     await record.save();
 
     const ourCenter = await RadiologyCenter.findById(ourCenterId);
