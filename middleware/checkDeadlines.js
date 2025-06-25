@@ -6,33 +6,6 @@ const nodemailer = require("nodemailer");
 const { cancelRecordByCron } = require("../controllers/RadiologyRecored.controller");
 const notificationManager = require("../middleware/notfi");
 
-const sendNotification = async (
-  userId,
-  userType,
-  title,
-  message,
-  image,
-  centername,
-  type
-) => {
-  try {
-    const result = await notificationManager.sendNotification(
-      userId,
-      userType,
-      title,
-      message,
-      image,
-      centername,
-      type
-    );
-
-    return result;
-  } catch (error) {
-    console.error("Notification error:", error);
-    throw error;
-  }
-};
-
 const sendEmail = async (to, centerName, centerEmail, recordId, patient_name, RadiologistName, type = "warning") => {
   let subject, contentText, alertColor;
 
@@ -42,6 +15,12 @@ const sendEmail = async (to, centerName, centerEmail, recordId, patient_name, Ra
       <p style="font-size: 16px; color: #555;">
         This is a reminder that there is less than <strong>one hour</strong> remaining before the end of the study for patient <strong>${patient_name}</strong> at center <strong>${centerName}</strong>.
       </p>
+      <div style="text-align: center; margin-top: 20px;">
+        <a href="https://abanoubsamaan5.github.io/my-react-app/#/extend-time-report/${recordId}"
+           style="background-color: #5bc0de; color: white; padding: 12px 20px; text-decoration: none; border-radius: 5px; font-weight: bold;">
+          Extend Time Now
+        </a>
+      </div>
     `;
     alertColor = "#f0ad4e"; // warning color
   } else {
@@ -57,7 +36,7 @@ const sendEmail = async (to, centerName, centerEmail, recordId, patient_name, Ra
   const html = `
     <div style="font-family: Arial, sans-serif; padding: 20px; border: 1px solid #ddd; border-radius: 10px; max-width: 600px; margin: auto; background-color: #fff;">
       <div style="text-align: center;">
-         <img src="https://cdn.dribbble.com/userupload/15606497/file/original-1d7be0867731a998337730f39268a54a.png?format=webp&resize=400x300&vertical=center" alt="Radintal Banner" style="width: 100%; max-height: 240px; object-fit: cover;">
+        <img src="https://cdn.dribbble.com/userupload/15606497/file/original-1d7be0867731a998337730f39268a54a.png?format=webp&resize=400x300&vertical=center" alt="Radintal Banner" style="width: 100%; max-height: 240px; object-fit: cover;">
       </div>
       <h2 style="color: ${alertColor}; text-align: center;">${subject}</h2>
       <p style="font-size: 16px; color: #555;">Dear ${RadiologistName},</p>
