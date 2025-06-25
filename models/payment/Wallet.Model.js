@@ -1,22 +1,23 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
-const walletSchema = new mongoose.Schema({
-  ownerId: {
-    type: mongoose.Schema.Types.ObjectId,
-    refPath: 'ownerType',
-    required: true,
+const walletSchema = new mongoose.Schema(
+  {
+    ownerId: {
+      type: mongoose.Schema.Types.ObjectId,
+      required: true,
+      refPath: "ownerType", // ممكن يكون Center أو Radiologist
+    },
+    ownerType: {
+      type: String,
+      required: true,
+      enum: ["RadiologyCenter", "Radiologist"],
+    },
+    balance: {
+      type: Number,
+      default: 0,
+    },
   },
-  ownerType: {
-    type: String,
-    enum: ['RadiologyCenter', 'Radiologist'],
-    required: true,
-  },
-  balance: {
-    type: Number,
-    default: 0,
-  }
-}, { timestamps: true });
+  { timestamps: true }
+);
 
-walletSchema.index({ ownerId: 1, ownerType: 1 }, { unique: true });
-
-module.exports = mongoose.model('Wallet', walletSchema);
+module.exports = mongoose.model("Wallet", walletSchema);
