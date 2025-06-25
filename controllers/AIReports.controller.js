@@ -233,19 +233,19 @@ exports.analyzeImage1 = async (req, res) => {
     }
 
     const [findingResponse, impressionResponse] = await Promise.all([
-      axios.post("http://localhost:8000/analyze-image-urls/", {
-        text: "Provide only the medical findings from this image dont say Image Analysis or any thing just findings.",
-        image_url: imageUrl
+      axios.post("http://localhost:2000/analyze-image-urls/", {
+        prompt: "Provide only the medical findings from this image without explanations, instructions, or steps and dont say Image Analysis Report and dont say any thing just findings and dont say Patient Information.",
+        image_urls: imageUrl
       }, { timeout: 100000 }),
 
-      axios.post("http://localhost:8000/analyze-image-urls/", {
-        text: "Provide the diagnostic impression based on the image dont say Image Analysis or any thing just findings.",
-        image_url: imageUrl
+      axios.post("http://localhost:2000/analyze-image-urls/", {
+        prompt: "Provide the diagnostic impression based on the image without explanations, instructions, or steps and dont say Image Analysis Report and dont say any thing just impression and dont say Patient Information.",
+        image_urls: imageUrl
       }, { timeout: 100000 }),
     ]);
 
-    const rawFinding = findingResponse.data?.data || '';
-    const rawImpression = impressionResponse.data?.data || '';
+    const rawFinding = findingResponse.data?.result || '';
+    const rawImpression = impressionResponse.data?.result || '';
 
     const cleanText = (text) => {
       return typeof text === 'string'
@@ -268,9 +268,14 @@ exports.analyzeImage1 = async (req, res) => {
     res.status(200).json(aiReport);
   } catch (error) {
     console.error("Analyze Error:", error);
+    if (error.response) {
+      console.error("Status:", error.response.status);
+      console.error("Data:", error.response.data);
+    }
     res.status(500).json({ error: error.message });
   }
 };
+
 
 
 exports.analyzeFindings = async (req, res) => {
