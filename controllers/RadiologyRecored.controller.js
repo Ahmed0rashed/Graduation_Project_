@@ -706,14 +706,16 @@ exports.cancel = async (req, res) => {
         .json({ message: "the study has been back to center" });
     }
 
-    const updatedRecord = await RadiologyRecord.findByIdAndUpdate(
-      req.params.id,
-      {
-        radiologistId: newRadiologist._id,
-        cancledby: [...Record.cancledby, Record.radiologistId],
-      },
-      { new: true }
-    );
+const updatedRecord = await RadiologyRecord.findByIdAndUpdate(
+  req.params.id,
+  {
+    radiologistId: newRadiologist._id,
+    cancledby: [...Record.cancledby, Record.radiologistId],
+    status: "Ready", 
+  },
+  { new: true }
+);
+
         if (!Record.flag) {
     Record.deadline = new Date(
       Record.createdAt.getTime() + 60 * 60 * center.deadlineHours * 1000
@@ -854,14 +856,16 @@ exports.cancelRecordByCron = async (recordId) => {
       return;
     }
 
-    const updatedRecord = await RadiologyRecord.findByIdAndUpdate(
-      recordId,
-      {
-        radiologistId: newRadiologist._id,
-        cancledby: [...Record.cancledby, Record.radiologistId],
-      },
-      { new: true }
-    );
+const updatedRecord = await RadiologyRecord.findByIdAndUpdate(
+  req.params.id,
+  {
+    radiologistId: newRadiologist._id,
+    cancledby: [...Record.cancledby, Record.radiologistId],
+    status: "Ready", 
+  },
+  { new: true }
+);
+
         if (Record.flag) {
     Record.deadline = new Date(
       Record.createdAt.getTime() + 60 * 60 * center.deadlineHours * 1000
