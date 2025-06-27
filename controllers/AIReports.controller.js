@@ -233,7 +233,7 @@ exports.analyzeImage1 = async (req, res) => {
     }
 
     const [findingResponse, impressionResponse] = await Promise.all([
-      axios.post("https://a713-41-68-141-45.ngrok-free.app/analyze-image-urls/", {
+      axios.post("httpanalyze-image-urls/", {
         prompt: "Provide only the medical findings from this image without explanations, instructions, or steps and dont say Image Analysis Report and dont say any thing just findings and dont say Patient Information.",
         image_urls: imageUrl
       }, { timeout: 100000 }),
