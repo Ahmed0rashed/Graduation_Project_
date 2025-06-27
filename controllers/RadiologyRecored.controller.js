@@ -208,7 +208,8 @@ exports.addRecord = async (req, res) => {
 
     const savedRecord = await record.save();
     if ( radiologist.status !== "online") {
-      await sendEmail2( radiologist.email, Center.centerName, Center.email, savedRecord._id,savedRecord.patient_name, radiologist.firstName + " " + radiologist.lastName, savedRecord.deadline, radiologist._id);
+     
+      // await sendEmail2( radiologist.email, Center.centerName, Center.email, savedRecord._id,savedRecord.patient_name, radiologist.firstName + " " + radiologist.lastName, savedRecord.deadline, radiologist._id);
     }
     const aiReport = new AIReport({
       record: savedRecord._id,
