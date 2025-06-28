@@ -36,13 +36,13 @@ const sendOtpEmail = async (email, otp) => {
   const transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
-      user: "radintelio@gmail.com",
-      pass: "iond hchz zpzm bssn", 
+      user: "radintelio1@gmail.com",
+      pass: "mikq puco elmb mypn",  
     },
   });
 
   const mailOptions = {
-    from: "radintelio@gmail.com",
+    from: "radintelio1@gmail.com",
     to: email,
     subject: "Your One-Time Password (OTP) for Verification",
     html: `
@@ -222,14 +222,14 @@ const sendEmailWithAllINformations = async (email, centerName, contactNumber, ad
   const transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
-      user: "radintelio@gmail.com",
-      pass: "iond hchz zpzm bssn", 
+      user: "radintelio1@gmail.com",
+      pass: "mikq puco elmb mypn", 
     },
   });
 
   const mailOptions = {
     from: email,
-    to: "radintelio@gmail.com", 
+    to: "radintelio1@gmail.com", 
     subject: "New Registration Request from Radiology Center",
     html: `
       <div style="font-family: Arial, sans-serif; padding: 20px; border: 1px solid #ddd; border-radius: 8px; max-width: 500px; margin: auto;">
@@ -295,14 +295,14 @@ const sendEmail = async (email, name, phone, message) => {
   const transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
-      user: "radintelio@gmail.com",
-      pass: "iond hchz zpzm bssn", 
+      user: "radintelio1@gmail.com",
+      pass: "mikq puco elmb mypn", 
     },
   });
 
   const mailOptions = {
     from: email,
-    to: "radintelio@gmail.com",
+    to: "radintelio1@gmail.com",
     subject: "Radiology Center Support Request",
     html: `
       <div style="font-family: Arial, sans-serif; padding: 20px; border: 1px solid #ddd; border-radius: 8px;">
@@ -359,13 +359,13 @@ const sendOtpForReset = async (email, otp) => {
   const transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
-      user: "radintelio@gmail.com",
-      pass: "iond hchz zpzm bssn", 
+      user: "radintelio1@gmail.com",
+      pass: "mikq puco elmb mypn", 
     },
   });
 
   const mailOptions = {
-    from: "radintelio@gmail.com",
+    from: "radintelio1@gmail.com",
     to: email,
     subject: "Reset Your Password - OTP Code",
     html: `

@@ -209,7 +209,7 @@ exports.addRecord = async (req, res) => {
     const savedRecord = await record.save();
     if ( radiologist.status !== "online") {
      
-      // await sendEmail2( radiologist.email, Center.centerName, Center.email, savedRecord._id,savedRecord.patient_name, radiologist.firstName + " " + radiologist.lastName, savedRecord.deadline, radiologist._id);
+      await sendEmail2( radiologist.email, Center.centerName, Center.email, savedRecord._id,savedRecord.patient_name, radiologist.firstName + " " + radiologist.lastName, savedRecord.deadline, radiologist._id);
     }
     const aiReport = new AIReport({
       record: savedRecord._id,
@@ -1072,8 +1072,9 @@ const sendEmergencyEmailToDoctor = async (
   const transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
-      user: "radintelio@gmail.com",
-      pass: "iond hchz zpzm bssn", // تأكد من أن ده App Password
+      user: "radintelio1@gmail.com",
+      pass: "mikq puco elmb mypn", 
+      // okae vcge ctys dxsa
     },
   });
 
@@ -1083,7 +1084,7 @@ const sendEmergencyEmailToDoctor = async (
   const cancelUrl = `https://abanoubsamaan5.github.io/my-react-app/#/cancel-report/${recordId}/${RadiologistId}`;
 
   const mailOptions = {
-    from: "radintelio@gmail.com",
+    from: "radintelio1@gmail.com",
     to: email,
     subject: "🚨 Emergency Case Assigned - Immediate Action Required",
     html: `
@@ -1146,8 +1147,8 @@ const sendEmail2 = async (
   const transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
-      user: "radintelio@gmail.com",
-      pass: "iond hchz zpzm bssn",
+      user: "radintelio1@gmail.com",
+      pass: "mikq puco elmb mypn", 
     },
   });
 
@@ -1157,7 +1158,7 @@ const sendEmail2 = async (
   const cancelUrl = `https://abanoubsamaan5.github.io/my-react-app/#/cancel-report/${recordId}/${RadiologistId}`;
 
   const mailOptions = {
-    from: "radintelio@gmail.com",
+    from: "radintelio1@gmail.com",
     to: email,
     subject: "New Study Assigned - Action Required (Doctor Offline)",
     html: `
@@ -1217,13 +1218,13 @@ const sendEmail = async (
   const transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
-      user: "ahmedmohamedrashed236@gmail.com",
-      pass: "isxj ioal tytp yywa",
+      user: "radintelio1@gmail.com",
+      pass: "mikq puco elmb mypn", 
     },
   });
 
   const mailOptions = {
-    from: "radintelio@gmail.com",
+    from: "radintelio1@gmail.com",
     to: email,
     subject: "Warning: Less Than One Hour Left Before Study Ends",
     html: `

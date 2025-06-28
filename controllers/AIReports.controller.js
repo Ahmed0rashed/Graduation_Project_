@@ -217,12 +217,19 @@ exports.deleteAIReport = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+const chunkArray = (arr, size) => {
+  const result = [];
+  for (let i = 0; i < arr.length; i += size) {
+    result.push(arr.slice(i, i + size));
+  }
+  return result;
+};
 exports.analyzeImage1 = async (req, res) => {
   try {
     const { id } = req.params;
     const { imageUrl } = req.body;
 
-    // Validate imageUrl as an array
     if (!Array.isArray(imageUrl) || imageUrl.length === 0) {
       return res.status(400).json({ error: "imageUrl must be a non-empty array of URLs." });
     }
@@ -232,37 +239,50 @@ exports.analyzeImage1 = async (req, res) => {
       return res.status(404).json({ error: "AI Report not found" });
     }
 
-    const [findingResponse, impressionResponse] = await Promise.all([
-      axios.post("httpanalyze-image-urls/", {
-        prompt: "Provide only the medical findings from this image without explanations, instructions, or steps and dont say Image Analysis Report and dont say any thing just findings and dont say Patient Information.",
-        image_urls: imageUrl
-      }, { timeout: 100000 }),
+    const promptFinding = "Provide only the medical findings from this image without explanations, instructions, or steps and dont say Image Analysis Report and dont say any thing just findings and dont say Patient Information and Analyze only the new images..";
+    const promptImpression = "Provide the diagnostic impression based on the image without explanations, instructions, or steps and dont say Image Analysis Report and dont say any thing just impression and dont say Patient Information and Analyze only the new images..";
 
-      axios.post("https://a713-41-68-141-45.ngrok-free.app/analyze-image-urls/", {
-        prompt: "Provide the diagnostic impression based on the image without explanations, instructions, or steps and dont say Image Analysis Report and dont say any thing just impression and dont say Patient Information.",
-        image_urls: imageUrl
-      }, { timeout: 100000 }),
-    ]);
+    const imageChunks = chunkArray(imageUrl, 3); 
+
+    let fullFinding = "";
     
+    let fullImpression = "";
 
-    const rawFinding = findingResponse.data?.result || '';
-    const rawImpression = impressionResponse.data?.result || '';
+    for (const chunk of imageChunks) {
+      const [findingRes, impressionRes] = await Promise.all([
+        axios.post("https://e32c-41-33-141-180.ngrok-free.app/analyze-image-urls/", {
+          prompt: promptFinding,
+          image_urls: chunk
+        }, { timeout: 100000 }),
 
-    const cleanText = (text) => {
-      return typeof text === 'string'
-        ? text.replace(/(\*\*.*?\*\*|\n|\*|:)/g, "").trim()
-        : '';
-    };
+        axios.post("https://e32c-41-33-141-180.ngrok-free.app/analyze-image-urls/", {
+          prompt: promptImpression,
+          image_urls: chunk
+        }, { timeout: 100000 }),
+      ]);
 
-    const finding = cleanText(rawFinding);
-    const impression = cleanText(rawImpression);
+      const rawFinding = findingRes.data?.result || '';
+      const rawImpression = impressionRes.data?.result || '';
 
-    if (!finding || !impression) {
+      const cleanText = (text) => {
+        return typeof text === 'string'
+          ? text.replace(/(\*\*.*?\*\*|\n|\*|:)/g, "").trim()
+          : '';
+      };
+
+      fullFinding += cleanText(rawFinding) + " ";
+      fullImpression += cleanText(rawImpression) + " ";
+    }
+
+    fullFinding = fullFinding.trim();
+    fullImpression = fullImpression.trim();
+
+    if (!fullFinding || !fullImpression) {
       return res.status(400).json({ error: "One or more analysis results are empty. Please check the API response." });
     }
 
-    aiReport.diagnosisReportFinding = finding;
-    aiReport.diagnosisReportImpration = impression;
+    aiReport.diagnosisReportFinding = fullFinding;
+    aiReport.diagnosisReportImpration = fullImpression;
 
     await aiReport.save();
 

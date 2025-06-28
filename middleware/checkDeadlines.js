@@ -4,7 +4,7 @@ const Radiologist = require('../models/Radiologists.Model');
 const Center = require('../models/Radiology_Centers.Model');
 const nodemailer = require("nodemailer");
 const { cancelRecordByCron } = require("../controllers/RadiologyRecored.controller");
-const notificationManager = require("../middleware/notfi");
+const notificationManager = require("../middleware/notfi"); // تأكد إنه فيه sendNotification
 
 const sendEmail = async (to, centerName, centerEmail, recordId, patient_name, RadiologistName, type = "warning") => {
   let subject, contentText, alertColor;
@@ -22,7 +22,7 @@ const sendEmail = async (to, centerName, centerEmail, recordId, patient_name, Ra
         </a>
       </div>
     `;
-    alertColor = "#f0ad4e"; // warning color
+    alertColor = "#f0ad4e";
   } else {
     subject = "Alert: Study Deadline Passed";
     contentText = `
@@ -30,7 +30,7 @@ const sendEmail = async (to, centerName, centerEmail, recordId, patient_name, Ra
         The study deadline for patient <strong>${patient_name}</strong> at center <strong>${centerName}</strong> has <strong>expired</strong> and the record has been marked as <strong>Cancelled</strong>.
       </p>
     `;
-    alertColor = "#d9534f"; // danger color
+    alertColor = "#d9534f";
   }
 
   const html = `
@@ -50,16 +50,16 @@ const sendEmail = async (to, centerName, centerEmail, recordId, patient_name, Ra
     </div>
   `;
 
-  const transporter = require("nodemailer").createTransport({
+  const transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
-      user: "radintelio@gmail.com",
-      pass: "iond hchz zpzm bssn",
+      user: "radintelio1@gmail.com",
+      pass: "mikq puco elmb mypn", 
     },
   });
 
   const mailOptions = {
-    from: "radintelio@gmail.com",
+    from: "radintelio1@gmail.com  ",
     to,
     subject,
     html,
@@ -80,7 +80,7 @@ function startDeadlineChecker() {
 
       for (const record of records) {
         const deadlineTime = new Date(record.deadline);
-        const timeDiff = deadlineTime - now; 
+        const timeDiff = deadlineTime - now;
         const oneHour = 60 * 60 * 1000;
 
         const radiologist = await Radiologist.findById(record.radiologistId);
@@ -88,7 +88,6 @@ function startDeadlineChecker() {
 
         if (!radiologist || !center) continue;
 
-        
         if (timeDiff > 0 && timeDiff <= oneHour && !record.emailWarningSent) {
           await sendEmail(
             radiologist.email,
@@ -99,22 +98,23 @@ function startDeadlineChecker() {
             `${radiologist.firstName} ${radiologist.lastName}`,
             "warning"
           );
-            const notificationResult = await sendNotification(
+
+          await notificationManager.sendNotification(
             radiologist._id,
             "Radiologist",
             center.centerName,
-            "Less than one hour left for study \n\nPatient: " + record.patient_name + " \nStudy ID: " + record._id + " \nCenter: " + center.centerName,
+            `Less than one hour left for study \n\nPatient: ${record.patient_name} \nStudy ID: ${record._id} \nCenter: ${center.centerName}`,
             center.image,
             center.centerName,
             "study"
-            );
+          );
+
           record.emailWarningSent = true;
           await record.save();
           console.log(`📧 Warning email sent for record: ${record._id}`);
         }
 
-
-        if (timeDiff <= 0) {
+        if (timeDiff <= 0 && !record.emailDeadlinePassedSent) {
           await sendEmail(
             radiologist.email,
             center.centerName,
@@ -123,16 +123,18 @@ function startDeadlineChecker() {
             record.patient_name,
             `${radiologist.firstName} ${radiologist.lastName}`,
             "expired"
-            );
-            const notificationResult = await sendNotification(
+          );
+
+          await notificationManager.sendNotification(
             radiologist._id,
             "Radiologist",
             center.centerName,
-            "Study deadline passed \n\n Patient: " + record.patient_name + " \n Study ID: " + record._id + " \nCenter: " + center.centerName,
+            `Study deadline passed \n\nPatient: ${record.patient_name} \nStudy ID: ${record._id} \nCenter: ${center.centerName}`,
             center.image,
             center.centerName,
             "study"
-            );
+          );
+
           await cancelRecordByCron(record._id);
           record.emailDeadlinePassedSent = true;
           await record.save();
