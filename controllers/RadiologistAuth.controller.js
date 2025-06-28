@@ -23,7 +23,7 @@ async function verifyIdCard(front_url, back_url) {
   }
 
   try {
-    const response = await axios.post('https://b7d5-41-33-141-180.ngrok-free.app/extract-text', {
+    const response = await axios.post('https://8b8d-41-33-141-180.ngrok-free.app/extract-text', {
       front_url,
       back_url
     });
@@ -44,13 +44,13 @@ const sendOtpEmail = async (email, otp) => {
   const transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
-      user: "radintelio@gmail.com",
-      pass: "iond hchz zpzm bssn", 
+      user: "radintelio1@gmail.com",
+      pass: "mikq puco elmb mypn", 
     },
   });
 
   const mailOptions = {
-    from: "radintelio@gmail.com",
+    from: "radintelio1@gmail.com",
     to: email,
     subject: "Your One-Time Password (OTP) for Verification",
     html: `
@@ -338,13 +338,13 @@ const sendOtpForReset = async (email, otp) => {
   const transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
-      user: "radintelio@gmail.com",
-      pass: "iond hchz zpzm bssn", 
+      user: "radintelio1@gmail.com",
+      pass: "mikq puco elmb mypn", 
     },
   });
 
   const mailOptions = {
-    from: "radintelio@gmail.com",
+    from: "radintelio1@gmail.com",
     to: email,
     subject: "Reset Your Password - OTP Code",
     html: `
