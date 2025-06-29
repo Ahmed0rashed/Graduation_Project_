@@ -251,12 +251,12 @@ exports.analyzeImage1 = async (req, res) => {
 
     for (const chunk of imageChunks) {
       const [findingRes, impressionRes] = await Promise.all([
-        axios.post("https://aaf5-41-68-141-45.ngrok-free.app/analyze-image-urls/", {
+        axios.post("https://a17c-41-68-141-45.ngrok-free.app/analyze-image-urls/", {
           prompt: promptFinding,
           image_urls: chunk
         }, { timeout: 100000 }),
 
-        axios.post("https://aaf5-41-68-141-45.ngrok-free.app/analyze-image-urls/", {
+        axios.post("https://a17c-41-68-141-45.ngrok-free.app/analyze-image-urls/", {
           prompt: promptImpression,
           image_urls: chunk
         }, { timeout: 100000 }),
