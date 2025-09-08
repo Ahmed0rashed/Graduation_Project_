@@ -72,14 +72,14 @@ class RadiologyCenterController {
       res.status(500).json({ message: "Server error", error: error.message });
     }
   }
-  // Get all centers
+
   async getAllCenters(req, res) {
     try {
       const { status, city, search, limit = 10, page = 1 } = req.query;
 
       let query = {};
 
-      // Build query filters
+
       if (status) {
         query.status = status;
       }
@@ -92,7 +92,7 @@ class RadiologyCenterController {
 
       const skip = (page - 1) * limit;
 
-      // Execute query with pagination and sorting
+
       const [centers, total] = await Promise.all([
         RadiologyCenter.find(query)
           .skip(skip)
@@ -100,7 +100,7 @@ class RadiologyCenterController {
           .sort({ name: 1 }),
         RadiologyCenter.countDocuments(query),
       ]);
-      // Send response
+
       res.json({
         data: centers,
         pagination: {
@@ -120,12 +120,12 @@ class RadiologyCenterController {
     }
   }
 
-  // Get center by ID
+
   async getCenterById(req, res) {
     try {
       const { id } = req.params;
 
-      // Validate ID
+
       if (!mongoose.Types.ObjectId.isValid(id)) {
         return res.status(400).json({
           error: "Invalid ID",
@@ -141,7 +141,7 @@ class RadiologyCenterController {
           message: "Radiology center not found",
         });
       }
-      // Send response
+
       res.json({ data: center });
     } catch (error) {
       console.error("Error in getCenterById:", error);
@@ -152,8 +152,6 @@ class RadiologyCenterController {
     }
   }
 
-  // Create center
-  // Create center
   async createCenter(req, res) {
     try {
       const errors = validationResult(req);
@@ -207,7 +205,7 @@ class RadiologyCenterController {
       });
     }
   }
-  // update both deadline and firstDeadline
+
   async updateDeadlines(req, res) {
     try {
       const { id } = req.params;

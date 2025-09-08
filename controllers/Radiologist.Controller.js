@@ -13,7 +13,7 @@ cloudinary.config({
 const router = express.Router();
 
 class RadiologistController {
-  // Get a radiologist by ID
+
   async getRadiologistById(req, res) {
     try {
       const radiologist = await Radiologist.findById(req.params.id);
@@ -25,7 +25,6 @@ class RadiologistController {
     }
   }
 
-  // Edit a radiologist
   async editRadiologist(req, res) {
     try {
       const radiologist = await Radiologist.findByIdAndUpdate(req.params.id, req.body, { new: true });
@@ -37,7 +36,6 @@ class RadiologistController {
     }
   }
 
-  // Delete a radiologist by ID
   async deleteRadiologist(req, res) {
     try {
       const radiologist = await Radiologist.findById(req.params.id);
@@ -63,7 +61,7 @@ class RadiologistController {
     }
   }
 
-  // Update a radiologist
+
   async updateRadiologist(req, res) {
     try {
       const updates = { ...req.body };
@@ -90,7 +88,7 @@ class RadiologistController {
     }
   }
 
-  // Upload an image
+
   async uploadImage(req, res) {
     try {
       if (!req.file) {

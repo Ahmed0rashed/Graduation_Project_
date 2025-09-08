@@ -6,7 +6,6 @@ const CenterRadiologistsRelation = require("../models/CenterRadiologistsRelation
 const notificationManager = require('../middleware/notfi');
 const Notification = require('../models/not.model');
 
-const { io, activeUsers } = require("../middleware/socketManager");
 
 exports.io = null; 
 

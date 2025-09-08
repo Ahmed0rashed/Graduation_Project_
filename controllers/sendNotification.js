@@ -14,10 +14,10 @@ exports.sendNotification = async (req, res) => {
     };
 
     await admin.messaging().send(message);
-    console.log("✅ Notification sent successfully!");
+    console.log(" Notification sent successfully!");
     return res.status(200).json({ success: true, message: "Notification sent successfully!" });
   } catch (error) {
-    console.error("❌ Error sending notification:", error);
+    console.error(" Error sending notification:", error);
 
     let errorMessage = "Failed to send notification";
     if (error.code === "messaging/invalid-registration-token") {

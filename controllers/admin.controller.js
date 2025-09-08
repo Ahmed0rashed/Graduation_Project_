@@ -210,7 +210,7 @@ exports.getNotApprovedRadiologyCenters = async (req, res) => {
     res.status(500).json({ message: "Failed to get approved radiology centers" });
   }
 };
-// change isApproved to true
+
 exports.approveRadiologyCenter = async (req, res) => {
   try {
     const { centerId } = req.params;

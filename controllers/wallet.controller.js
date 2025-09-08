@@ -3,7 +3,7 @@ const Wallet = require("../models/payment/Wallet.Model");
 const Transaction = require("../models/payment/Transaction.Model");
 const WithdrawRequest = require("../models/payment/WithdrawRequest.Model");
 
-// ✅ Top up wallet via Stripe
+
 exports.topUpWallet = async (req, res) => {
   try {
     const { ownerId, ownerType, amount, paymentMethodId } = req.body;
@@ -40,7 +40,7 @@ exports.topUpWallet = async (req, res) => {
   }
 };
 
-// ✅ Withdraw funds via Stripe
+
 exports.withdrawFunds = async (req, res) => {
   try {
     const { walletId, amount, destinationStripeAccount } = req.body;
@@ -78,7 +78,7 @@ exports.withdrawFunds = async (req, res) => {
   }
 };
 
-// ✅ Withdraw funds to bank card
+
 exports.withdrawToCard = async (req, res) => {
   try {
     const { walletId, amount, cardNumber } = req.body;
@@ -117,7 +117,7 @@ exports.withdrawToCard = async (req, res) => {
   }
 };
 
-// ✅ Transfer funds between Stripe accounts
+
 exports.transferFunds = async (req, res) => {
   try {
     const { amount, sourceAccount, destinationAccount } = req.body;
@@ -140,7 +140,7 @@ exports.transferFunds = async (req, res) => {
   }
 };
 
-// ✅ Retrieve account balance from Stripe
+
 exports.getStripeBalance = async (req, res) => {
   try {
     const balance = await stripe.balance.retrieve();
@@ -151,7 +151,7 @@ exports.getStripeBalance = async (req, res) => {
   }
 };
 
-// ✅ Create a Stripe connected account
+
 exports.createConnectedAccount = async (req, res) => {
   try {
     const account = await stripe.accounts.create({
@@ -164,7 +164,7 @@ exports.createConnectedAccount = async (req, res) => {
   }
 };
 
-// ✅ Generate account link for onboarding
+
 exports.createAccountLink = async (req, res) => {
   try {
     const { accountId } = req.body;

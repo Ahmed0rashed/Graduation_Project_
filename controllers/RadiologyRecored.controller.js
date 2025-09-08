@@ -208,7 +208,7 @@ exports.addRecord = async (req, res) => {
 
     const savedRecord = await record.save();
     if ( radiologist.status !== "online") {
-     
+    
       await sendEmail2( radiologist.email, Center.centerName, Center.email, savedRecord._id,savedRecord.patient_name, radiologist.firstName + " " + radiologist.lastName, savedRecord.deadline, radiologist._id);
     }
     const aiReport = new AIReport({
@@ -281,6 +281,7 @@ exports.updateRecordById = async (req, res) => {
 };
 
 exports.getAllRecords = async (req, res) => {
+
   try {
     const Records = await RadiologyRecord.find().sort({ createdAt: -1 });
     if (!Records) return res.status(404).json({ error: "Records not found" });

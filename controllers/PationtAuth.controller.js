@@ -115,7 +115,7 @@ exports.GoogleCallback = (req, res, next) => {
 };
 
 
-// فشل المصادقة
+
 exports.Failure = (req, res) => {
   res.status(401).json({ message: "Failed to authenticate with Google", error: req.query.error });
 };

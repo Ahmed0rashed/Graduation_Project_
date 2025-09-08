@@ -18,7 +18,7 @@ const checkBalance = async (req, res, next) => {
       return res.status(400).json({ message: "Insufficient wallet balance" });
     }
 
-    // ✅ الرصيد كافي → كمل
+
     req.wallet = wallet;
     next();
   } catch (err) {
