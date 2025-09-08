@@ -148,23 +148,23 @@ exports.getRecordsCountPerDayInCenterPerStatus = async (req, res) => {
 
     const today = new Date();
 
-    // Calculate start and end of the day
+
     const startOfDay = new Date(today.setHours(0, 0, 0, 0));
     const endOfDay = new Date(today.setHours(23, 59, 59, 999));
 
-    // Calculate start and end of the week
+
     const startOfWeek = new Date(today.setDate(today.getDate() - today.getDay()));
     const endOfWeek = new Date(startOfWeek).setDate(startOfWeek.getDate() + 6);
 
-    // Calculate start and end of the month
+
     const startOfMonth = new Date(today.setDate(1));
     const endOfMonth = new Date(today.setMonth(today.getMonth() + 1, 0));
 
-    // Calculate start and end of the year
-    const startOfYear = new Date(today.setMonth(0, 1)); // January 1st
-    const endOfYear = new Date(today.setMonth(11, 31)); // December 31st
 
-    // Helper function to count records for each period and status
+    const startOfYear = new Date(today.setMonth(0, 1)); 
+    const endOfYear = new Date(today.setMonth(11, 31)); 
+
+
     const countRecords = async (startDate, endDate, status = null) => {
       const query = {
         centerId,
@@ -477,7 +477,6 @@ exports.getTotalRecordsCountInCenter = async (req, res) => {
       });
     }
 
-    // Count the total number of records within the date range
     const totalRecords = await RadiologyRecord.aggregate([
       {
         $match: {
@@ -486,7 +485,7 @@ exports.getTotalRecordsCountInCenter = async (req, res) => {
         },
       },
       {
-        $count: "total", // Count all records
+        $count: "total", 
       },
     ]);
 

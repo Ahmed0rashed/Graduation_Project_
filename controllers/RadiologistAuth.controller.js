@@ -12,11 +12,6 @@ const upload = require("../utils/cloudinary");
 const axios = require('axios');
 
 
-
-
-
-
-
 async function verifyIdCard(front_url, back_url) {
   if (!front_url || !back_url) {
     throw new Error('Both front_url and back_url are required');
@@ -56,7 +51,7 @@ const sendOtpEmail = async (email, otp) => {
     html: `
       <div style="font-family: Arial, sans-serif; padding: 20px; border: 1px solid #ddd; border-radius: 8px; max-width: 500px; margin: auto;">
         <div style="text-align: center;">
-           <img src="https://cdn.dribbble.com/userupload/15606497/file/original-1d7be0867731a998337730f39268a54a.png?format=webp&resize=400x300&vertical=center" alt="Radintal Banner" style="width: 100%; max-height: 240px; object-fit: cover;">
+          <img src="https://cdn.dribbble.com/userupload/15606497/file/original-1d7be0867731a998337730f39268a54a.png?format=webp&resize=400x300&vertical=center" alt="Radintal Banner" style="width: 100%; max-height: 240px; object-fit: cover;">
         </div>
         <h2 style="color: #333; text-align: center;">OTP Verification</h2>
         <p style="font-size: 16px; color: #555;">Dear User,</p>

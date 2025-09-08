@@ -291,7 +291,7 @@ class CenterRadiologistsRelationController {
       const { centerId } = req.params;
       const { radiologistId } = req.body;
   
-      // Validate IDs
+
       if (!mongoose.Types.ObjectId.isValid(centerId) || !mongoose.Types.ObjectId.isValid(radiologistId)) {
         return res.status(400).json({
           error: 'Invalid ID',
@@ -299,7 +299,7 @@ class CenterRadiologistsRelationController {
         });
       }
   
-      // Ensure the Radiologist exists
+
       const radiologistExists = await Radiologist.findById(radiologistId);
       if (!radiologistExists) {
         return res.status(404).json({
@@ -308,17 +308,17 @@ class CenterRadiologistsRelationController {
         });
       }
   
-      // Find the relation record
+
       let centerRadiologists = await CenterRadiologistsRelation.findOne({ center: centerId });
   
-      // If no record exists for this center, create one
+
       if (!centerRadiologists) {
         centerRadiologists = new CenterRadiologistsRelation({
           center: centerId,
           radiologists: [radiologistId]
         });
       } else {
-        // Check if radiologist is already assigned to this center
+
         if (centerRadiologists.radiologists.includes(radiologistId)) {
           return res.status(409).json({
             error: 'Conflict',
@@ -326,14 +326,14 @@ class CenterRadiologistsRelationController {
           });
         }
   
-        // Add radiologist to list
+
         centerRadiologists.radiologists.push(radiologistId);
       }
   
-      // Save the updated or new record
+
       await centerRadiologists.save();
   
-      // Get updated data with population
+
       const updatedCenter = await CenterRadiologistsRelation.findOne({ center: centerId })
         .populate('radiologists', '-passwordHash')
         .populate('center', 'name address');
@@ -523,8 +523,8 @@ async getCentersByRadiologistId(req, res) {
       data: centers.map(center => ({
         id: center.center._id,
         centerName: center.center.centerName,
-        imageUrl: center.center.image, // Added imageUrl field
-        address: center.center.address // Optional address
+        imageUrl: center.center.image, 
+        address: center.center.address 
       })),
     });
   } catch (error) {

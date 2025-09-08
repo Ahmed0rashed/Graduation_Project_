@@ -4,7 +4,9 @@ const WithdrawRequest = require("../models/payment/WithdrawRequest.Model");
 const sendNotification = require("../utils/sendNotification");
 
 
-exports.getWalletbyUserId = async (req, res) => {
+
+exports.topUpWallet = async (req, res) => {
+
   try {
     // const { ownerId, type } = req.params; 
     const { userId, userType } = req.params;
@@ -30,7 +32,10 @@ exports.getWalletbyUserId = async (req, res) => {
   }
 };
 
-exports.getWalletBalance = async (req, res) => {
+
+
+exports.withdrawFunds = async (req, res) => {
+
   try {
     const { userId } = req.params;
     const { type } = req.query;
@@ -144,12 +149,101 @@ exports.deductFromWallet = async (req, res) => {
       reason: reason || "خصم من المحفظة"
     });
 
-    res.status(200).json({
-      message: "تم الخصم بنجاح",
-      newBalance: wallet.balance
-    });
+
+    res.status(200).json({ message: "Withdrawal successful", transfer });
   } catch (err) {
-    console.error("Wallet Deduction Error:", err);
-    res.status(500).json({ message: "حدث خطأ أثناء الخصم", error: err.message });
+    console.error("Withdrawal failed:", err);
+    res.status(500).json({ error: "Withdrawal failed" });
+  }
+};
+
+
+exports.withdrawToCard = async (req, res) => {
+  try {
+    const { walletId, amount, cardNumber } = req.body;
+    if (!walletId || !amount || amount <= 0 || !cardNumber) {
+      return res.status(400).json({ message: "Invalid input" });
+    }
+
+    const wallet = await Wallet.findById(walletId);
+    if (!wallet || wallet.balance < amount) {
+      return res.status(400).json({ message: "Insufficient balance" });
+    }
+
+    const payout = await stripe.payouts.create({
+      amount: amount * 100,
+      currency: "usd",
+      method: "instant",
+      destination: cardNumber,
+      description: "Withdrawal to bank card"
+
+    });
+  } catch (err) {    console.error("Withdrawal to card failed:", err);
+    res.status(500).json({ error: "Withdrawal to card failed" });
+  }
+};
+
+
+exports.transferFunds = async (req, res) => {
+  try {
+    const { amount, sourceAccount, destinationAccount } = req.body;
+    if (!amount || amount <= 0 || !sourceAccount || !destinationAccount) {
+      return res.status(400).json({ message: "Invalid input" });
+    }
+
+    const transfer = await stripe.transfers.create({
+      amount: amount * 100,
+      currency: "usd",
+      source_transaction: sourceAccount,
+      destination: destinationAccount,
+      description: "Internal fund transfer"
+    });
+
+    res.status(200).json({ message: "Transfer successful", transfer });
+  } catch (err) {
+    console.error("Transfer failed:", err);
+    res.status(500).json({ error: "Transfer failed" });
+  }
+};
+
+
+exports.getStripeBalance = async (req, res) => {
+  try {
+    const balance = await stripe.balance.retrieve();
+    res.status(200).json({ balance });
+  } catch (err) {
+    console.error("Failed to fetch balance:", err);
+    res.status(500).json({ error: "Could not fetch balance" });
+  }
+};
+
+
+exports.createConnectedAccount = async (req, res) => {
+  try {
+    const account = await stripe.accounts.create({
+      type: 'express',
+    });
+    res.status(200).json({ account });
+  } catch (err) {
+    console.error("Failed to create account:", err);
+    res.status(500).json({ error: "Account creation failed" });
+  }
+};
+
+
+exports.createAccountLink = async (req, res) => {
+  try {
+    const { accountId } = req.body;
+    const accountLink = await stripe.accountLinks.create({
+      account: accountId,
+      refresh_url: 'https://yourdomain.com/reauth',
+      return_url: 'https://yourdomain.com/success',
+      type: 'account_onboarding',
+    });
+    res.status(200).json({ accountLink });
+  } catch (err) {
+    console.error("Failed to create account link:", err);
+    res.status(500).json({ error: "Account link creation failed" });
+
   }
 };

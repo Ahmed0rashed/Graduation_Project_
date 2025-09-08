@@ -4,7 +4,7 @@ const Radiologist = require('../models/Radiologists.Model');
 const Center = require('../models/Radiology_Centers.Model');
 const nodemailer = require("nodemailer");
 const { cancelRecordByCron } = require("../controllers/RadiologyRecored.controller");
-const notificationManager = require("../middleware/notfi"); // تأكد إنه فيه sendNotification
+const notificationManager = require("../middleware/notfi"); 
 
 const sendEmail = async (to, centerName, centerEmail, recordId, patient_name, RadiologistName, type = "warning") => {
   let subject, contentText, alertColor;
@@ -138,15 +138,15 @@ function startDeadlineChecker() {
           await cancelRecordByCron(record._id);
           record.emailDeadlinePassedSent = true;
           await record.save();
-          console.log(`❌ Deadline expired - record cancelled: ${record._id}`);
+          console.log(` Deadline expired - record cancelled: ${record._id}`);
         }
       }
     } catch (err) {
-      console.error('❌ Error checking deadlines:', err.message);
+      console.error(' Error checking deadlines:', err.message);
     }
   });
 
-  console.log('✅ Deadline checker started...');
+  console.log(' Deadline checker started...');
 }
 
 module.exports = startDeadlineChecker;

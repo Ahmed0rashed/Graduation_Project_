@@ -20,8 +20,8 @@ startDeadlineChecker();
 
 const port = 3000 || process.env.PORT;
 httpServer.listen(port, () => {
-  console.log(`🚀 Server running on port ${port}`);
-  console.log(`🔌 Socket.io status: ${notificationManager.isInitialized ? "READY" : "NOT READY"}`);
+  console.log(` Server running on port ${port}`);
+  console.log(` Socket.io status: ${notificationManager.isInitialized ? "READY" : "NOT READY"}`);
 });
 
 process.on("unhandledRejection", (err) => {
