@@ -11,7 +11,8 @@ const aireports = require("./routes/AIReports.routes");
 const record = require("./routes/radiologyRecords.routes");
 const RadiologyCenter = require("./routes/RadiologyCenter.Routes");
 const massage = require("./routes/Char.routes");
-
+const paymentRoutes = require("./routes/payment.routes");
+const walletRoutes = require("./routes/wallet.routes");
 
 const CenterRadiologistsRelationRoutes = require("./routes/CenterRadiologistsRelation.Routes");
 
@@ -44,15 +45,12 @@ app.use("/api/centers", RadiologyCenter);
 app.use("/api/messages", massage);
 
 app.use("/api/relations", CenterRadiologistsRelationRoutes);
-
-
 app.use("/api/notifications", notificationRoutes);
-
-
 
 app.use("/api/admin", Admin);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/radiologistDashboard", radiologistDashboardRoutes);
 app.use("/api/comments", comment);
-
+app.use("/api/payments", paymentRoutes);
+app.use("/api/wallet", walletRoutes);
 module.exports = app;

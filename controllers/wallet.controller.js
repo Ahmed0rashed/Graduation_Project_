@@ -1,75 +1,154 @@
-const stripe = require('stripe')("sk_test_51QzGtQGgW7daCfmBOEgBz7v9gttS9bM2bX85VqMEuGDAFeZpgrTXMY2NE1UVcxDtdRZ4OEr9BVK4djfYb50v8Rv500gkQfbUkf");
 const Wallet = require("../models/payment/Wallet.Model");
-const Transaction = require("../models/payment/Transaction.Model");
+const WalletTransaction = require("../models/payment/WalletTransaction.Model");
 const WithdrawRequest = require("../models/payment/WithdrawRequest.Model");
+const sendNotification = require("../utils/sendNotification");
+
 
 
 exports.topUpWallet = async (req, res) => {
+
   try {
-    const { ownerId, ownerType, amount, paymentMethodId } = req.body;
-    if (!ownerId || !ownerType || !amount || isNaN(amount) || amount <= 0 || !paymentMethodId) {
-      return res.status(400).json({ message: "Invalid input" });
+    // const { ownerId, type } = req.params; 
+    const { userId, userType } = req.params;
+
+    if (!["RadiologyCenter", "Radiologist"].includes(userType)) {
+      return res.status(400).json({ message: "نوع المستخدم غير صالح" });
+    }
+    console.log(userId, userType);
+    const wallet = await Wallet.findOne({ ownerId: userId });
+    console.log(wallet);
+    if (!wallet) {
+      return res.status(404).json({ message: "المحفظة غير موجودة" });
     }
 
-    const paymentIntent = await stripe.paymentIntents.create({
-      amount: amount * 100,
-      currency: "usd",
-      payment_method: paymentMethodId,
-      confirm: true,
-      description: `Wallet top-up for ${ownerType} ${ownerId}`
+    res.status(200).json({
+      message: "Data fetched successfully",
+      wallet,
     });
 
-    const wallet = await Wallet.findOneAndUpdate(
-      { ownerId, ownerType },
-      { $inc: { balance: amount } },
-      { upsert: true, new: true }
-    );
-
-    await Transaction.create({
-      fromWallet: null,
-      toWallet: wallet._id,
-      amount,
-      type: "top_up",
-      description: "Top-up via Stripe"
-    });
-
-    res.status(200).json({ message: "Wallet topped up", wallet, paymentIntent });
   } catch (err) {
-    console.error("Top-up failed:", err);
-    res.status(500).json({ error: "Top-up failed" });
+    console.error(err.message);
+    res.status(500).json({ message: "حدث خطأ أثناء استرجاع المحفظة" });
   }
 };
 
 
+
 exports.withdrawFunds = async (req, res) => {
+
   try {
-    const { walletId, amount, destinationStripeAccount } = req.body;
-    if (!walletId || !amount || amount <= 0 || !destinationStripeAccount) {
-      return res.status(400).json({ message: "Invalid input" });
+    const { userId } = req.params;
+    const { type } = req.query;
+
+    const wallet = await Wallet.findOne({ ownerId: userId });
+    if (!wallet) return res.status(404).json({ message: "Wallet not found" });
+
+    res.json({ balance: wallet.balance });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+exports.getWalletTransactions = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { userType } = req.query;
+
+    if (!["RadiologyCenter", "Radiologist"].includes(userType)) {
+      return res.status(400).json({ message: "نوع المستخدم غير صالح" });
     }
 
-    const wallet = await Wallet.findById(walletId);
+    const transactions = await WalletTransaction.find({
+      userId,
+      userType
+    }).sort({ createdAt: -1 });
+
+    res.status(200).json({
+      message: "تم جلب سجل العمليات",
+      transactions
+    });
+
+  } catch (err) {
+    console.error("Transaction history error:", err);
+    res.status(500).json({ message: "فشل في جلب سجل العمليات", error: err.message });
+  }
+};
+
+
+exports.requestWithdrawal = async (req, res) => {
+  try {
+    const { userId, userType, amount } = req.body;
+
+    const wallet = await Wallet.findOne({ ownerId: userId, ownerType: userType });
     if (!wallet || wallet.balance < amount) {
       return res.status(400).json({ message: "Insufficient balance" });
     }
 
-    const transfer = await stripe.transfers.create({
-      amount: amount * 100,
-      currency: "usd",
-      destination: destinationStripeAccount,
-      description: "Wallet withdrawal"
+    const request = await WithdrawRequest.create({
+      userId,
+      userType,
+      amount,
     });
+
+    await sendNotification({
+      userId: "67fe500364e9d7e5d709c6c6", // Replace with actual admin ID
+      userType: "Admin",
+      title: "Withdrawal Request",
+      message: `New withdrawal request from a ${userType}`,
+      // type: "withdrawal_request",
+    });
+
+    res.status(201).json({ message: "Withdrawal request sent", request });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+exports.getUserWithdrawals = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { type } = req.query;
+
+    const requests = await WithdrawRequest.find({
+      userId,
+      userType: type,
+    }).sort({ createdAt: -1 });
+
+    res.json(requests);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+exports.deductFromWallet = async (req, res) => {
+  try {
+    const { userId, userType, amount, reason } = req.body;
+
+    if (!userId || !userType || !amount) {
+      return res.status(400).json({ message: "userId userType amount" });
+    }
+
+    if (!["RadiologyCenter", "Radiologist"].includes(userType)) {
+      return res.status(400).json({ message: "نوع المستخدم غير صالح" });
+    }
+
+    const wallet = await Wallet.findOne({ ownerId: userId, ownerType: userType });
+    if (!wallet) return res.status(404).json({ message: "المحفظة غير موجودة" });
+
+    if (wallet.balance < amount) {
+      return res.status(400).json({ message: "الرصيد غير كافي" });
+    }
 
     wallet.balance -= amount;
     await wallet.save();
 
-    await Transaction.create({
-      fromWallet: wallet._id,
-      toWallet: null,
+    await WalletTransaction.create({
+      userId: userId,             // متوافق مع الـ schema
+      userType: userType,         // enum قيمته صحيحة الآن
+      type: "debit",
       amount,
-      type: "withdraw",
-      description: "Withdrawal via Stripe"
+      reason: reason || "خصم من المحفظة"
     });
+
 
     res.status(200).json({ message: "Withdrawal successful", transfer });
   } catch (err) {
@@ -97,22 +176,9 @@ exports.withdrawToCard = async (req, res) => {
       method: "instant",
       destination: cardNumber,
       description: "Withdrawal to bank card"
+
     });
-
-    wallet.balance -= amount;
-    await wallet.save();
-
-    await Transaction.create({
-      fromWallet: wallet._id,
-      toWallet: null,
-      amount,
-      type: "withdraw",
-      description: "Withdrawal to bank card"
-    });
-
-    res.status(200).json({ message: "Withdrawal to card successful", payout });
-  } catch (err) {
-    console.error("Withdrawal to card failed:", err);
+  } catch (err) {    console.error("Withdrawal to card failed:", err);
     res.status(500).json({ error: "Withdrawal to card failed" });
   }
 };
@@ -178,5 +244,6 @@ exports.createAccountLink = async (req, res) => {
   } catch (err) {
     console.error("Failed to create account link:", err);
     res.status(500).json({ error: "Account link creation failed" });
+
   }
 };

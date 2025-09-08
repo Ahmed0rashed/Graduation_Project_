@@ -20,6 +20,11 @@ const radiologyRecordSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "AIReport",
     },
+    recordPrice: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
     patient_name: {
       type: String,
       required: false,
