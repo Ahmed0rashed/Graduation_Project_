@@ -5,6 +5,7 @@ const { createServer } = require("http");
 const app = require("./app");
 const notificationManager = require("./middleware/notfi");
 const startDeadlineChecker = require("./middleware/checkDeadlines"); 
+const { setSocketIO } = require("./controllers/Massage.controller");
 
 dotenv.config({ path: "./config.env" });
 
@@ -12,9 +13,11 @@ const httpServer = createServer(app);
 
 connectDB();
 
+// Initialize WebSocket
+const io = notificationManager.initialize(httpServer);
 
-notificationManager.initialize(httpServer);
-
+// Set WebSocket instance for message controller
+setSocketIO(io);
 
 startDeadlineChecker();
 

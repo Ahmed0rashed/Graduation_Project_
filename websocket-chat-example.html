@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebSocket Chat Example</title>
+    <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .chat-container {
+            border: 1px solid #ccc;
+            height: 400px;
+            overflow-y: auto;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+
+        .message {
+            margin: 5px 0;
+            padding: 8px;
+            border-radius: 5px;
+        }
+
+        .message.sent {
+            background-color: #007bff;
+            color: white;
+            text-align: right;
+        }
+
+        .message.received {
+            background-color: #f8f9fa;
+            color: black;
+        }
+
+        .input-container {
+            display: flex;
+            gap: 10px;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        button {
+            padding: 8px 16px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        .status {
+            margin: 10px 0;
+            padding: 5px;
+            border-radius: 4px;
+        }
+
+        .status.online {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .status.offline {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+
+        .typing-indicator {
+            font-style: italic;
+            color: #666;
+            margin: 5px 0;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>WebSocket Chat Example</h1>
+
+    <div class="status" id="connectionStatus">Disconnected</div>
+
+    <div>
+        <h3>Connection Settings</h3>
+        <input type="text" id="userId" placeholder="User ID" value="user123">
+        <input type="text" id="userType" placeholder="User Type (Radiologist/RadiologyCenter)" value="Radiologist">
+        <button onclick="connect()">Connect</button>
+        <button onclick="disconnect()">Disconnect</button>
+    </div>
+
+    <div>
+        <h3>Chat Settings</h3>
+        <input type="text" id="partnerId" placeholder="Partner ID" value="partner456">
+        <input type="text" id="partnerType" placeholder="Partner Type" value="RadiologyCenter">
+        <button onclick="joinChat()">Join Chat</button>
+        <button onclick="leaveChat()">Leave Chat</button>
+    </div>
+
+    <div class="chat-container" id="chatContainer"></div>
+
+    <div class="typing-indicator" id="typingIndicator" style="display: none;">
+        Partner is typing...
+    </div>
+
+    <div class="input-container">
+        <input type="text" id="messageInput" placeholder="Type your message..." onkeypress="handleKeyPress(event)">
+        <button onclick="sendMessage()">Send</button>
+    </div>
+
+    <div>
+        <h3>WebSocket Events Log</h3>
+        <div id="eventLog"
+            style="height: 200px; overflow-y: auto; border: 1px solid #ccc; padding: 10px; background-color: #f8f9fa;">
+        </div>
+    </div>
+
+    <script>
+        let socket = null;
+        let isConnected = false;
+        let isInChat = false;
+        let typingTimeout = null;
+
+        function logEvent(event, data) {
+            const eventLog = document.getElementById('eventLog');
+            const timestamp = new Date().toLocaleTimeString();
+            eventLog.innerHTML += `<div><strong>[${timestamp}]</strong> ${event}: ${JSON.stringify(data)}</div>`;
+            eventLog.scrollTop = eventLog.scrollHeight;
+        }
+
+        function connect() {
+            if (isConnected) {
+                alert('Already connected!');
+                return;
+            }
+
+            const userId = document.getElementById('userId').value;
+            const userType = document.getElementById('userType').value;
+
+            if (!userId || !userType) {
+                alert('Please enter User ID and User Type');
+                return;
+            }
+
+            // Connect to WebSocket server
+            socket = io('http://localhost:3000', {
+                transports: ['websocket', 'polling']
+            });
+
+            socket.on('connect', () => {
+                isConnected = true;
+                document.getElementById('connectionStatus').textContent = 'Connected';
+                document.getElementById('connectionStatus').className = 'status online';
+                logEvent('Connected', { socketId: socket.id });
+
+                // Send user online event
+                socket.emit('userOnline', { userId, userType });
+            });
+
+            socket.on('disconnect', () => {
+                isConnected = false;
+                document.getElementById('connectionStatus').textContent = 'Disconnected';
+                document.getElementById('connectionStatus').className = 'status offline';
+                logEvent('Disconnected', {});
+            });
+
+            socket.on('connectionError', (data) => {
+                alert('Connection Error: ' + data.error);
+                logEvent('Connection Error', data);
+            });
+
+            socket.on('initialNotifications', (notifications) => {
+                logEvent('Initial Notifications', notifications);
+            });
+
+            socket.on('rich_notification', (notification) => {
+                logEvent('Rich Notification', notification);
+                addMessage('system', `Notification: ${notification.title} - ${notification.message}`);
+            });
+
+            socket.on('newMessage', (data) => {
+                logEvent('New Message', data);
+                addMessage('received', `${data.message.sender}: ${data.message.content}`);
+            });
+
+            socket.on('messagesRead', (data) => {
+                logEvent('Messages Read', data);
+                addMessage('system', `Messages marked as read by ${data.partnerId}`);
+            });
+
+            socket.on('userTyping', (data) => {
+                logEvent('User Typing', data);
+                const typingIndicator = document.getElementById('typingIndicator');
+                if (data.isTyping) {
+                    typingIndicator.style.display = 'block';
+                    clearTimeout(typingTimeout);
+                    typingTimeout = setTimeout(() => {
+                        typingIndicator.style.display = 'none';
+                    }, 3000);
+                } else {
+                    typingIndicator.style.display = 'none';
+                }
+            });
+
+            socket.on('userStatusUpdate', (data) => {
+                logEvent('User Status Update', data);
+                addMessage('system', `User ${data.userId} status updated to ${data.status}`);
+            });
+
+            socket.on('chatError', (data) => {
+                alert('Chat Error: ' + data.error);
+                logEvent('Chat Error', data);
+            });
+        }
+
+        function disconnect() {
+            if (socket) {
+                socket.disconnect();
+                socket = null;
+                isConnected = false;
+                isInChat = false;
+            }
+        }
+
+        function joinChat() {
+            if (!isConnected) {
+                alert('Please connect first!');
+                return;
+            }
+
+            const userId = document.getElementById('userId').value;
+            const userType = document.getElementById('userType').value;
+            const partnerId = document.getElementById('partnerId').value;
+            const partnerType = document.getElementById('partnerType').value;
+
+            if (!partnerId || !partnerType) {
+                alert('Please enter Partner ID and Partner Type');
+                return;
+            }
+
+            socket.emit('joinChat', { userId, userType, partnerId, partnerType });
+            isInChat = true;
+            addMessage('system', `Joined chat with ${partnerId}`);
+        }
+
+        function leaveChat() {
+            if (!isConnected || !isInChat) {
+                alert('Not in a chat!');
+                return;
+            }
+
+            const userId = document.getElementById('userId').value;
+            const userType = document.getElementById('userType').value;
+            const partnerId = document.getElementById('partnerId').value;
+            const partnerType = document.getElementById('partnerType').value;
+
+            socket.emit('leaveChat', { userId, userType, partnerId, partnerType });
+            isInChat = false;
+            addMessage('system', `Left chat with ${partnerId}`);
+        }
+
+        function sendMessage() {
+            if (!isConnected || !isInChat) {
+                alert('Please connect and join a chat first!');
+                return;
+            }
+
+            const messageInput = document.getElementById('messageInput');
+            const message = messageInput.value.trim();
+
+            if (!message) {
+                return;
+            }
+
+            const userId = document.getElementById('userId').value;
+            const userType = document.getElementById('userType').value;
+            const partnerId = document.getElementById('partnerId').value;
+            const partnerType = document.getElementById('partnerType').value;
+
+            // Send message via HTTP API (as per your existing implementation)
+            fetch('http://localhost:3000/api/messages/send', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    senderId: userId,
+                    senderType: userType,
+                    receiverId: partnerId,
+                    receiverType: partnerType,
+                    content: message
+                })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        addMessage('sent', `You: ${message}`);
+                        messageInput.value = '';
+                    } else {
+                        alert('Failed to send message: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error sending message:', error);
+                    alert('Error sending message');
+                });
+        }
+
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            } else {
+                // Send typing indicator
+                if (isConnected && isInChat) {
+                    const userId = document.getElementById('userId').value;
+                    const userType = document.getElementById('userType').value;
+                    const partnerId = document.getElementById('partnerId').value;
+                    const partnerType = document.getElementById('partnerType').value;
+
+                    socket.emit('typing', {
+                        userId,
+                        userType,
+                        partnerId,
+                        partnerType,
+                        isTyping: true
+                    });
+
+                    clearTimeout(typingTimeout);
+                    typingTimeout = setTimeout(() => {
+                        socket.emit('typing', {
+                            userId,
+                            userType,
+                            partnerId,
+                            partnerType,
+                            isTyping: false
+                        });
+                    }, 1000);
+                }
+            }
+        }
+
+        function addMessage(type, text) {
+            const chatContainer = document.getElementById('chatContainer');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${type}`;
+            messageDiv.textContent = text;
+            chatContainer.appendChild(messageDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        // Auto-connect on page load (optional)
+        // connect();
+    </script>
+</body>
+
+</html>

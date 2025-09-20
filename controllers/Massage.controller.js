@@ -6,6 +6,8 @@ const CenterRadiologistsRelation = require("../models/CenterRadiologistsRelation
 const notificationManager = require('../middleware/notfi');
 const Notification = require('../models/not.model');
 
+// Get activeUsers from notification manager
+const getActiveUsers = () => notificationManager.activeUsers;
 
 exports.io = null; 
 
@@ -88,12 +90,27 @@ exports.getConversation = async (req, res) => {
     );
     
     
-    if (updatedDocs.modifiedCount > 0 && activeUsers.has(partnerId)) {
-      const partnerSocketId = activeUsers.get(partnerId).socketId;
-      exports.io.to(partnerSocketId).emit('messagesRead', {
+    if (updatedDocs.modifiedCount > 0) {
+      // Get conversation room ID for broadcasting
+      const conversationRoomId = notificationManager.getConversationRoomId(
+        userId, userType, partnerId, partnerType
+      );
+      
+      // Broadcast to conversation room
+      exports.io.to(conversationRoomId).emit('messagesRead', {
         partnerId: userId,
-        partnerType: userType
+        partnerType: userType,
+        conversationRoomId
       });
+      
+      // Also send to individual user if online
+      if (getActiveUsers().has(partnerId)) {
+        const partnerSocketId = getActiveUsers().get(partnerId).socketId;
+        exports.io.to(partnerSocketId).emit('messagesRead', {
+          partnerId: userId,
+          partnerType: userType
+        });
+      }
     }
     
     return res.status(200).json({
@@ -183,16 +200,26 @@ let oldcontact = "";
       await notification.save(); 
     }
     
-    if (activeUsers.has(receiverId)) {
-      const receiverSocketId = activeUsers.get(receiverId).socketId;
-      
+    // Get conversation room ID for broadcasting
+    const conversationRoomId = notificationManager.getConversationRoomId(
+      senderId, senderType, receiverId, receiverType
+    );
+    
+    // Broadcast to conversation room
+    exports.io.to(conversationRoomId).emit('newMessage', {
+      message: newMessage,
+      conversationRoomId
+    });
+    
+    // Also send to individual user if online
+    if (getActiveUsers().has(receiverId)) {
+      const receiverSocketId = getActiveUsers().get(receiverId).socketId;
       
       const totalUnreadCount = await Message.countDocuments({
         receiver: receiverId,
         receiverModel: receiverType,
         readStatus: false
       });
-      
       
       const senderUnreadCount = await Message.countDocuments({
         sender: senderId,
@@ -368,12 +395,27 @@ exports.markMessagesAsRead = async (req, res) => {
       { readStatus: true }
     );
     
-    if (result.modifiedCount > 0 && activeUsers.has(partnerId)) {
-      const partnerSocketId = activeUsers.get(partnerId).socketId;
-      exports.io.to(partnerSocketId).emit('messagesRead', {
+    if (result.modifiedCount > 0) {
+      // Get conversation room ID for broadcasting
+      const conversationRoomId = notificationManager.getConversationRoomId(
+        userId, userType, partnerId, partnerType
+      );
+      
+      // Broadcast to conversation room
+      exports.io.to(conversationRoomId).emit('messagesRead', {
         partnerId: userId,
-        partnerType: userType
+        partnerType: userType,
+        conversationRoomId
       });
+      
+      // Also send to individual user if online
+      if (getActiveUsers().has(partnerId)) {
+        const partnerSocketId = getActiveUsers().get(partnerId).socketId;
+        exports.io.to(partnerSocketId).emit('messagesRead', {
+          partnerId: userId,
+          partnerType: userType
+        });
+      }
     }
     
     return res.status(200).json({

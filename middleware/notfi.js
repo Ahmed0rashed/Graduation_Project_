@@ -63,7 +63,8 @@ class NotificationManager {
                     
                     socket.emit("initialNotifications", notifications);
 
-
+                    // Join user to their personal room for direct messaging
+                    socket.join(`user_${userId}`);
                     
                 } catch (error) {
                     console.error("Connection error:", error);
@@ -71,10 +72,89 @@ class NotificationManager {
                 }
             });
 
+            // Chat-specific events
+            socket.on("joinChat", ({ userId, userType, partnerId, partnerType }) => {
+                try {
+                    // Join a room for this specific conversation
+                    const roomId = this.getConversationRoomId(userId, userType, partnerId, partnerType);
+                    socket.join(roomId);
+                    console.log(`User ${userId} joined chat room: ${roomId}`);
+                } catch (error) {
+                    console.error("Join chat error:", error);
+                    socket.emit("chatError", { error: "Failed to join chat" });
+                }
+            });
+
+            socket.on("leaveChat", ({ userId, userType, partnerId, partnerType }) => {
+                try {
+                    const roomId = this.getConversationRoomId(userId, userType, partnerId, partnerType);
+                    socket.leave(roomId);
+                    console.log(`User ${userId} left chat room: ${roomId}`);
+                } catch (error) {
+                    console.error("Leave chat error:", error);
+                }
+            });
+
+            socket.on("typing", ({ userId, userType, partnerId, partnerType, isTyping }) => {
+                try {
+                    const roomId = this.getConversationRoomId(userId, userType, partnerId, partnerType);
+                    socket.to(roomId).emit("userTyping", {
+                        userId,
+                        userType,
+                        isTyping
+                    });
+                } catch (error) {
+                    console.error("Typing indicator error:", error);
+                }
+            });
+
+            // Message delivery confirmation
+            socket.on("messageDelivered", ({ messageId, userId, userType }) => {
+                try {
+                    console.log(`Message ${messageId} delivered to ${userType} ${userId}`);
+                    // You can add database update here if needed
+                } catch (error) {
+                    console.error("Message delivery confirmation error:", error);
+                }
+            });
+
+            // User status updates
+            socket.on("updateStatus", async ({ userId, userType, status }) => {
+                try {
+                    if (userType === 'Radiologist') {
+                        await Radiologist.findByIdAndUpdate(userId, { 
+                            status: status,
+                            lastSeen: new Date()
+                        });
+                    }
+                    
+                    // Broadcast status update to all connected users
+                    socket.broadcast.emit("userStatusUpdate", {
+                        userId,
+                        userType,
+                        status,
+                        lastSeen: new Date()
+                    });
+                } catch (error) {
+                    console.error("Status update error:", error);
+                }
+            });
+
             socket.on("disconnect", () => {
                 this._handleDisconnection(socket);
             });
         });
+    }
+
+    getConversationRoomId(userId1, userType1, userId2, userType2) {
+        // Create a consistent room ID for a conversation between two users
+        // Sort the IDs to ensure the same room ID regardless of order
+        const users = [
+            { id: userId1, type: userType1 },
+            { id: userId2, type: userType2 }
+        ].sort((a, b) => a.id.localeCompare(b.id));
+        
+        return `chat_${users[0].id}_${users[0].type}_${users[1].id}_${users[1].type}`;
     }
 
     async getActiveUsersInCenter(centerId) {
