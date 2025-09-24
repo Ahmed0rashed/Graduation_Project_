@@ -36,6 +36,16 @@ app.use("/api/", generalLimiter);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Health check endpoint for Fly.io
+app.get('/health', (req, res) => {
+  res.status(200).json({
+    status: 'OK',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    environment: process.env.NODE_ENV || 'development'
+  });
+});
+
 app.use("/api/radiologists", radiologistRouter);
 app.use("/api/patients", pationtRouter);
 // Apply strict rate limiting to authentication routes
