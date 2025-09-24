@@ -42,13 +42,13 @@ const sendOtpEmail = async (email, otp) => {
   const transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
-      user: "radintelio1@gmail.com",
-      pass: "mikq puco elmb mypn", 
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS, 
     },
   });
 
   const mailOptions = {
-    from: "radintelio1@gmail.com",
+    from: process.env.EMAIL_FROM,
     to: email,
     subject: "Your One-Time Password (OTP) for Verification",
     html: `
@@ -336,13 +336,13 @@ const sendOtpForReset = async (email, otp) => {
   const transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
-      user: "radintelio1@gmail.com",
-      pass: "mikq puco elmb mypn", 
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS, 
     },
   });
 
   const mailOptions = {
-    from: "radintelio1@gmail.com",
+    from: process.env.EMAIL_FROM,
     to: email,
     subject: "Reset Your Password - OTP Code",
     html: `

@@ -1073,8 +1073,8 @@ const sendEmergencyEmailToDoctor = async (
   const transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
-      user: "radintelio1@gmail.com",
-      pass: "mikq puco elmb mypn", 
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS, 
       // okae vcge ctys dxsa
     },
   });
@@ -1085,7 +1085,7 @@ const sendEmergencyEmailToDoctor = async (
   const cancelUrl = `https://abanoubsamaan5.github.io/my-react-app/#/cancel-report/${recordId}/${RadiologistId}`;
 
   const mailOptions = {
-    from: "radintelio1@gmail.com",
+    from: process.env.EMAIL_FROM,
     to: email,
     subject: "🚨 Emergency Case Assigned - Immediate Action Required",
     html: `
@@ -1148,8 +1148,8 @@ const sendEmail2 = async (
   const transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
-      user: "radintelio1@gmail.com",
-      pass: "mikq puco elmb mypn", 
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS, 
     },
   });
 
@@ -1159,7 +1159,7 @@ const sendEmail2 = async (
   const cancelUrl = `https://abanoubsamaan5.github.io/my-react-app/#/cancel-report/${recordId}/${RadiologistId}`;
 
   const mailOptions = {
-    from: "radintelio1@gmail.com",
+    from: process.env.EMAIL_FROM,
     to: email,
     subject: "New Study Assigned - Action Required (Doctor Offline)",
     html: `
@@ -1219,13 +1219,13 @@ const sendEmail = async (
   const transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
-      user: "radintelio1@gmail.com",
-      pass: "mikq puco elmb mypn", 
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS, 
     },
   });
 
   const mailOptions = {
-    from: "radintelio1@gmail.com",
+    from: process.env.EMAIL_FROM,
     to: email,
     subject: "Warning: Less Than One Hour Left Before Study Ends",
     html: `

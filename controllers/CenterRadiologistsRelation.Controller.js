@@ -9,8 +9,8 @@ async function sendInvitationEmail(radiologistEmail, centerName, centerEmail, ph
   const transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
-      user: "radintelio@gmail.com",
-      pass: "iond hchz zpzm bssn", 
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS, 
     },
   });
 
@@ -55,8 +55,8 @@ async function sendInvitationEmail1(radiologistId, radiologistEmail, centerName,
   const transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
-      user: "radintelio1@gmail.com",
-      pass: "mikq puco elmb mypn",  
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS,  
     },
   });
 
