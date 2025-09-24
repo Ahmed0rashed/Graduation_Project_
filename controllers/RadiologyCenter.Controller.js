@@ -3,11 +3,14 @@ const RadiologyCenter = require("../models/Radiology_Centers.Model");
 const mongoose = require("mongoose");
 const { validationResult } = require("express-validator");
 const Wallet = require('../models/payment/Wallet.Model');
+const dotenv = require("dotenv");
+
+dotenv.config({ path: "./config.env" });
 
 cloudinary.config({
-  cloud_name: "dncawa23w",
-  api_key: "451913596668632",
-  api_secret: "KboaQ-CpKdNpD0oJ0JvAagR3N_4",
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
 class RadiologyCenterController {

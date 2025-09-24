@@ -7,7 +7,10 @@ const notificationManager = require('../middleware/notfi');
 const RadiologyCenter = require("../models/Radiology_Centers.Model.js");
 const axios = require("axios");
 const router = express.Router();
+const { analyzeImages  } = require("../middleware/gemini.js");
+const dotenv = require("dotenv");
 
+dotenv.config({ path: "./config.env" });
 
 const sendNotification = async (userId, userType, title, message,image,centername, type) => {
   try {
@@ -174,7 +177,20 @@ exports.deleteAIReport = async (req, res) => {
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
-};exports.analyzeImage = async (req, res) => {
+
+
+const imageUrl = "https://res.cloudinary.com/dncawa23w/image/upload/v1744588703/Dicom_image/dicom%252F20250413_234830_0003.dcm/slice_0.png";
+
+async function run() {
+  const findings = await analyzeMedicalImage(imageUrl);
+  console.log("Findings:", findings);
+}
+
+run();
+
+};
+
+exports.analyzeImage = async (req, res) => {
   try {
     const { id } = req.params;
     const { imageUrl } = req.body;
@@ -226,7 +242,7 @@ const chunkArray = (arr, size) => {
   }
   return result;
 };
-exports.analyzeImage1 = async (req, res) => {
+exports.analyzeImage11 = async (req, res) => {
   try {
     const { id } = req.params;
     const { imageUrl } = req.body;
@@ -298,75 +314,40 @@ exports.analyzeImage1 = async (req, res) => {
   }
 };
 
-// exports.analyzeImage1 = async (req, res) => {
-//   try {
-//     const { id } = req.params;
-//     const { imageUrl } = req.body;
+exports.analyzeImage1 = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { imageUrl } = req.body;
 
-//     if (!Array.isArray(imageUrl) || imageUrl.length === 0) {
-//       return res.status(400).json({ error: "imageUrl must be a non-empty array of URLs." });
-//     }
+    if (!Array.isArray(imageUrl) || imageUrl.length === 0) {
+      return res
+        .status(400)
+        .json({ error: "imageUrl must be a non-empty array of URLs." });
+    }
 
-//     const aiReport = await AIReport.findById(id);
-//     if (!aiReport) {
-//       return res.status(404).json({ error: "AI Report not found" });
-//     }
+    const aiReport = await AIReport.findById(id);
+    if (!aiReport) {
+      return res.status(404).json({ error: "AI Report not found" });
+    }
 
-//     const promptFinding = "Provide only the medical findings from this image without explanations, instructions, or steps and dont say Image Analysis Report and dont say any thing just findings ";
-//     const promptImpression = "Provide the diagnostic impression based on the image without explanations, instructions, or steps and dont say Image Analysis Report and dont say any thing just impression";
+    const { finding, impression } = await analyzeImages(imageUrl);
 
-//     let fullFinding = "";
-//     let fullImpression = "";
+    if (!finding || !impression) {
+      return res.status(400).json({
+        error: "One or more analysis results are empty. Please check Gemini response.",
+      });
+    }
 
-//     for (const image of imageUrl) {
-//       const [findingRes, impressionRes] = await Promise.all([
-//         axios.post("https://8b8d-41-33-141-180.ngrok-free.app/analyze-image", {
-//           text: promptFinding,
-//           image_url: image
-//         }, { timeout: 100000 }),
+    aiReport.diagnosisReportFinding = finding;
+    aiReport.diagnosisReportImpration = impression;
+    await aiReport.save();
 
-//         axios.post("https://8b8d-41-33-141-180.ngrok-free.app/analyze-image", {
-//           text: promptImpression,
-//           image_url: image
-//         }, { timeout: 100000 }),
-//       ]);
-
-//       const rawFinding = findingRes.data?.diagnosis || '';
-//       const rawImpression = impressionRes.data?.diagnosis || '';
-
-//       const cleanText = (text) => {
-//         return typeof text === 'string'
-//           ? text.replace(/(\*\*.*?\*\*|\n|\*|:)/g, "").trim()
-//           : '';
-//       };
-
-//       fullFinding += cleanText(rawFinding) + " ";
-//       fullImpression += cleanText(rawImpression) + " ";
-//     }
-
-//     fullFinding = fullFinding.trim();
-//     fullImpression = fullImpression.trim();
-
-//     if (!fullFinding || !fullImpression) {
-//       return res.status(400).json({ error: "One or more analysis results are empty. Please check the API response." });
-//     }
-
-//     aiReport.diagnosisReportFinding = fullFinding;
-//     aiReport.diagnosisReportImpration = fullImpression;
-
-//     await aiReport.save();
-
-//     res.status(200).json(aiReport);
-//   } catch (error) {
-//     console.error("Analyze Error:", error);
-//     if (error.response) {
-//       console.error("Status:", error.response.status);
-//       console.error("Data:", error.response.data);
-//     }
-//     res.status(500).json({ error: error.message });
-//   }
-// };
-
+    res.status(200).json(aiReport);
+  } catch (error) {
+    console.error("Analyze Error:", error);
+    res.status(500).json({ error: error.message });
+  }
+};
 
 exports.analyzeFindings = async (req, res) => {
   try {

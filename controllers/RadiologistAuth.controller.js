@@ -10,6 +10,9 @@ const Wallet = require('../models/payment/Wallet.Model');
 const Admin = require("../models/admin.model");
 const upload = require("../utils/cloudinary");
 const axios = require('axios');
+const dotenv = require("dotenv");
+
+dotenv.config({ path: "./config.env" });
 
 
 async function verifyIdCard(front_url, back_url) {
