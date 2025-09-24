@@ -1,7 +1,6 @@
 
-import { GoogleGenerativeAI } from "@google/generative-ai";
-import fetch from "node-fetch";
-import dotenv from "dotenv";
+const { GoogleGenerativeAI } = require("@google/generative-ai");
+const dotenv = require("dotenv");
 
 dotenv.config({ path: "./config.env" });
 
@@ -15,7 +14,7 @@ function cleanText(text) {
     : "";
 }
 
-export async function analyzeImages(imageUrls) {
+async function analyzeImages(imageUrls) {
   const promptFinding =
     "Provide only the full diagnostic findings from this image for doctor without any thing else and without any steps";
   const promptImpression =
@@ -48,3 +47,5 @@ export async function analyzeImages(imageUrls) {
     impression: cleanText(impressionResult.response.text() || ""),
   };
 }
+
+module.exports = { analyzeImages };
