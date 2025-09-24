@@ -4,6 +4,7 @@ const express = require('express');
 const router = express.Router();
 const multer = require("multer");
 const RadiologistController = require('../controllers/Radiologist.Controller');
+const { uploadLimiter } = require("../middleware/rateLimiter");
 
 const { uploadImage } = require("../controllers/Radiologist.Controller");
 const uploadImag = require("../controllers/Radiologist.Controller");

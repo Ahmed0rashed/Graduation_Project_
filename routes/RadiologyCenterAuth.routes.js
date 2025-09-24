@@ -4,6 +4,7 @@ const authController = require("../controllers/RadiologyCenterAuth.controller");
 const { verifyOtp } = require("../controllers/RadiologyCenterAuth.controller");
 const multer = require("multer");
 const upload = require("../middleware/upload");
+const { passwordResetLimiter, otpLimiter, strictLimiter } = require("../middleware/rateLimiter");
 
 const storage = multer.memoryStorage();
 const fileUpload = multer({ storage: storage });
@@ -15,9 +16,9 @@ router.post(
   fileUpload.single("path"),
   verifyOtp
 );
-router.post("/SendEmail", authController.SendEmail);
-router.post("/forgotPassword", authController.forgotPassword);
-router.post("/resetPassword", authController.resetPassword);
+router.post("/SendEmail", otpLimiter, authController.SendEmail);
+router.post("/forgotPassword", passwordResetLimiter, authController.forgotPassword);
+router.post("/resetPassword", strictLimiter, authController.resetPassword);
 router.post('/checkOtp', authController.checkOtp);
 
 
