@@ -4,10 +4,13 @@ const Radiologist = require("../models/Radiologists.Model");
 const cloudinary = require("cloudinary").v2;
 const activeUsers =require("../server");
 const upload = require("../utils/cloudinary");
+const dotenv = require("dotenv");
+
+dotenv.config({ path: "./config.env" });
 cloudinary.config({
-  cloud_name: "dncawa23w",
-  api_key: "451913596668632",
-  api_secret: "KboaQ-CpKdNpD0oJ0JvAagR3N_4",
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
 const router = express.Router();

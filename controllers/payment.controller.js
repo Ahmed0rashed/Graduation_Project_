@@ -6,14 +6,17 @@ const Wallet = require("../models/payment/Wallet.Model");
 const WithdrawalRequest = require("../models/payment/WithdrawRequest.Model");
 const sendNotification = require("../utils/sendNotification");
 const WalletTransactionModel = require("../models/payment/WalletTransaction.Model");
+const dotenv = require("dotenv");
+
+dotenv.config({ path: "./config.env" });
 
 
 
 const BASE_URL = "https://accept.paymob.com/api";
-const PAYMOB_API_KEY = "ZXlKaGJHY2lPaUpJVXpVeE1pSXNJblI1Y0NJNklrcFhWQ0o5LmV5SmpiR0Z6Y3lJNklrMWxjbU5vWVc1MElpd2ljSEp2Wm1sc1pWOXdheUk2TVRBek56UTVOQ3dpYm1GdFpTSTZJbWx1YVhScFlXd2lmUS51dDF2TllHVWlveU9vRl85Szc5ZUVvcGZXZGQ0RV9uN1RHMFRLbDVaeEI4Y3I5TUVDX29xVDJKOWg3MGRuUDMxOGJWVjlLZDZ2NUIyZlJDVWVqRThjdw=="
-const INTEGRATION_ID = "5044614"
-const IFRAME_ID = "913739"
-const ADMIN_ID = "67fe500364e9d7e5d709c6c6"
+const PAYMOB_API_KEY = process.env.PAYMOB_API_KEY
+const INTEGRATION_ID = process.env.PAYMOB_INTEGRATION_ID
+const IFRAME_ID = process.env.PAYMOB_IFRAME_ID
+const ADMIN_ID = process.env.PAYMOB_ADMIN_ID
 exports.initiatePayment = async (req, res) => {
   try {
     const { amountCents, billing_data, centerId } = req.body;
@@ -245,7 +248,7 @@ exports.approveWithdrawal = async (req, res) => {
       currency: 'EGP',
       description: 'Withdrawal payout'
     }, {
-      headers: { Authorization: `Bearer ${PAYMOB_LIVE_TOKEN}` }
+      headers: { Authorization: `Bearer ${process.env.PAYMOB_LIVE_TOKEN}` }
     });
 
 

@@ -6,7 +6,7 @@ router.post("/addAIReport", userController.createAIReport);
 router.get("/getOneAIReport/:id", userController.getOneAIReport);
 router.put("/updateAIReport/:id", userController.updateAIReport);
 router.delete("/deleteAIReport/:id", userController.deleteAIReport);
-router.post("/analyzeImage/:id", userController.analyzeImage);
+router.post("/analyzeImage/:id", userController.analyzeImage1);
 router.post("/analyzeImages/:id", userController.analyzeImage1);
 
 router.post("/analyzeFindings/:id", userController.analyzeFindings);

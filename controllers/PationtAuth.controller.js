@@ -3,6 +3,9 @@ const bcrypt = require("bcrypt");
 const validator = require("validator");
 const { createToken } = require("../utils/createToken");  
 const passport = require('../config/passport');
+const dotenv = require("dotenv");
+
+dotenv.config({ path: "./config.env" });
 
 
 exports.loginPatient = async (req, res) => {

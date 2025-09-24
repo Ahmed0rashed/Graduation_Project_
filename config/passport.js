@@ -2,11 +2,11 @@ const passport = require('passport');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const Patient = require('../models/Patients.model'); 
 const session = require("express-session");
-// require('dotenv').config({ path: __dirname + '/config.env' }); 
+require('dotenv').config({ path: __dirname + '/../config.env' }); 
 
 
-const GOOGLE_CLIENT_ID = "302606941835-6u1pnqocpbp0juaq99anblgiflc9dran.apps.googleusercontent.com";
-const GOOGLE_CLIENT_SECRET = "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";
+const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
+const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
 
 
 passport.use(
