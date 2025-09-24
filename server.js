@@ -7,10 +7,7 @@ const notificationManager = require("./middleware/notfi");
 const startDeadlineChecker = require("./middleware/checkDeadlines"); 
 const { setSocketIO } = require("./controllers/Massage.controller");
 
-// Load environment variables
-if (process.env.NODE_ENV !== 'production') {
-  dotenv.config({ path: "./config.env" });
-}
+dotenv.config({ path: "./config.env" });
 
 const httpServer = createServer(app);
 
@@ -24,13 +21,10 @@ setSocketIO(io);
 
 startDeadlineChecker();
 
-const port = process.env.PORT || 3000;
-const host = process.env.NODE_ENV === 'production' ? '0.0.0.0' : 'localhost';
-
-httpServer.listen(port, host, () => {
-  console.log(`🚀 Server running on ${host}:${port}`);
-  console.log(`📡 Socket.io status: ${notificationManager.isInitialized ? "READY" : "NOT READY"}`);
-  console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
+const port = 3000 || process.env.PORT;
+httpServer.listen(port, () => {
+  console.log(` Server running on port ${port}`);
+  console.log(` Socket.io status: ${notificationManager.isInitialized ? "READY" : "NOT READY"}`);
 });
 
 process.on("unhandledRejection", (err) => {
