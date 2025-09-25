@@ -42,7 +42,7 @@ app.use("/api/patients", pationtRouter);
 // Apply strict rate limiting to authentication routes
 app.use("/api/auth", authLimiter, adminRouter);
 app.use("/api/RadiologistAuth", authLimiter, RadiologistAuth);
-app.use("/api/patientAuth", authLimiter, pationtAuth);
+app.use("/api/patientAuth", pationtAuth);
 app.use("/api/AIReports", aireports);
 
 app.use("/api/Record", record);

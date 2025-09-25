@@ -41,49 +41,93 @@ exports.loginPatient = async (req, res) => {
 
 exports.registerPatient = async (req, res) => {
   try {
-    const { firstName, lastName, dateOfBirth, gender, email, password } = req.body;
+    const { firstName, lastName, dateOfBirth, gender, email, password, nationalId, contactNumber, address, medicalHistory, emergencyContact } = req.body;
 
-
+    // Validation
     if (!email || !validator.isEmail(email)) {
       return res.status(400).json({ message: "A valid email is required" });
     }
     if (!firstName) {
       return res.status(400).json({ message: "First name is required" });
     }
-
     if (!password || password.length < 6) {
       return res.status(400).json({ message: "Password must be at least 6 characters long" });
     }
 
-
+    // Check if email already exists
     if (await Patient.findOne({ email: email.toLowerCase() })) {
       return res.status(400).json({ message: `This email "${email}" already exists` });
     }
 
+    // Check if nationalId already exists (if provided)
+    if (nationalId && await Patient.findOne({ nationalId })) {
+      return res.status(400).json({ message: `National ID "${nationalId}" already exists` });
+    }
 
+   if (nationalId && !/^[A-Z0-9]{10,14}$/.test(nationalId)) {
+    return res.status(400).json({ message: `National ID not valid` });
+  }
+
+    if (contactNumber && await Patient.findOne({ contactNumber })) {
+      return res.status(400).json({ message: `Contact number "${contactNumber}" already exists` });
+    }
+
+
+    // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-
-    const newPatient = new Patient({
+    // Create patient object
+    const patientData = {
       firstName,
       lastName,
       dateOfBirth,
       gender,
       email: email.toLowerCase(),
       passwordHash: hashedPassword,
-    });
+      contactNumber,
+    };
 
+    // Only add nationalId if it's provided and valid
+    if (nationalId && nationalId.trim() !== '') {
+      patientData.nationalId = nationalId;
+    }
 
+    const newPatient = new Patient(patientData);
+
+    // Save patient
     await newPatient.save();
 
-
+    // Create token
     const token = createToken(newPatient._id);
 
+    // Return response (remove passwordHash from response)
+    const patientResponse = newPatient.toObject();
+    delete patientResponse.passwordHash;
 
-    res.status(201).json({ token, patient: newPatient });
+    res.status(201).json({ 
+      success: true,
+      message: "Patient registered successfully",
+      token, 
+      patient: patientResponse 
+    });
   } catch (error) {
     console.error("Error registering patient: ", error);
-    res.status(500).json({ message: "Error registering patient", error: error.message });
+    
+    // Handle specific MongoDB errors
+    if (error.code === 11000) {
+      const field = Object.keys(error.keyPattern)[0];
+      return res.status(400).json({ 
+        success: false,
+        message: `Duplicate ${field} found`,
+        error: `This ${field} already exists` 
+      });
+    }
+    
+    res.status(500).json({ 
+      success: false,
+      message: "Error registering patient", 
+      error: error.message 
+    });
   }
 };
 
