@@ -269,6 +269,6 @@ class NotificationManager {
         }
     }
 }
-// 
+
 
 module.exports = new NotificationManager();
