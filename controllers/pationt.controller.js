@@ -283,5 +283,71 @@ exports.getPatientStatistics = async (req, res) => {
     });
   }
 };
+// get patient by nationalId
+exports.getPatientByNationalId = async (req, res) => {
+  try {
+    const { nationalId } = req.params;
+    const patient = await Patient.findOne({ nationalId }).select("-passwordHash");
+    if (!patient) {
+      return res.status(404).json({ message: "Patient not found" });
+    }
+    res.status(200).json(patient);
+  } catch (error) {
+    console.error("Error in getPatientByNationalId:", error);
+    res.status(500).json({
+      error: "Internal Server Error",
+      message: "Error fetching patient by national ID",
+    });
+  }
+};
+// add record to patient
+exports.addRecordToPatient = async (req, res) => {
+  try {
+    const { patientId } = req.params;
+    const { recordId } = req.body;
+    if (!recordId) {
+      return res.status(400).json({ message: "recordId is required in body" });
+    }
+    const patient = await Patient.findById(patientId);
+    if (!patient) {
+      return res.status(404).json({ message: "Patient not found" });
+    }
+   const x = patient.records.push(recordId);
+
+if (x === 0) {
+  return res.status(500).json({ message: "Failed to add record to patient" });
+} 
+console.log("patientId from params:", patientId);
+console.log("recordId from body:", recordId);
+
+
+    await patient.save();
+    res.status(200).json({ message: "Record added to patient", patient });
+  } catch (error) {
+    console.error("Error in addRecordToPatient:", error);
+    res.status(500).json({
+      error: "Internal Server Error",
+      message: "Error adding record to patient",
+    });
+  }
+};
+// get all records of a patient
+ exports.getPatientRecords = async (req, res) => {
+  try {
+    const { patientId } = req.params;
+    const patient = await Patient.findById(patientId).populate('records');
+    if (!patient) {
+      return res.status(404).json({ message: "Patient not found" });
+    }
+    res.status(200).json({ records: patient.records });
+  }
+  catch (error) {
+    console.error("Error in getPatientRecords:", error);
+    res.status(500).json({
+      error: "Internal Server Error",
+      message: "Error fetching patient records",
+    });
+  }
+  };
 
 module.exports = exports;

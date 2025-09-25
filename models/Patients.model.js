@@ -3,7 +3,13 @@ const validator = require("validator");
 
 const patientSchema = new mongoose.Schema(
   {
-
+    nationalId: {
+      type: String,
+      required: false,
+      unique: true,
+      sparse: true, 
+      trim: true,
+    },
     email: {
       type: String,
       required: [true, "Email is required"],
@@ -48,17 +54,24 @@ const patientSchema = new mongoose.Schema(
       type: String,
       required: [true, "Password is required"],
     },
-    // contactNumber: {
-    //   type: String,
-    //   required: [true, "Contact number is required"],
-    //   trim: true,
-    //   validate: {
-    //     validator: function (v) {
-    //       return /^\+?[\d\s-]+$/.test(v);
-    //     },
-    //     message: "Please enter a valid contact number",
-    //   },
-    // },
+    contactNumber: {
+      type: String,
+      required: [true, "Contact number is required"],
+      trim: true,
+      validate: {
+        validator: function (v) {
+          return /^\+?[\d\s-]+$/.test(v);
+        },
+        message: "Please enter a valid contact number",
+      },
+    },
+    // list of recoreds id
+    records: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "RadiologyRecord",
+      },
+    ],
     address: {
       street: { type: String, trim: true },
       city: { type: String, trim: true },
@@ -117,6 +130,7 @@ const patientSchema = new mongoose.Schema(
     },
   }
 );
+
 
 // Remove duplicate indexes
 // patientSchema.index({ nationalId: 1 }, { unique: true }); // Remove
