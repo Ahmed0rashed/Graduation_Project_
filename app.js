@@ -23,6 +23,7 @@ const radiologistDashboardRoutes = require("./routes/RadiologistDashboard.routes
 
 const Admin = require("./routes/admon.routes");
 const comment = require("./routes/comment.routes");
+const geminiRoutes = require("./routes/Gemini.routes");
 
 const app = express();
 
@@ -58,4 +59,5 @@ app.use("/api/radiologistDashboard", radiologistDashboardRoutes);
 app.use("/api/comments", comment);
 app.use("/api/payments", paymentRoutes);
 app.use("/api/wallet", walletRoutes);
+app.use("/api/gemini", geminiRoutes);
 module.exports = app;
