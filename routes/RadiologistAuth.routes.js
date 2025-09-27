@@ -2,7 +2,8 @@ const express = require('express');
 const router = express.Router();
 const multer = require('multer');
 const authController = require('../controllers/RadiologistAuth.controller');
-const { passwordResetLimiter, otpLimiter, strictLimiter } = require('../middleware/rateLimiter');
+// Rate limiters disabled
+// const { passwordResetLimiter, otpLimiter, strictLimiter } = require('../middleware/rateLimiter');
 
 
 const storage = multer.memoryStorage();
@@ -29,11 +30,11 @@ router.post(
 );
 
 // OTP-related routes
-router.post('/sendOtp', otpLimiter, authController.sendOtp);
-router.post('/verifyOtp', strictLimiter, authController.verifyOtp);
+router.post('/sendOtp', authController.sendOtp);
+router.post('/verifyOtp', authController.verifyOtp);
 
 // Password recovery routes
-router.post('/forgotPassword', passwordResetLimiter, authController.forgotPassword);
-router.post('/resetPassword', strictLimiter, authController.resetPassword);
+router.post('/forgotPassword', authController.forgotPassword);
+router.post('/resetPassword', authController.resetPassword);
 
 module.exports = router;

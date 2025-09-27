@@ -1,10 +1,11 @@
 const express = require('express');
 const router = express.Router();
 const geminiController = require('../controllers/Gemini.controller');
-const { generalLimiter } = require('../middleware/rateLimiter');
+// Rate limiters disabled
+// const { generalLimiter } = require('../middleware/rateLimiter');
 
-// Apply rate limiting to all Gemini routes
-router.use(generalLimiter);
+// Rate limiting disabled
+// router.use(generalLimiter);
 
 // Generate text using Gemini API
 router.post('/generate', geminiController.generateText);
