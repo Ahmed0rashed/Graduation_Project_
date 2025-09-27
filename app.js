@@ -34,7 +34,7 @@ app.use(cors());
 
 app.use(morgan("dev"));
 
-app.use("/api/", generalLimiter);
+app.use("/api/");
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
