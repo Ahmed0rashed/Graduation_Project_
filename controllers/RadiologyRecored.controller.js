@@ -650,7 +650,7 @@ exports.cancel = async (req, res) => {
 
       const notificationResult = await sendNotification(
         center._id,
-        "ٌRadiologyCenter",
+        "RadiologyCenter",
         "you have a study cancelled",
         "\ncancelled by all radiologists",
         "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ_J_xJvdD8hmGay4prO6qildXton3MBK8Xi1JYdzifvo2C35Q9SQJBATZKUmIc1CdPzO4&usqp=CAU",
@@ -691,7 +691,7 @@ exports.cancel = async (req, res) => {
 
       const notificationResult = await sendNotification(
         center._id,
-        "ٌRadiologyCenter",
+        "RadiologyCenter",
         "you have a study cancelled",
         "\ncancelled by all radiologists",
         "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ_J_xJvdD8hmGay4prO6qildXton3MBK8Xi1JYdzifvo2C35Q9SQJBATZKUmIc1CdPzO4&usqp=CAU",
