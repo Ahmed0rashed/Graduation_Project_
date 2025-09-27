@@ -28,16 +28,14 @@ const geminiRoutes = require("./routes/Gemini.routes");
 
 const app = express();
 
-app.use(express.json());
-app.use(mongoSanitize());
 app.use(cors());
-
 app.use(morgan("dev"));
-
-app.use("/api/");
-
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(mongoSanitize());
+
+// Apply general rate limiting to all API routes
+app.use("/api/", generalLimiter);
 
 app.use("/api/radiologists", radiologistRouter);
 app.use("/api/patients", pationtRouter);
