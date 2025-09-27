@@ -114,7 +114,7 @@ exports.updateAIReport1 = async (req, res) => {
 
     const notificationResult = await sendNotification(
       center._id,
-      "ٌRadiologyCenter",
+      "RadiologyCenter",
       "new study completed",
       `You have a study completed from ${foundRadiologist.firstName} ${foundRadiologist.lastName}`,
       foundRadiologist.image,

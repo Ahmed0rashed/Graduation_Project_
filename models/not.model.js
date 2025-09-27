@@ -7,7 +7,7 @@ const notificationSchema = new mongoose.Schema(
     userType: {
       type: String,
       required: true,
-      enum: ["Radiologist", "ٌRadiologyCenter"],
+      enum: ["Radiologist", "RadiologyCenter", "Patient"],
     },
     title: { type: String, required: true },
     message: { type: String, required: true },

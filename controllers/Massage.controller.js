@@ -188,7 +188,7 @@ let oldcontact = "";
     } else {
       const center = await RadiologyCenter.findById(senderId).select('centerName image');
       senderName = center.centerName;
-      notification = await sendNotification(receiverId, "ٌRadiologyCenter", center.centerName ,oldcontact +content,center.image,center.centerName);
+      notification = await sendNotification(receiverId, "RadiologyCenter", center.centerName ,oldcontact +content,center.image,center.centerName);
 
     }
 
