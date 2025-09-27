@@ -35,7 +35,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(mongoSanitize());
 
 // Apply general rate limiting to all API routes
-app.use("/api/", generalLimiter);
+// app.use("/api/", generalLimiter);
 
 app.use("/api/radiologists", radiologistRouter);
 app.use("/api/patients", pationtRouter);
@@ -59,4 +59,5 @@ app.use("/api/comments", comment);
 app.use("/api/payments", paymentRoutes);
 app.use("/api/wallet", walletRoutes);
 app.use("/api/gemini", geminiRoutes);
+
 module.exports = app;
