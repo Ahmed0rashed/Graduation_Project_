@@ -168,15 +168,15 @@ exports.registerRadiologist = async (req, res) => {
   
     const FrontId = await upload(req.frontId.buffer, "image"); 
     const BackId = await upload(req.backId.buffer, "image"); 
-    const result = await verifyIdCard(FrontId, BackId);
+    // const result = await verifyIdCard(FrontId, BackId);
 
-    if(!result.isDoctor && !result.isRadiologist ){
+    // if(!result.isDoctor && !result.isRadiologist ){
 
-      return res.status(400).json({ message: "your Card is not Valid as radiologist" }); 
-    }
-    if(!result.isValidCard){
-      return res.status(400).json({ message: "your Card is not Valid" }); 
-    }
+    //   return res.status(400).json({ message: "your Card is not Valid as radiologist" }); 
+    // }
+    // if(!result.isValidCard){
+    //   return res.status(400).json({ message: "your Card is not Valid" }); 
+    // }
 
     const otp = otpGenerator.generate(6, {
       digits: true,
