@@ -3,7 +3,8 @@ const morgan = require("morgan");
 const cors = require("cors");
 const mongoSanitize = require("express-mongo-sanitize");
 const passport = require("./config/passport");
-const { generalLimiter, authLimiter, strictLimiter, passwordResetLimiter, otpLimiter, uploadLimiter } = require("./middleware/rateLimiter");
+// Rate limiters disabled
+// const { generalLimiter, authLimiter, strictLimiter, passwordResetLimiter, otpLimiter, uploadLimiter } = require("./middleware/rateLimiter");
 const radiologistRouter = require("./routes/Radiologist.Routes");
 const pationtRouter = require("./routes/pationt.routes");
 const adminRouter = require("./routes/RadiologyCenterAuth.routes");
@@ -39,8 +40,8 @@ app.use(mongoSanitize());
 
 app.use("/api/radiologists", radiologistRouter);
 app.use("/api/patients", pationtRouter);
-app.use("/api/auth", authLimiter, adminRouter);
-app.use("/api/RadiologistAuth", authLimiter, RadiologistAuth);
+app.use("/api/auth", adminRouter);
+app.use("/api/RadiologistAuth", RadiologistAuth);
 app.use("/api/patientAuth", pationtAuth);
 app.use("/api/AIReports", aireports);
 

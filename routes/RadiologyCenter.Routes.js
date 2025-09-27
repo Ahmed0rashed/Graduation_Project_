@@ -4,7 +4,8 @@ const multer = require("multer");
 const upload = require("../middleware/upload");
 const { uploadImage } = require("../controllers/RadiologyCenter.Controller");
 const uploadImag = require("../controllers/RadiologyCenter.Controller");
-const { uploadLimiter } = require("../middleware/rateLimiter");
+// Rate limiters disabled
+// const { uploadLimiter } = require("../middleware/rateLimiter");
 const RadiologyCenterController = require("../controllers/RadiologyCenter.Controller");
 
 const storage = multer.memoryStorage();
